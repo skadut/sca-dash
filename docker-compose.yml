@@ -1,0 +1,15 @@
+services:
+  bsncs01:
+    image: sandidata/bsncs01:2.3.4.0s0
+    container_name: bsncs01
+    restart: always
+    ports:
+    - '2796:2796'
+    volumes:
+    - '/var/log/sd-counting:/home/sandidata/counting'
+    - '/var/log/sd-log:/home/sandidata/log'
+    networks:
+    - sandidata-net
+networks:
+  sandidata-net:
+    external: true
