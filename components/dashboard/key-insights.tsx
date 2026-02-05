@@ -36,7 +36,17 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
       keys: data.keys,
     }))
 
-  const getTimeAgo = (dateStr: string): string => {
+  const getHsmColor = (hsm: string): { badge: string; avatarIndex: number } => {
+    const normalized = hsm?.toLowerCase() || ''
+    if (normalized.includes('klavis-spbe')) {
+      return { badge: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20', avatarIndex: 0 }
+    } else if (normalized.includes('klavis-iiv')) {
+      return { badge: 'bg-purple-500/10 text-purple-400 border-purple-500/20', avatarIndex: 1 }
+    } else if (normalized.includes('thales-luna')) {
+      return { badge: 'bg-blue-500/10 text-blue-400 border-blue-500/20', avatarIndex: 2 }
+    }
+    return { badge: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20', avatarIndex: 3 }
+  }
     const date = new Date(dateStr)
     const now = new Date()
     const diffMs = now.getTime() - date.getTime()
@@ -77,33 +87,36 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
               <Clock className="h-5 w-5 text-cyan-400" />
-              Recent Keys
+              Recent Key Created
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">Latest activity</p>
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
-          {recentKeys.map((key, index) => (
-            <div
-              key={key.id}
-              className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-            >
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 ${getAvatarColor(index)}`}>
-                {getInitials(key.nama_aplikasi)}
+          {recentKeys.map((key) => {
+            const hsmColor = getHsmColor(key.hsm)
+            return (
+              <div
+                key={key.id}
+                className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+              >
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 ${getAvatarColor(hsmColor.avatarIndex)}`}>
+                  {getInitials(key.nama_aplikasi)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm text-foreground truncate">{key.nama_aplikasi}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {key.id_login} • {getTimeAgo(key.created_at)}
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <Badge variant="outline" className={`${hsmColor.badge} text-xs whitespace-nowrap`}>
+                    {key.hsm}
+                  </Badge>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-foreground truncate">{key.nama_aplikasi}</p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {key.id_login} • {getTimeAgo(key.created_at)}
-                </p>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <Badge variant="outline" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 text-xs whitespace-nowrap">
-                  {key.hsm}
-                </Badge>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </CardContent>
       </Card>
 

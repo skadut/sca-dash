@@ -2,8 +2,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Clock, Trophy, TrendingUp } from 'lucide-react'
+import { Clock, AlertCircle } from 'lucide-react'
 import type { Certificate } from '@/lib/types'
+import { getCertificateStatus, getValidityStatus, getDaysUntilExpiry } from '@/lib/certificate-utils'
 
 interface CertificateInsightsProps {
   certificates: Certificate[]
@@ -41,32 +42,47 @@ const getTimeAgo = (dateString: string): string => {
   return `${days}d ago`
 }
 
+const getHsmColor = (hsm: string): { badge: string; avatarIndex: number } => {
+  const normalized = hsm?.toLowerCase() || ''
+  if (normalized.includes('klavis-spbe')) {
+    return { badge: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20', avatarIndex: 0 }
+  } else if (normalized.includes('klavis-iiv')) {
+    return { badge: 'bg-purple-500/10 text-purple-400 border-purple-500/20', avatarIndex: 1 }
+  } else if (normalized.includes('thales-luna')) {
+    return { badge: 'bg-blue-500/10 text-blue-400 border-blue-500/20', avatarIndex: 2 }
+  }
+  return { badge: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20', avatarIndex: 3 }
+}
+
 export function CertificateInsights({ certificates }: CertificateInsightsProps) {
   // Get top 4 most recent certificates
   const recentCerts = [...certificates]
     .sort((a, b) => new Date(b.created_date).getTime() - new Date(a.created_date).getTime())
     .slice(0, 4)
 
-  // Get top 4 certificates by app ID count
-  const appIdCounts = certificates.reduce((acc, cert) => {
-    const name = cert.app_id_label
-    if (!acc[name]) {
-      acc[name] = { count: 0, certs: [] }
-    }
-    acc[name].count++
-    acc[name].certs.push(cert)
-    return acc
-  }, {} as Record<string, { count: number; certs: Certificate[] }>)
-
-  const topAppIds = Object.entries(appIdCounts)
-    .sort(([, a], [, b]) => b.count - a.count)
-    .slice(0, 4)
-    .map(([name, data], index) => ({
-      rank: index + 1,
-      name,
-      count: data.count,
-      certs: data.certs,
+  // Get active certificates nearing expiration, sorted by most imminent
+  const certificateStages = certificates
+    .filter(cert => getCertificateStatus(cert.expired_date, cert.revoked_app_status) === 'active')
+    .map(cert => ({
+      ...cert,
+      daysUntilExpiry: getDaysUntilExpiry(cert.expired_date),
+      validity: getValidityStatus(cert.expired_date),
     }))
+    .sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry)
+    .slice(0, 4)
+
+  const getProgressColor = (validity: 'valid' | 'expiring' | 'expired'): string => {
+    if (validity === 'expired') return 'bg-zinc-500'
+    if (validity === 'expiring') return 'bg-amber-500'
+    return 'bg-emerald-500'
+  }
+
+  const getProgressPercentage = (daysUntilExpiry: number): number => {
+    // Assume 365 days for full validity
+    const maxDays = 365
+    const percentage = Math.max(0, Math.min(100, ((maxDays - daysUntilExpiry) / maxDays) * 100))
+    return percentage
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -76,81 +92,82 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
               <Clock className="h-5 w-5 text-cyan-400" />
-              Recent Certificates
+              Recent Certificate Created
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">Latest activity</p>
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
-          {recentCerts.map((cert, index) => (
-            <div
-              key={cert.id}
-              className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-            >
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 ${getAvatarColor(index)}`}>
-                {getInitials(cert.app_id_label)}
+          {recentCerts.map((cert) => {
+            const hsmColor = getHsmColor(cert.hsm)
+            return (
+              <div
+                key={cert.id}
+                className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+              >
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 ${getAvatarColor(hsmColor.avatarIndex)}`}>
+                  {getInitials(cert.app_id_label)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm text-foreground truncate">{cert.app_id_label}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {getTimeAgo(cert.created_date)}
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <Badge variant="outline" className={`${hsmColor.badge} text-xs whitespace-nowrap`}>
+                    {cert.hsm}
+                  </Badge>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-foreground truncate">{cert.app_id_label}</p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {getTimeAgo(cert.created_date)}
-                </p>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <Badge variant="outline" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 text-xs whitespace-nowrap">
-                  {cert.hsm}
-                </Badge>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </CardContent>
       </Card>
 
-      {/* Top Application IDs */}
+      {/* Certificate Stages */}
       <Card className="border-border/50 bg-card">
         <CardHeader className="pb-4">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-amber-400" />
-              Top Application ID
+              <AlertCircle className="h-5 w-5 text-amber-400" />
+              Certificate Stages
             </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">Most certificates</p>
+            <p className="text-sm text-muted-foreground mt-1">Nearing expiration</p>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2">
-          {topAppIds.map((item) => {
-            const percentage = ((item.count / certificates.length) * 100).toFixed(0)
+        <CardContent className="space-y-3">
+          {certificateStages.map((cert) => {
+            const progressColor = getProgressColor(cert.validity)
+            const progressPercentage = getProgressPercentage(cert.daysUntilExpiry)
             return (
               <div
-                key={item.name}
-                className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                key={cert.id}
+                className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
               >
-                <div className="relative flex-shrink-0">
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center font-semibold text-sm ${getAvatarColor(item.rank - 1)}`}>
-                    {getInitials(item.name)}
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm text-foreground truncate">{cert.app_id_label}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {cert.daysUntilExpiry} days left
+                    </p>
                   </div>
-                  {item.rank <= 3 && (
-                    <div className={`absolute -top-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 ${
-                      item.rank === 1 ? 'bg-amber-500' :
-                      item.rank === 2 ? 'bg-zinc-400' :
-                      'bg-amber-600'
-                    }`}>
-                      {item.rank}
-                    </div>
-                  )}
+                  <Badge 
+                    variant="outline" 
+                    className={`text-xs whitespace-nowrap flex-shrink-0 ${
+                      cert.validity === 'expired' ? 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' :
+                      cert.validity === 'expiring' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                      'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                    }`}
+                  >
+                    {cert.validity === 'expired' ? 'Expired' : cert.validity === 'expiring' ? 'Expiring' : 'Active'}
+                  </Badge>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-foreground truncate">{item.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {item.count} {item.count === 1 ? 'cert' : 'certs'}
-                  </p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="font-mono text-sm font-semibold text-foreground">{item.count}</p>
-                  <div className="flex items-center justify-end gap-1 text-xs text-emerald-400">
-                    <TrendingUp className="h-3 w-3" />
-                    +{percentage}%
-                  </div>
+                <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${progressColor}`}
+                    style={{ width: `${progressPercentage}%` }}
+                  />
                 </div>
               </div>
             )
