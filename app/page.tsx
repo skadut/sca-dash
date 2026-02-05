@@ -5,7 +5,7 @@ import useSWR from "swr"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { CertificateTable } from "@/components/dashboard/certificate-table"
 import { NavigationTabs } from "@/components/dashboard/navigation-tabs"
-import { TrafficGraph } from "@/components/dashboard/traffic-graph"
+import { UtilityTrends } from "@/components/dashboard/utility-trends"
 import { DataModeToggle } from "@/components/dashboard/data-mode-toggle"
 import { ThemeToggle } from "@/components/dashboard/theme-toggle"
 import { FileDistribution } from "@/components/dashboard/file-distribution"
@@ -144,7 +144,7 @@ export default function DashboardPage() {
                     </div>
                     
                     {/* Traffic Graph */}
-                    <TrafficGraph certificates={certificates} />
+                    <UtilityTrends certificates={certificates} keys={keys} />
                   </>
                 )}
                 {activeMenu === "inventory" && (
