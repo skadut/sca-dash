@@ -90,7 +90,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Recent Certificates */}
-      <Card className="border-border/50 bg-card flex flex-col min-h-[420px] rounded-lg overflow-hidden">
+      <Card className="border-border/50 bg-card flex flex-col min-h-[420px] overflow-hidden">
         <CardHeader className="pb-4">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -129,7 +129,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
       </Card>
 
       {/* Certificate Stages - Health Bar View */}
-      <Card className="border-border/50 bg-card flex flex-col min-h-[420px] rounded-lg overflow-hidden">
+      <Card className="border-border/50 bg-card flex flex-col min-h-[420px] overflow-hidden">
         <CardHeader className="pb-4">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
