@@ -30,7 +30,7 @@ export function CombinedHSMVisualization({ certificates, keys }: CombinedHSMVisu
 
   const COLORS = {
     certificates: "#06b6d4",
-    keys: "#8b5cf6",
+    keys: "#C9D115",
   }
 
   function getDisplayName(name: string) {
@@ -75,8 +75,15 @@ export function CombinedHSMVisualization({ certificates, keys }: CombinedHSMVisu
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="name" stroke="hsl(var(--foreground))" tick={{ fill: "hsl(var(--foreground))" }} />
-            <YAxis stroke="hsl(var(--foreground))" tick={{ fill: "hsl(var(--foreground))" }} />
+            <XAxis 
+              dataKey="name" 
+              stroke="hsl(var(--foreground))" 
+              tick={{ fill: "hsl(var(--foreground))", fontSize: 14, fontWeight: 700 }}
+            />
+            <YAxis 
+              stroke="hsl(var(--foreground))" 
+              tick={{ fill: "hsl(var(--foreground))", fontSize: 14, fontWeight: 700 }}
+            />
             <Tooltip content={<CustomTooltip />} />
             <Legend
               formatter={(value) => (value === "certificates" ? "Certificates" : "Keys")}
@@ -106,7 +113,7 @@ export function CombinedHSMVisualization({ certificates, keys }: CombinedHSMVisu
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Keys</p>
-                  <p className="font-bold font-mono text-purple-400">{item.keys}</p>
+                  <p className="font-bold font-mono" style={{ color: "#C9D115" }}>{item.keys}</p>
                 </div>
               </div>
             </div>

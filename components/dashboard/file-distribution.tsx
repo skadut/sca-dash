@@ -36,7 +36,7 @@ export function FileDistribution({ certificates }: FileDistributionProps) {
       available: withKEY, 
       missing: total - withKEY,
       total: total,
-      color: "#8b5cf6" 
+      color: "#C9D115" 
     },
   ]
 
@@ -90,8 +90,8 @@ export function FileDistribution({ certificates }: FileDistributionProps) {
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis type="number" stroke="hsl(var(--foreground))" tick={{ fill: "hsl(var(--foreground))" }} />
-            <YAxis dataKey="name" type="category" stroke="hsl(var(--foreground))" tick={{ fill: "hsl(var(--foreground))" }} width={60} />
+            <XAxis type="number" stroke="hsl(var(--foreground))" tick={{ fill: "hsl(var(--foreground))", fontSize: 14, fontWeight: 700 }} />
+            <YAxis dataKey="name" type="category" stroke="hsl(var(--foreground))" tick={{ fill: "hsl(var(--foreground))", fontSize: 14, fontWeight: 700 }} width={60} />
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="available" stackId="a" radius={[0, 4, 4, 0]}>
               {data.map((entry, index) => (
@@ -137,8 +137,8 @@ export function FileDistribution({ certificates }: FileDistributionProps) {
             </p>
             <div className="mt-2 w-full bg-muted rounded h-1.5">
               <div
-                className="bg-violet-500 h-1.5 rounded transition-all"
-                style={{ width: `${(withKEY / certificates.length) * 100}%` }}
+                className="h-1.5 rounded transition-all"
+                style={{ width: `${(withKEY / certificates.length) * 100}%`, backgroundColor: "#C9D115" }}
               />
             </div>
           </div>
