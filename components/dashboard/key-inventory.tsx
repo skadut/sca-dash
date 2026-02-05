@@ -30,6 +30,7 @@ export function KeyInventoryStats({ keys }: KeyInventoryStatsProps) {
     {
       label: 'Keys',
       value: total,
+      sublabel: 'Generated Key',
       icon: KeyRound,
       iconColor: 'text-cyan-400',
       iconBg: 'bg-cyan-500/10',
@@ -94,6 +95,7 @@ export function KeyInventoryStats({ keys }: KeyInventoryStatsProps) {
                     {stat.value.toLocaleString()}
                   </p>
                 </div>
+                {stat.sublabel && <p className="text-xs text-muted-foreground mt-2 font-sans">{stat.sublabel}</p>}
                 {stat.subtitle && <p className="text-xs text-muted-foreground mt-2 font-sans">{stat.subtitle}</p>}
               </div>
             </div>

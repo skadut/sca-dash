@@ -120,8 +120,6 @@ export function KeyTable({ keys }: KeyTableProps) {
     <Card className="border-border/50">
       <CardHeader className="pb-4">
         <div className="flex flex-col gap-4">
-          <CardTitle className="text-lg">Key Inventory</CardTitle>
-          <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
