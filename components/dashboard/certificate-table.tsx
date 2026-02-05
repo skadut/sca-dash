@@ -164,15 +164,25 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
 
   const getHSMBadge = (hsm: string | undefined) => {
     if (!hsm) {
-      return <Badge className="bg-zinc-500/15 text-zinc-600 hover:bg-zinc-500/20 border-0">N/A</Badge>
+      return <Badge className="bg-zinc-500/10 text-zinc-400 border-zinc-500/20 font-mono text-xs">N/A</Badge>
     }
-    const hsmUpper = hsm.toUpperCase()
-    if (hsmUpper === "SPBE") {
-      return <Badge className="bg-blue-500/15 text-blue-600 hover:bg-blue-500/20 border-0">SPBE</Badge>
-    } else if (hsmUpper === "IIV") {
-      return <Badge className="bg-purple-500/15 text-purple-600 hover:bg-purple-500/20 border-0">IIV</Badge>
+    
+    const normalizedHsm = hsm.toLowerCase()
+    const config: Record<string, { label: string; className: string }> = {
+      'spbe': { label: 'Klavis-SPBE', className: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' },
+      'iiv': { label: 'Klavis-IIV', className: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
+      'thales': { label: 'Thales-Luna', className: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+      'luna': { label: 'Thales-Luna', className: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
     }
-    return <Badge className="bg-zinc-500/15 text-zinc-600 hover:bg-zinc-500/20 border-0">{hsm}</Badge>
+    
+    const matchedKey = Object.keys(config).find(key => normalizedHsm.includes(key))
+    const hsmConfig = matchedKey ? config[matchedKey] : { label: hsm, className: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' }
+    
+    return (
+      <Badge variant="outline" className={`font-mono text-xs ${hsmConfig.className}`}>
+        {hsmConfig.label}
+      </Badge>
+    )
   }
 
   const getFilesStatus = (cert: Certificate) => {

@@ -75,8 +75,8 @@ export function CombinedHSMVisualization({ certificates, keys }: CombinedHSMVisu
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="name" stroke="hsl(var(--foreground))" />
-            <YAxis stroke="hsl(var(--foreground))" />
+            <XAxis dataKey="name" stroke="hsl(var(--foreground))" tick={{ fill: "hsl(var(--foreground))" }} />
+            <YAxis stroke="hsl(var(--foreground))" tick={{ fill: "hsl(var(--foreground))" }} />
             <Tooltip content={<CustomTooltip />} />
             <Legend
               formatter={(value) => (value === "certificates" ? "Certificates" : "Keys")}
