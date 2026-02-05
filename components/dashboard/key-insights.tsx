@@ -84,7 +84,7 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Recent Keys */}
-      <Card className="border-border/50 bg-card">
+      <Card className="border-border/50 bg-card flex flex-col">
         <CardHeader className="pb-4">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -94,7 +94,7 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
             <p className="text-sm text-muted-foreground mt-1">Latest activity</p>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-2 flex-1 overflow-y-auto">
           {recentKeys.map((key) => {
             const hsmColor = getHsmColor(key.hsm)
             return (
@@ -123,7 +123,7 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
       </Card>
 
       {/* Top Institutions */}
-      <Card className="border-border/50 bg-card">
+      <Card className="border-border/50 bg-card flex flex-col">
         <CardHeader className="pb-4">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -133,7 +133,7 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
             <p className="text-sm text-muted-foreground mt-1">Most keys generated</p>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-2 flex-1 overflow-y-auto">
           {topInstansi.map((item) => {
             const percentage = ((item.count / keys.length) * 100).toFixed(0)
             return (
