@@ -23,6 +23,8 @@ export function KeyTable({ keys }: KeyTableProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [hsmFilter, setHsmFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [secretStatusFilter, setSecretStatusFilter] = useState<string>('all')
+  const [instansiFilter, setInstansiFilter] = useState<string>('all')
   const [sortField, setSortField] = useState<keyof Key>('key_created')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const [currentPage, setCurrentPage] = useState(1)
@@ -43,16 +45,22 @@ export function KeyTable({ keys }: KeyTableProps) {
 
   const filteredAndSortedKeys = useMemo(() => {
     let filtered = keys.filter((key) => {
+      const hasSecret = key.secret_data && key.secret_data.trim() !== ''
+      const secretStatus = hasSecret ? 'available' : 'no-secret'
+      
       const matchesSearch =
         key.nama_aplikasi.toLowerCase().includes(searchTerm.toLowerCase()) ||
         key.nama_instansi.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        key.key_label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        key.id_aplikasi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        key.id_login.toLowerCase().includes(searchTerm.toLowerCase()) ||
         key.key_id.toLowerCase().includes(searchTerm.toLowerCase())
 
       const matchesHsm = hsmFilter === 'all' || key.hsm === hsmFilter
       const matchesStatus = statusFilter === 'all' || getKeyStatus(key) === statusFilter
+      const matchesSecretStatus = secretStatusFilter === 'all' || secretStatus === secretStatusFilter
+      const matchesInstansi = instansiFilter === 'all' || key.nama_instansi === instansiFilter
 
-      return matchesSearch && matchesHsm && matchesStatus
+      return matchesSearch && matchesHsm && matchesStatus && matchesSecretStatus && matchesInstansi
     })
 
     filtered.sort((a, b) => {
@@ -65,7 +73,7 @@ export function KeyTable({ keys }: KeyTableProps) {
     })
 
     return filtered
-  }, [keys, searchTerm, hsmFilter, statusFilter, sortField, sortDirection])
+  }, [keys, searchTerm, hsmFilter, statusFilter, secretStatusFilter, instansiFilter, sortField, sortDirection])
 
   const totalPages = Math.ceil(filteredAndSortedKeys.length / rowsPerPage)
   const startIndex = (currentPage - 1) * rowsPerPage
@@ -120,10 +128,10 @@ export function KeyTable({ keys }: KeyTableProps) {
     <Card className="border-border/50">
       <CardHeader className="pb-4">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative flex-1 min-w-[250px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name, institution, key ID..."
+              placeholder="Search by Aplikasi, Instansi, ID, Key ID..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value)
@@ -132,6 +140,22 @@ export function KeyTable({ keys }: KeyTableProps) {
               className="pl-9 w-full"
             />
           </div>
+          <Select
+            value={secretStatusFilter}
+            onValueChange={(value) => {
+              setSecretStatusFilter(value)
+              setCurrentPage(1)
+            }}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Secret Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Secret</SelectItem>
+              <SelectItem value="available">Available</SelectItem>
+              <SelectItem value="no-secret">No Secret</SelectItem>
+            </SelectContent>
+          </Select>
           <Select
             value={hsmFilter}
             onValueChange={(value) => {
@@ -144,9 +168,28 @@ export function KeyTable({ keys }: KeyTableProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All HSM</SelectItem>
-              <SelectItem value="klavis-spbe">Klavis-SPBE</SelectItem>
-              <SelectItem value="klavis-iiv">Klavis-IIV</SelectItem>
-              <SelectItem value="thales-luna">Thales-Luna</SelectItem>
+              <SelectItem value="Klavis-SPBE">Klavis-SPBE</SelectItem>
+              <SelectItem value="Klavis-IIV">Klavis-IIV</SelectItem>
+              <SelectItem value="Thales-Luna">Thales-Luna</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={instansiFilter}
+            onValueChange={(value) => {
+              setInstansiFilter(value)
+              setCurrentPage(1)
+            }}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Instansi" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Instansi</SelectItem>
+              {Array.from(new Set(keys.map(k => k.nama_instansi))).map((instansi) => (
+                <SelectItem key={instansi} value={instansi}>
+                  {instansi}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Select
@@ -179,7 +222,9 @@ export function KeyTable({ keys }: KeyTableProps) {
                   </button>
                 </th>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Instansi
+                  <button onClick={() => handleSort('nama_instansi')} className="flex items-center gap-1 hover:text-foreground">
+                    Instansi <ArrowUpDown className="h-3 w-3" />
+                  </button>
                 </th>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   <button onClick={() => handleSort('key_id')} className="flex items-center gap-1 hover:text-foreground">
