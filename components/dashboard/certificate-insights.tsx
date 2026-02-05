@@ -73,7 +73,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
 
   const getHealthBarColor = (daysUntilExpiry: number, validity: 'valid' | 'expiring' | 'expired'): string => {
     if (validity === 'expired' || daysUntilExpiry <= 0) {
-      return 'bg-red-500'
+      return 'bg-red-600'
     }
     if (validity === 'expiring' || daysUntilExpiry <= 30) {
       return 'bg-amber-500'
@@ -129,7 +129,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
       </Card>
 
       {/* Certificate Stages - Health Bar View */}
-      <Card className="border-border/50 bg-card h-full">
+      <Card className="border-border/50 bg-card">
         <CardHeader className="pb-4">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -139,57 +139,53 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
             <p className="text-sm text-muted-foreground mt-1">Validity health status</p>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3 flex flex-col h-full">
+        <CardContent className="space-y-2">
           {certificateStages.length === 0 ? (
-            <div className="flex items-center justify-center h-full min-h-[200px]">
-              <p className="text-sm text-muted-foreground">No active certificates</p>
-            </div>
+            <p className="text-sm text-muted-foreground text-center py-4">No active certificates</p>
           ) : (
-            <div className="space-y-3">
-              {certificateStages.map((cert) => {
-                const healthColor = getHealthBarColor(cert.daysUntilExpiry, cert.validity)
-                const healthPercentage = getHealthPercentage(cert.daysUntilExpiry)
-                const statusLabel = cert.validity === 'expired' ? 'Expired' : cert.validity === 'expiring' ? 'Critical' : 'Healthy'
-                
-                return (
-                  <div
-                    key={cert.id}
-                    className="p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors border border-border/30"
-                  >
-                    {/* Certificate Name and Status */}
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <p className="font-medium text-sm text-foreground truncate">{cert.app_id_label}</p>
-                      <Badge 
-                        variant="outline" 
-                        className={`text-xs font-medium flex-shrink-0 ${
-                          healthColor === 'bg-red-500' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                          healthColor === 'bg-amber-500' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                          'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                        }`}
-                      >
-                        {statusLabel}
-                      </Badge>
+            certificateStages.map((cert) => {
+              const healthColor = getHealthBarColor(cert.daysUntilExpiry, cert.validity)
+              const healthPercentage = getHealthPercentage(cert.daysUntilExpiry)
+              const statusLabel = cert.validity === 'expired' ? 'Expired' : cert.validity === 'expiring' ? 'Critical' : 'Healthy'
+              
+              return (
+                <div
+                  key={cert.id}
+                  className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                >
+                  {/* Certificate Name and Status */}
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <p className="font-medium text-sm text-foreground truncate">{cert.app_id_label}</p>
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs font-medium flex-shrink-0 ${
+                        healthColor === 'bg-red-500' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                        healthColor === 'bg-amber-500' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                        'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                      }`}
+                    >
+                      {statusLabel}
+                    </Badge>
+                  </div>
+                  
+                  {/* Health Bar Container */}
+                  <div className="flex items-center gap-2.5">
+                    {/* Health Bar */}
+                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-500 ease-out rounded-full ${healthColor}`}
+                        style={{ width: `${healthPercentage}%` }}
+                      />
                     </div>
                     
-                    {/* Health Bar Container */}
-                    <div className="flex items-center gap-2">
-                      {/* Health Bar Background */}
-                      <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden border border-border/50">
-                        <div
-                          className={`h-full transition-all duration-500 ease-out rounded-full ${healthColor} shadow-lg`}
-                          style={{ width: `${healthPercentage}%` }}
-                        />
-                      </div>
-                      
-                      {/* Days Left Label */}
-                      <span className="text-sm font-mono font-semibold text-foreground whitespace-nowrap flex-shrink-0 min-w-fit">
-                        {cert.daysUntilExpiry} days
-                      </span>
-                    </div>
+                    {/* Days Left Label */}
+                    <span className="text-sm font-mono font-semibold text-foreground whitespace-nowrap flex-shrink-0">
+                      {cert.daysUntilExpiry} days
+                    </span>
                   </div>
-                )
-              })}
-            </div>
+                </div>
+              )
+            })
           )}
         </CardContent>
       </Card>
