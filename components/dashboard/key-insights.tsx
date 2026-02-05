@@ -111,15 +111,12 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
       {/* Top Institutions */}
       <Card className="border-border/50 bg-card">
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-amber-400" />
-                Top Institution
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">Most keys generated</p>
-            </div>
-            <Trophy className="h-6 w-6 text-amber-400/30" />
+          <div>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-amber-400" />
+              Top Institution
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">Most keys generated</p>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
