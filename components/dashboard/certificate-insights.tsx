@@ -139,7 +139,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
             <p className="text-sm text-muted-foreground mt-1">Validity health status</p>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2 flex-1 overflow-y-auto">
+        <CardContent className="space-y-1.5 flex-1">
           {certificateStages.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">No active certificates</p>
           ) : (
@@ -151,10 +151,10 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
               return (
                 <div
                   key={cert.id}
-                  className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                  className="p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                 >
                   {/* Certificate Name and Status */}
-                  <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
                     <p className="font-medium text-sm text-foreground truncate">{cert.app_id_label}</p>
                     <Badge 
                       variant="outline" 
