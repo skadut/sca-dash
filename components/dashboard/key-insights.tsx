@@ -10,12 +10,12 @@ interface KeyInsightsProps {
 }
 
 export function KeyInsights({ keys }: KeyInsightsProps) {
-  // Get top 3 most recent keys
+  // Get top 4 most recent keys
   const recentKeys = [...keys]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 3)
+    .slice(0, 4)
 
-  // Get top 3 institutions by key count
+  // Get top 4 institutions by key count
   const instansiCounts = keys.reduce((acc, key) => {
     const name = key.nama_instansi
     if (!acc[name]) {
@@ -28,7 +28,7 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
 
   const topInstansi = Object.entries(instansiCounts)
     .sort(([, a], [, b]) => b.count - a.count)
-    .slice(0, 3)
+    .slice(0, 4)
     .map(([name, data], index) => ({
       rank: index + 1,
       name,
