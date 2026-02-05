@@ -11,8 +11,7 @@ import { ThemeToggle } from "@/components/dashboard/theme-toggle"
 import { FileDistribution } from "@/components/dashboard/file-distribution"
 import { KeySecretRelationship } from "@/components/dashboard/key-secret-relationship"
 import { Sidebar } from "@/components/dashboard/sidebar"
-import { HSMVisualization } from "@/components/dashboard/hsm-visualization"
-import { KeyHSMVisualization } from "@/components/dashboard/key-hsm-visualization"
+import { CombinedHSMVisualization } from "@/components/dashboard/combined-hsm-visualization"
 import { KeyInventoryStats } from "@/components/dashboard/key-inventory"
 import { KeyTable } from "@/components/dashboard/key-table"
 import { KeyTrafficGraph } from "@/components/dashboard/key-traffic-graph"
@@ -135,11 +134,8 @@ export default function DashboardPage() {
               <>
                 {activeMenu === "dashboard" && (
                   <>
-                    {/* Top Row: HSM Type Visualizations */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <HSMVisualization certificates={certificates} />
-                      <KeyHSMVisualization keys={keys} />
-                    </div>
+                    {/* Top Row: Combined HSM Type Visualization */}
+                    <CombinedHSMVisualization certificates={certificates} keys={keys} />
                     
                     {/* Second Row: File Availability and Key-Secret Relationship */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

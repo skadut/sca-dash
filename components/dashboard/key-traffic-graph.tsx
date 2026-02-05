@@ -169,9 +169,9 @@ export function KeyTrafficGraph({ keys }: KeyTrafficGraphProps) {
                 className="px-3 py-2 text-sm rounded-md border border-border bg-background font-sans"
               >
                 <option value="all">All HSM</option>
-                <option value="klavis-spbe">Klavis SPBE</option>
-                <option value="klavis-iiv">Klavis IIV</option>
-                <option value="thales-luna">Thales Luna</option>
+                <option value="klavis-spbe">Klavis-SPBE</option>
+                <option value="klavis-iiv">Klavis-IIV</option>
+                <option value="thales-luna">Thales-Luna</option>
               </select>
 
               <div className="flex gap-1 p-1 bg-muted rounded-md">

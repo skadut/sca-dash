@@ -166,8 +166,8 @@ export function TrafficGraph({ certificates }: TrafficGraphProps) {
                 className="px-3 py-2 text-sm rounded-md border border-border bg-background font-sans"
               >
                 <option value="all">All HSM</option>
-                <option value="alpha">Klavis SPBE</option>
-                <option value="beta">Klavis IIV</option>
+                <option value="alpha">Klavis-SPBE</option>
+                <option value="beta">Klavis-IIV</option>
               </select>
 
               <div className="flex gap-1 p-1 bg-muted rounded-md">

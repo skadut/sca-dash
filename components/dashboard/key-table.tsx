@@ -99,15 +99,19 @@ export function KeyTable({ keys }: KeyTableProps) {
   }
 
   const getHsmBadge = (hsm: string) => {
-    const config = {
-      'klavis-spbe': { label: 'Klavis SPBE', className: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' },
-      'klavis-iiv': { label: 'Klavis IIV', className: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
-      'thales-luna': { label: 'Thales Luna', className: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+    const config: Record<string, { label: string; className: string }> = {
+      'klavis-spbe': { label: 'Klavis-SPBE', className: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' },
+      'klavis-iiv': { label: 'Klavis-IIV', className: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
+      'thales-luna': { label: 'Thales-Luna', className: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
     }
-    const conf = config[hsm as keyof typeof config] || { label: hsm, className: 'bg-muted text-muted-foreground' }
+    
+    const normalizedHsm = hsm?.toLowerCase() || ''
+    const matchedKey = Object.keys(config).find(key => normalizedHsm.includes(key))
+    const hsmConfig = matchedKey ? config[matchedKey] : { label: hsm || 'N/A', className: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' }
+    
     return (
-      <Badge variant="outline" className={`font-mono text-xs ${conf.className}`}>
-        {conf.label}
+      <Badge variant="outline" className={`font-mono text-xs ${hsmConfig.className}`}>
+        {hsmConfig.label}
       </Badge>
     )
   }
@@ -141,9 +145,9 @@ export function KeyTable({ keys }: KeyTableProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All HSM</SelectItem>
-              <SelectItem value="klavis-spbe">Klavis SPBE</SelectItem>
-              <SelectItem value="klavis-iiv">Klavis IIV</SelectItem>
-              <SelectItem value="thales-luna">Thales Luna</SelectItem>
+              <SelectItem value="klavis-spbe">Klavis-SPBE</SelectItem>
+              <SelectItem value="klavis-iiv">Klavis-IIV</SelectItem>
+              <SelectItem value="thales-luna">Thales-Luna</SelectItem>
             </SelectContent>
           </Select>
           <Select
@@ -172,11 +176,11 @@ export function KeyTable({ keys }: KeyTableProps) {
               <tr>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   <button onClick={() => handleSort('nama_aplikasi')} className="flex items-center gap-1 hover:text-foreground">
-                    Application <ArrowUpDown className="h-3 w-3" />
+                    Aplikasi <ArrowUpDown className="h-3 w-3" />
                   </button>
                 </th>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Institution
+                  Instansi
                 </th>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   <button onClick={() => handleSort('key_id')} className="flex items-center gap-1 hover:text-foreground">

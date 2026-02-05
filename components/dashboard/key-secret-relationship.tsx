@@ -16,7 +16,7 @@ export function KeySecretRelationship({ keys }: KeySecretRelationshipProps) {
 
   const data = [
     { name: "With Secret", value: withSecret, color: "#10b981" },
-    { name: "Without Secret", value: withoutSecret, color: "#6b7280" },
+    { name: "Without Secret", value: withoutSecret, color: "#ef4444" },
   ]
 
   const percentage = keys.length > 0 ? ((withSecret / keys.length) * 100).toFixed(1) : "0"
@@ -53,10 +53,11 @@ export function KeySecretRelationship({ keys }: KeySecretRelationshipProps) {
                   backgroundColor: "hsl(var(--background))",
                   border: `1px solid hsl(var(--border))`,
                   borderRadius: "0.5rem",
+                  color: "hsl(var(--foreground))",
                 }}
                 labelStyle={{ color: "hsl(var(--foreground))" }}
               />
-              <Legend />
+              <Legend wrapperStyle={{ color: "hsl(var(--foreground))" }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -72,12 +73,12 @@ export function KeySecretRelationship({ keys }: KeySecretRelationshipProps) {
             <p className="text-xs text-muted-foreground mt-1">{percentage}% of total keys</p>
           </div>
 
-          <div className="p-4 rounded-lg bg-zinc-500/10 border border-zinc-500/20">
+          <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
             <div className="flex items-center gap-2 mb-2">
-              <ShieldX className="h-4 w-4 text-zinc-400" />
+              <ShieldX className="h-4 w-4 text-red-400" />
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Without Secret</p>
             </div>
-            <p className="text-2xl font-bold font-mono text-zinc-400">{withoutSecret}</p>
+            <p className="text-2xl font-bold font-mono text-red-400">{withoutSecret}</p>
             <p className="text-xs text-muted-foreground mt-1">{(100 - parseFloat(percentage)).toFixed(1)}% of total keys</p>
           </div>
         </div>

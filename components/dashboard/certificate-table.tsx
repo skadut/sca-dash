@@ -222,7 +222,6 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
     <Card className="border-border/50">
       <CardHeader className="pb-4">
         <div className="flex flex-col gap-4">
-          <CardTitle className="text-lg font-semibold">cert_test Table</CardTitle>
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -281,12 +280,17 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
               <PopoverContent className="w-[200px] p-3" align="start">
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="csr_encrypted"
-                      checked={filesFilter.includes("CSR")}
-                      onCheckedChange={() => toggleFileFilter("CSR")}
-                    />
-                    <label htmlFor="csr_encrypted" className="text-sm font-medium leading-none cursor-pointer">
+              <Checkbox
+                id="csr_encrypted"
+                checked={filesFilter.includes("CSR")}
+                onCheckedChange={(checked) => {
+                  setFilesFilter(
+                    checked ? [...filesFilter, "CSR"] : filesFilter.filter((f) => f !== "CSR"),
+                  )
+                  setCurrentPage(1)
+                }}
+              />
+              <label htmlFor="csr_encrypted" className="text-sm font-medium leading-none cursor-pointer">
                       Has CSR
                     </label>
                   </div>
@@ -347,7 +351,7 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
                     className="h-auto p-0 font-semibold hover:bg-transparent"
                     onClick={() => handleSort("app_id_label")}
                   >
-                    app_id_label
+                    Cert
                     <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
                   </Button>
                 </TableHead>
@@ -358,7 +362,7 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
                     className="h-auto p-0 font-semibold hover:bg-transparent"
                     onClick={() => handleSort("created_date")}
                   >
-                    created_date
+                    Date Created
                     <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
                   </Button>
                 </TableHead>
@@ -369,7 +373,7 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
                     className="h-auto p-0 font-semibold hover:bg-transparent"
                     onClick={() => handleSort("expired_date")}
                   >
-                    expired_date
+                    Expired Date
                     <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
                   </Button>
                 </TableHead>
