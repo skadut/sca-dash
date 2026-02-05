@@ -90,8 +90,8 @@ export function FileDistribution({ certificates }: FileDistributionProps) {
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis type="number" stroke="hsl(var(--foreground))" />
-            <YAxis dataKey="name" type="category" stroke="hsl(var(--foreground))" width={60} />
+            <XAxis type="number" stroke="hsl(var(--foreground))" tick={{ fill: "hsl(var(--foreground))" }} />
+            <YAxis dataKey="name" type="category" stroke="hsl(var(--foreground))" tick={{ fill: "hsl(var(--foreground))" }} width={60} />
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="available" stackId="a" radius={[0, 4, 4, 0]}>
               {data.map((entry, index) => (
