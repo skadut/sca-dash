@@ -119,54 +119,53 @@ export function KeyTable({ keys }: KeyTableProps) {
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-4">
-        <div className="flex flex-col gap-4">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, institution, key ID..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value)
-                  setCurrentPage(1)
-                }}
-                className="pl-9 w-full"
-              />
-            </div>
-            <Select
-              value={hsmFilter}
-              onValueChange={(value) => {
-                setHsmFilter(value)
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, institution, key ID..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value)
                 setCurrentPage(1)
               }}
-            >
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="HSM Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All HSM</SelectItem>
-                <SelectItem value="klavis-spbe">Klavis-SPBE</SelectItem>
-                <SelectItem value="klavis-iiv">Klavis-IIV</SelectItem>
-                <SelectItem value="thales-luna">Thales-Luna</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={statusFilter}
-              onValueChange={(value) => {
-                setStatusFilter(value)
-                setCurrentPage(1)
-              }}
-            >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
-                <SelectItem value="revoked">Revoked</SelectItem>
-              </SelectContent>
-            </Select>
+              className="pl-9 w-full"
+            />
           </div>
+          <Select
+            value={hsmFilter}
+            onValueChange={(value) => {
+              setHsmFilter(value)
+              setCurrentPage(1)
+            }}
+          >
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="HSM Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All HSM</SelectItem>
+              <SelectItem value="klavis-spbe">Klavis-SPBE</SelectItem>
+              <SelectItem value="klavis-iiv">Klavis-IIV</SelectItem>
+              <SelectItem value="thales-luna">Thales-Luna</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => {
+              setStatusFilter(value)
+              setCurrentPage(1)
+            }}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="expired">Expired</SelectItem>
+              <SelectItem value="revoked">Revoked</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       <CardContent className="p-0">
