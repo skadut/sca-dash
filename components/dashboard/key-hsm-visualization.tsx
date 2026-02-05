@@ -1,19 +1,18 @@
 'use client'
 
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import type { Certificate } from '@/lib/types'
+import type { Key } from '@/lib/types'
 
-interface HSMVisualizationProps {
-  certificates: Certificate[]
+interface KeyHSMVisualizationProps {
+  keys: Key[]
 }
 
-export function HSMVisualization({ certificates }: HSMVisualizationProps) {
-  // Calculate HSM type distribution
-  const hsmDistribution = certificates.reduce(
-    (acc, cert) => {
-      const hsm = cert.hsm || 'Unknown'
+export function KeyHSMVisualization({ keys }: KeyHSMVisualizationProps) {
+  // Calculate HSM type distribution for keys
+  const hsmDistribution = keys.reduce(
+    (acc, key) => {
+      const hsm = key.hsm || 'Unknown'
       const existing = acc.find((item) => item.name === hsm)
       if (existing) {
         existing.value += 1
@@ -25,35 +24,7 @@ export function HSMVisualization({ certificates }: HSMVisualizationProps) {
     [] as Array<{ name: string; value: number }>
   )
 
-  // Calculate HSM status breakdown
-  const hsmStatusBreakdown = certificates.reduce(
-    (acc, cert) => {
-      const hsm = cert.hsm || 'Unknown'
-      const existing = acc.find((item) => item.hsm === hsm)
-
-      let status = 'active'
-      if (cert.revoked_app_status) status = 'revoked'
-      else if (cert.expired_date && new Date(cert.expired_date.slice(0, 4) + '-' + cert.expired_date.slice(4, 6) + '-' + cert.expired_date.slice(6, 8)) < new Date())
-        status = 'expired'
-
-      if (existing) {
-        existing[status as keyof typeof existing] = (existing[status as keyof typeof existing] || 0) + 1
-      } else {
-        acc.push({
-          hsm,
-          active: status === 'active' ? 1 : 0,
-          revoked: status === 'revoked' ? 1 : 0,
-          expired: status === 'expired' ? 1 : 0,
-        })
-      }
-      return acc
-    },
-    [] as Array<{ hsm: string; active: number; revoked: number; expired: number }>
-  )
-
   const COLORS = {
-    'SPBE': '#06b6d4',
-    'IIV': '#8b5cf6',
     'klavis-spbe': '#06b6d4',
     'Klavis-SPBE': '#06b6d4',
     'klavis-iiv': '#8b5cf6',
@@ -71,11 +42,19 @@ export function HSMVisualization({ certificates }: HSMVisualizationProps) {
     return COLORS[name as keyof typeof COLORS] || '#6b7280'
   }
 
+  const getDisplayName = (name: string) => {
+    const normalized = name.toLowerCase()
+    if (normalized.includes('spbe')) return 'Klavis-SPBE'
+    if (normalized.includes('iiv')) return 'Klavis-IIV'
+    if (normalized.includes('thales') || normalized.includes('luna')) return 'Thales-Luna'
+    return name
+  }
+
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle className="text-lg">Certificate HSM Type</CardTitle>
-        <CardDescription className="text-sm">Overview of certificates by HSM type and status</CardDescription>
+        <CardTitle className="text-lg">Key HSM Type</CardTitle>
+        <CardDescription className="text-sm">Overview of keys by HSM type distribution</CardDescription>
       </CardHeader>
       <CardContent className="p-6">
         <div className="flex justify-center mb-6">
@@ -86,7 +65,7 @@ export function HSMVisualization({ certificates }: HSMVisualizationProps) {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, value }) => `${name}: ${value}`}
+                label={({ name, value }) => `${getDisplayName(name)}: ${value}`}
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="value"
@@ -96,7 +75,7 @@ export function HSMVisualization({ certificates }: HSMVisualizationProps) {
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value) => `${value} certificates`}
+                formatter={(value) => `${value} keys`}
                 contentStyle={{
                   backgroundColor: 'hsl(var(--background))',
                   border: '1px solid hsl(var(--border))',
@@ -116,12 +95,12 @@ export function HSMVisualization({ certificates }: HSMVisualizationProps) {
                   className="h-3 w-3 rounded-full"
                   style={{ backgroundColor: getColor(item.name) }}
                 />
-                <span className="font-medium">{item.name}</span>
+                <span className="font-medium font-sans">{getDisplayName(item.name)}</span>
               </div>
               <div className="text-right">
-                <p className="text-lg font-bold">{item.value}</p>
+                <p className="text-lg font-bold font-mono">{item.value}</p>
                 <p className="text-xs text-muted-foreground">
-                  {((item.value / certificates.length) * 100).toFixed(1)}%
+                  {((item.value / keys.length) * 100).toFixed(1)}%
                 </p>
               </div>
             </div>

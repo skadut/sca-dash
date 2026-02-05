@@ -179,9 +179,12 @@ export function KeyTable({ keys }: KeyTableProps) {
                   Institution
                 </th>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  <button onClick={() => handleSort('key_label')} className="flex items-center gap-1 hover:text-foreground">
-                    Key Label <ArrowUpDown className="h-3 w-3" />
+                  <button onClick={() => handleSort('key_id')} className="flex items-center gap-1 hover:text-foreground">
+                    Key ID <ArrowUpDown className="h-3 w-3" />
                   </button>
+                </th>
+                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Secret Status
                 </th>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   HSM
@@ -208,16 +211,34 @@ export function KeyTable({ keys }: KeyTableProps) {
               {currentKeys.map((key) => {
                 const status = getKeyStatus(key)
                 const daysLeft = getDaysUntilExpiry(key.key_expired)
+                const hasSecret = key.secret_data && key.secret_data.trim() !== ''
                 return (
                   <tr key={key.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors h-12">
                     <td className="p-3">
                       <div>
                         <p className="font-medium text-sm">{key.nama_aplikasi}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{key.key_id}</p>
+                        <p className="text-xs text-muted-foreground font-mono">{key.id_aplikasi}</p>
                       </div>
                     </td>
-                    <td className="p-3 text-sm">{key.nama_instansi}</td>
-                    <td className="p-3 text-sm font-mono">{key.key_label}</td>
+                    <td className="p-3">
+                      <div>
+                        <p className="font-medium text-sm">{key.nama_instansi}</p>
+                        <p className="text-xs text-muted-foreground font-mono">{key.id_login}</p>
+                      </div>
+                    </td>
+                    <td className="p-3 text-sm font-mono">{key.key_id}</td>
+                    <td className="p-3">
+                      <Badge
+                        variant="outline"
+                        className={`font-mono text-xs ${
+                          hasSecret
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+                        }`}
+                      >
+                        {hasSecret ? 'Available' : 'No Secret'}
+                      </Badge>
+                    </td>
                     <td className="p-3">{getHsmBadge(key.hsm)}</td>
                     <td className="p-3 text-sm font-mono">{key.key_created}</td>
                     <td className="p-3 text-sm font-mono">{key.key_expired}</td>
@@ -238,7 +259,7 @@ export function KeyTable({ keys }: KeyTableProps) {
               })}
               {emptyRowsArray.map((_, idx) => (
                 <tr key={`empty-${idx}`} className="border-b border-border/20 h-12">
-                  <td colSpan={8} className="p-3" />
+                  <td colSpan={9} className="p-3" />
                 </tr>
               ))}
             </tbody>

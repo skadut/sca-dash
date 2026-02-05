@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import type { Certificate } from "@/lib/types"
 import { FileText, Package, Key } from "lucide-react"
 
@@ -14,11 +14,30 @@ export function FileDistribution({ certificates }: FileDistributionProps) {
   const withCSR = certificates.filter((c) => c.csr_encrypted).length
   const withCRT = certificates.filter((c) => c.crt_encrypted).length
   const withKEY = certificates.filter((c) => c.key_encrypted).length
+  const total = certificates.length
 
   const data = [
-    { name: "CSR", value: withCSR, color: "#3b82f6" },
-    { name: "CRT", value: withCRT, color: "#10b981" },
-    { name: "KEY", value: withKEY, color: "#f59e0b" },
+    { 
+      name: "CSR", 
+      available: withCSR, 
+      missing: total - withCSR,
+      total: total,
+      color: "#06b6d4" 
+    },
+    { 
+      name: "CRT", 
+      available: withCRT, 
+      missing: total - withCRT,
+      total: total,
+      color: "#10b981" 
+    },
+    { 
+      name: "KEY", 
+      available: withKEY, 
+      missing: total - withKEY,
+      total: total,
+      color: "#f59e0b" 
+    },
   ]
 
   const stats = [
@@ -48,45 +67,30 @@ export function FileDistribution({ certificates }: FileDistributionProps) {
   return (
     <Card className="border-border/50 h-full">
       <CardHeader>
-        <CardTitle className="text-lg">File Type Distribution</CardTitle>
+        <CardTitle className="text-lg">Certificate File Availability</CardTitle>
         <p className="text-sm text-muted-foreground mt-1">Overview of CSR, CRT, and KEY file availability</p>
       </CardHeader>
       <CardContent className="p-6">
-        <div className="flex items-center justify-center">
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
-                outerRadius={100}
-                innerRadius={60}
-                fill="#8884d8"
-                dataKey="value"
-                paddingAngle={2}
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip
-                formatter={(value) => [`${value} certificates`, "Count"]}
-                contentStyle={{
-                  backgroundColor: "hsl(var(--background))",
-                  border: `1px solid hsl(var(--border))`,
-                  borderRadius: "0.5rem",
-                }}
-                labelStyle={{ color: "hsl(var(--foreground))" }}
-              />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={data} layout="vertical">
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
+            <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" width={60} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--background))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '0.5rem',
+              }}
+              formatter={(value, name) => [value, name === 'available' ? 'Available' : 'Missing']}
+            />
+            <Bar dataKey="available" stackId="a" fill="#10b981" radius={[0, 4, 4, 0]} />
+            <Bar dataKey="missing" stackId="a" fill="#3f3f46" radius={[0, 4, 4, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
 
         {/* File Availability Summary */}
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="p-4 rounded-lg bg-muted/50">
             <p className="text-xs text-muted-foreground uppercase tracking-wide">CSR Available</p>
             <p className="text-sm font-semibold mt-1">
