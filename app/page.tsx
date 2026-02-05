@@ -12,10 +12,8 @@ import { FileDistribution } from "@/components/dashboard/file-distribution"
 import { KeySecretRelationship } from "@/components/dashboard/key-secret-relationship"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { CombinedHSMVisualization } from "@/components/dashboard/combined-hsm-visualization"
-import { KeyInventoryStats } from "@/components/dashboard/key-inventory"
-import { KeyInsights } from "@/components/dashboard/key-insights"
+import { KeyInventoryToggle } from "@/components/dashboard/key-inventory-toggle"
 import { KeyTable } from "@/components/dashboard/key-table"
-import { KeyTrafficGraph } from "@/components/dashboard/key-traffic-graph"
 import { StatsCardsSkeleton, TableSkeleton, GraphSkeleton } from "@/components/dashboard/loading-skeleton"
 import { Shield, AlertCircle, RefreshCw, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -144,15 +142,13 @@ export default function DashboardPage() {
                       <KeySecretRelationship keys={keys} />
                     </div>
                     
-                    {/* Traffic Graphs */}
+                    {/* Traffic Graph */}
                     <TrafficGraph certificates={certificates} />
-                    <KeyTrafficGraph keys={keys} />
                   </>
                 )}
                 {activeMenu === "inventory" && (
                   <>
-                    <KeyInventoryStats keys={keys} />
-                    <KeyInsights keys={keys} />
+                    <KeyInventoryToggle keys={keys} />
                     <KeyTable keys={keys} />
                   </>
                 )}
