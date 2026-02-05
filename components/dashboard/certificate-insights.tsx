@@ -90,7 +90,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Recent Certificates */}
-      <Card className="border-border/50 bg-card">
+      <Card className="border-border/50 bg-card flex flex-col">
         <CardHeader className="pb-4">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -100,7 +100,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
             <p className="text-sm text-muted-foreground mt-1">Latest activity</p>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-2 flex-1 overflow-y-auto">
           {recentCerts.map((cert) => {
             const hsmColor = getHsmColor(cert.hsm)
             return (
