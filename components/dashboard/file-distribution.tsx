@@ -64,6 +64,22 @@ export function FileDistribution({ certificates }: FileDistributionProps) {
     },
   ]
 
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-background border border-border rounded-lg shadow-lg p-3">
+          <p className="font-semibold text-foreground mb-2">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} className="text-sm" style={{ color: entry.fill }}>
+              {entry.dataKey === 'available' ? 'Available' : 'Missing'}: {entry.value}
+            </p>
+          ))}
+        </div>
+      )
+    }
+    return null
+  }
+
   return (
     <Card className="border-border/50 h-full">
       <CardHeader>
@@ -76,17 +92,12 @@ export function FileDistribution({ certificates }: FileDistributionProps) {
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis type="number" stroke="hsl(var(--foreground))" />
             <YAxis dataKey="name" type="category" stroke="hsl(var(--foreground))" width={60} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--background))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '0.5rem',
-                color: 'hsl(var(--foreground))',
-              }}
-              labelStyle={{ color: 'hsl(var(--foreground))' }}
-              formatter={(value, name) => [value, name === 'available' ? 'Available' : 'Missing']}
-            />
-            <Bar dataKey="available" stackId="a" fill="#10b981" radius={[0, 4, 4, 0]} />
+            <Tooltip content={<CustomTooltip />} />
+            <Bar dataKey="available" stackId="a" radius={[0, 4, 4, 0]}>
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Bar>
             <Bar dataKey="missing" stackId="a" fill="#52525b" radius={[0, 4, 4, 0]} />
           </BarChart>
         </ResponsiveContainer>
