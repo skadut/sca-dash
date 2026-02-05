@@ -117,56 +117,58 @@ export function KeyTable({ keys }: KeyTableProps) {
   }
 
   return (
-    <Card className="border-border/30 bg-card/50 backdrop-blur">
-      <CardHeader>
-        <CardTitle className="text-lg">Key Inventory Table</CardTitle>
-        <div className="flex flex-col sm:flex-row gap-3 mt-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name, institution, key ID..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value)
+    <Card className="border-border/50">
+      <CardHeader className="pb-4">
+        <div className="flex flex-col gap-4">
+          <CardTitle className="text-lg">Key Inventory</CardTitle>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, institution, key ID..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="pl-9 w-full"
+              />
+            </div>
+            <Select
+              value={hsmFilter}
+              onValueChange={(value) => {
+                setHsmFilter(value)
                 setCurrentPage(1)
               }}
-              className="pl-9"
-            />
+            >
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="HSM Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All HSM</SelectItem>
+                <SelectItem value="klavis-spbe">Klavis-SPBE</SelectItem>
+                <SelectItem value="klavis-iiv">Klavis-IIV</SelectItem>
+                <SelectItem value="thales-luna">Thales-Luna</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => {
+                setStatusFilter(value)
+                setCurrentPage(1)
+              }}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+                <SelectItem value="revoked">Revoked</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Select
-            value={hsmFilter}
-            onValueChange={(value) => {
-              setHsmFilter(value)
-              setCurrentPage(1)
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="HSM Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All HSM</SelectItem>
-              <SelectItem value="klavis-spbe">Klavis-SPBE</SelectItem>
-              <SelectItem value="klavis-iiv">Klavis-IIV</SelectItem>
-              <SelectItem value="thales-luna">Thales-Luna</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={statusFilter}
-            onValueChange={(value) => {
-              setStatusFilter(value)
-              setCurrentPage(1)
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-[150px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="expired">Expired</SelectItem>
-              <SelectItem value="revoked">Revoked</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </CardHeader>
       <CardContent className="p-0">
@@ -217,7 +219,7 @@ export function KeyTable({ keys }: KeyTableProps) {
                 const daysLeft = getDaysUntilExpiry(key.key_expired)
                 const hasSecret = key.secret_data && key.secret_data.trim() !== ''
                 return (
-                  <tr key={key.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors h-12">
+                  <tr key={key.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
                     <td className="p-3">
                       <div>
                         <p className="font-medium text-sm">{key.nama_aplikasi}</p>
@@ -262,7 +264,7 @@ export function KeyTable({ keys }: KeyTableProps) {
                 )
               })}
               {emptyRowsArray.map((_, idx) => (
-                <tr key={`empty-${idx}`} className="border-b border-border/20 h-12">
+                <tr key={`empty-${idx}`} className="border-b border-border/20">
                   <td colSpan={9} className="p-3" />
                 </tr>
               ))}
