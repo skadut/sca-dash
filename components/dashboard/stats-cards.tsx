@@ -3,13 +3,14 @@
 import { Card, CardContent } from "@/components/ui/card"
 import type { Certificate } from "@/lib/types"
 import { getValidityStatus, getCertificateStatus } from "@/lib/certificate-utils"
-import { ShieldCheck, ShieldAlert, ShieldX, Ban } from "lucide-react"
+import { ShieldCheck, ShieldAlert, ShieldX, Ban, FileText } from "lucide-react"
 
 interface StatsCardsProps {
   certificates: Certificate[]
 }
 
 export function StatsCards({ certificates }: StatsCardsProps) {
+  const total = certificates.length
   const active = certificates.filter(
     (c) => getCertificateStatus(c.expired_date, c.revoked_app_status) === "active",
   ).length
@@ -26,6 +27,16 @@ export function StatsCards({ certificates }: StatsCardsProps) {
   ).length
 
   const stats = [
+    {
+      label: "Certificates",
+      value: total,
+      sublabel: "Generated Certificate",
+      icon: FileText,
+      iconColor: "text-cyan-400",
+      iconBg: "bg-cyan-500/10",
+      glowColor: "text-cyan-400",
+      animated: false,
+    },
     {
       label: "Active",
       value: active,
@@ -98,6 +109,7 @@ export function StatsCards({ certificates }: StatsCardsProps) {
                     </span>
                   )}
                 </div>
+                {stat.sublabel && <p className="text-xs text-muted-foreground mt-2 font-sans">{stat.sublabel}</p>}
                 {stat.subtitle && (
                   <p className="text-xs text-muted-foreground mt-2 font-sans">
                     {stat.subtitle}
