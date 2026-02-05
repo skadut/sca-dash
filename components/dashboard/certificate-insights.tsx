@@ -154,12 +154,12 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
                   className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                 >
                   {/* Certificate Name and Status */}
-                  <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center justify-between gap-3 mb-2.5">
                     <p className="font-medium text-sm text-foreground truncate">{cert.app_id_label}</p>
                     <Badge 
                       variant="outline" 
                       className={`text-xs font-medium flex-shrink-0 ${
-                        healthColor === 'bg-red-500' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                        healthColor === 'bg-red-600' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
                         healthColor === 'bg-amber-500' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
                         'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                       }`}
@@ -169,17 +169,17 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
                   </div>
                   
                   {/* Health Bar Container */}
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3">
                     {/* Health Bar */}
-                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="flex-1 h-2 bg-red-900/40 rounded-full overflow-hidden">
                       <div
-                        className={`h-full transition-all duration-500 ease-out rounded-full ${healthColor}`}
+                        className={`h-full transition-all duration-500 ease-out ${healthColor}`}
                         style={{ width: `${healthPercentage}%` }}
                       />
                     </div>
                     
                     {/* Days Left Label */}
-                    <span className="text-sm font-mono font-semibold text-foreground whitespace-nowrap flex-shrink-0">
+                    <span className="text-sm font-mono font-semibold text-foreground whitespace-nowrap flex-shrink-0 min-w-[60px] text-right">
                       {cert.daysUntilExpiry} days
                     </span>
                   </div>
