@@ -28,7 +28,7 @@ export function KeyInventoryStats({ keys }: KeyInventoryStatsProps) {
 
   const stats = [
     {
-      label: 'Total Keys',
+      label: 'Keys',
       value: total,
       icon: KeyRound,
       iconColor: 'text-cyan-400',
