@@ -88,7 +88,7 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Recent Keys */}
       <Card className="border-border/50 bg-card flex flex-col">
-        <CardHeader className="pb-4">
+        <CardHeader className="pb-3">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
               <Clock className="h-5 w-5 text-cyan-400" />
@@ -97,7 +97,7 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
             <p className="text-sm text-muted-foreground mt-1">Latest activity</p>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2 flex-1 overflow-y-auto">
+        <CardContent className="space-y-1.5 flex-1 overflow-y-auto pr-2">
           {recentKeys.map((key) => {
             const hsmColor = getHsmColor(key.hsm)
             return (
@@ -127,7 +127,7 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
 
       {/* Top Institutions */}
       <Card className="border-border/50 bg-card flex flex-col">
-        <CardHeader className="pb-4">
+        <CardHeader className="pb-3">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
               <Trophy className="h-5 w-5 text-amber-400" />
@@ -136,7 +136,7 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
             <p className="text-sm text-muted-foreground mt-1">Most keys generated</p>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2 flex-1 overflow-y-auto">
+        <CardContent className="space-y-1.5 flex-1 overflow-y-auto pr-2">
           {topInstansi.map((item) => {
             return (
               <div

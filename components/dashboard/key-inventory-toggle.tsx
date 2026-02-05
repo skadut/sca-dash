@@ -50,17 +50,17 @@ export function KeyInventoryToggle({ keys }: KeyInventoryToggleProps) {
         </CardContent>
       </Card>
 
-      {/* Content Sections - Fixed Height with Smooth Transition */}
-      <div className="relative h-full min-h-[600px] overflow-hidden">
+      {/* Content Sections - Flexible Height with Smooth Transition */}
+      <div className="relative overflow-hidden">
         {/* Overview Section */}
         <div
-          className={`absolute inset-0 transition-all duration-500 ease-in-out ${
+          className={`transition-all duration-500 ease-in-out ${
             activeView === "overview"
               ? "opacity-100 translate-x-0 pointer-events-auto"
               : "opacity-0 translate-x-full pointer-events-none"
           }`}
         >
-          <div className="space-y-6">
+          <div className="space-y-6 pb-6">
             <KeyInventoryStats keys={keys} />
             <KeyInsights keys={keys} />
           </div>
@@ -68,13 +68,15 @@ export function KeyInventoryToggle({ keys }: KeyInventoryToggleProps) {
 
         {/* Traffic Analysis Section */}
         <div
-          className={`absolute inset-0 transition-all duration-500 ease-in-out ${
+          className={`transition-all duration-500 ease-in-out ${
             activeView === "traffic"
               ? "opacity-100 translate-x-0 pointer-events-auto"
-              : "opacity-0 -translate-x-full pointer-events-none"
+              : "opacity-0 -translate-x-full pointer-events-none absolute inset-0"
           }`}
         >
-          <KeyTrafficGraph keys={keys} />
+          <div className="pb-6">
+            <KeyTrafficGraph keys={keys} />
+          </div>
         </div>
       </div>
     </div>

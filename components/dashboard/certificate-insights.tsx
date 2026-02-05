@@ -100,8 +100,8 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Recent Certificates */}
-      <Card className="border-border/50 bg-card flex flex-col min-h-[420px]">
-        <CardHeader className="pb-4">
+      <Card className="border-border/50 bg-card flex flex-col">
+        <CardHeader className="pb-3">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
               <Clock className="h-5 w-5 text-cyan-400" />
@@ -110,7 +110,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
             <p className="text-sm text-muted-foreground mt-1">Latest activity</p>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2 flex-1 overflow-y-auto overflow-x-hidden pb-0">
+        <CardContent className="space-y-1.5 flex-1 overflow-y-auto pr-2">
           {recentCerts.map((cert) => {
             const hsmColor = getHsmColor(cert.hsm)
             return (
@@ -139,8 +139,8 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
       </Card>
 
       {/* Certificate Stages - Health Bar View */}
-      <Card className="border-border/50 bg-card flex flex-col min-h-[420px]">
-        <CardHeader className="pb-4">
+      <Card className="border-border/50 bg-card flex flex-col">
+        <CardHeader className="pb-3">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-amber-400" />
@@ -149,7 +149,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
             <p className="text-sm text-muted-foreground mt-1">Validity health status</p>
           </div>
         </CardHeader>
-        <CardContent className="space-y-1.5 flex-1 overflow-y-auto pb-0">
+        <CardContent className="space-y-1.5 flex-1 overflow-y-auto pr-2">
           {certificateStages.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">No active certificates</p>
           ) : (
