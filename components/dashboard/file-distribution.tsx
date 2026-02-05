@@ -36,7 +36,7 @@ export function FileDistribution({ certificates }: FileDistributionProps) {
       available: withKEY, 
       missing: total - withKEY,
       total: total,
-      color: "#f59e0b" 
+      color: "#8b5cf6" 
     },
   ]
 
@@ -137,7 +137,7 @@ export function FileDistribution({ certificates }: FileDistributionProps) {
             </p>
             <div className="mt-2 w-full bg-muted rounded h-1.5">
               <div
-                className="bg-amber-500 h-1.5 rounded transition-all"
+                className="bg-violet-500 h-1.5 rounded transition-all"
                 style={{ width: `${(withKEY / certificates.length) * 100}%` }}
               />
             </div>

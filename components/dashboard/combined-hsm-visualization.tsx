@@ -87,13 +87,16 @@ export function CombinedHSMVisualization({ certificates, keys }: CombinedHSMVisu
           </BarChart>
         </ResponsiveContainer>
 
-        {/* Stats Summary */}
+        {/* HSM Type Identifiers and Stats Summary */}
         <div className="mt-6 space-y-3">
           {data.map((item) => (
-            <div key={item.hsm} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+            <div key={item.hsm} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50">
               <div className="flex items-center gap-3">
                 <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getHSMColor(item.hsm) }} />
-                <span className="font-medium text-foreground">{item.name}</span>
+                <div>
+                  <span className="font-medium text-foreground block">{item.name}</span>
+                  <span className="text-xs text-muted-foreground">HSM Module Type</span>
+                </div>
               </div>
               <div className="flex items-center gap-6 text-sm">
                 <div className="text-right">
