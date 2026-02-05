@@ -198,8 +198,7 @@ export function TrafficGraph({ certificates }: TrafficGraphProps) {
             }}
             className="h-[400px] w-full"
           >
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData.data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+            <AreaChart data={chartData.data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }} width={845} height={400}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis
                   dataKey={timeSpan === "monthly" ? "month" : "period"}
@@ -269,8 +268,7 @@ export function TrafficGraph({ certificates }: TrafficGraphProps) {
                   />
                 )}
               </AreaChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+            </ChartContainer>
         </CardContent>
       </Card>
     </div>
