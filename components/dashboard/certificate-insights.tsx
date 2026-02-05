@@ -55,10 +55,10 @@ const getHsmColor = (hsm: string): { badge: string; avatarIndex: number } => {
 }
 
 export function CertificateInsights({ certificates }: CertificateInsightsProps) {
-  // Get top 4 most recent certificates
+  // Get top 5 most recent certificates
   const recentCerts = [...certificates]
     .sort((a, b) => new Date(b.created_date).getTime() - new Date(a.created_date).getTime())
-    .slice(0, 4)
+    .slice(0, 5)
 
   // Get active certificates nearing expiration, sorted by most imminent
   const certificateStages = certificates
@@ -69,16 +69,26 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
       validity: getValidityStatus(cert.expired_date),
     }))
     .sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry)
-    .slice(0, 4)
+    .slice(0, 5)
 
   const getHealthBarColor = (daysUntilExpiry: number, validity: 'valid' | 'expiring' | 'expired'): string => {
     if (validity === 'expired' || daysUntilExpiry <= 0) {
       return 'bg-red-600'
     }
-    if (validity === 'expiring' || daysUntilExpiry <= 30) {
+    if (validity === 'expiring' || daysUntilExpiry <= 7) {
       return 'bg-amber-500'
     }
     return 'bg-emerald-500'
+  }
+
+  const getStatusLabel = (daysUntilExpiry: number, validity: 'valid' | 'expiring' | 'expired'): string => {
+    if (validity === 'expired' || daysUntilExpiry <= 0) {
+      return 'Critical'
+    }
+    if (validity === 'expiring' || daysUntilExpiry <= 7) {
+      return 'Warning'
+    }
+    return 'Safe'
   }
 
   const getHealthPercentage = (daysUntilExpiry: number, maxDays: number = 365): number => {
@@ -146,7 +156,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
             certificateStages.map((cert) => {
               const healthColor = getHealthBarColor(cert.daysUntilExpiry, cert.validity)
               const healthPercentage = getHealthPercentage(cert.daysUntilExpiry)
-              const statusLabel = cert.validity === 'expired' ? 'Expired' : cert.validity === 'expiring' ? 'Critical' : 'Safe'
+              const statusLabel = getStatusLabel(cert.daysUntilExpiry, cert.validity)
               
               return (
                 <div
@@ -179,8 +189,8 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
                     </div>
                     
                     {/* Days Left Label */}
-                    <span className="text-sm font-mono font-semibold text-foreground whitespace-nowrap flex-shrink-0 min-w-[55px] text-right">
-                      {cert.daysUntilExpiry} days
+                    <span className="text-sm font-mono font-semibold text-foreground whitespace-nowrap flex-shrink-0 min-w-[70px] text-right">
+                      {cert.daysUntilExpiry} days remain
                     </span>
                   </div>
                 </div>

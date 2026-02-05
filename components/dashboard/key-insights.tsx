@@ -10,30 +10,33 @@ interface KeyInsightsProps {
 }
 
 export function KeyInsights({ keys }: KeyInsightsProps) {
-  // Get top 4 most recent keys
+  // Get top 5 most recent keys
   const recentKeys = [...keys]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 4)
+    .slice(0, 5)
 
-  // Get top 4 institutions by key count
+  // Get top 5 institutions by key count
   const instansiCounts = keys.reduce((acc, key) => {
     const name = key.nama_instansi
     if (!acc[name]) {
-      acc[name] = { count: 0, keys: [] }
+      acc[name] = { appIds: new Set(), keys: [] }
     }
-    acc[name].count++
+    acc[name].appIds.add(key.nama_aplikasi)
     acc[name].keys.push(key)
     return acc
-  }, {} as Record<string, { count: number; keys: Key[] }>)
+  }, {} as Record<string, { appIds: Set<string>; keys: Key[] }>)
 
   const topInstansi = Object.entries(instansiCounts)
-    .sort(([, a], [, b]) => b.count - a.count)
-    .slice(0, 4)
-    .map(([name, data], index) => ({
-      rank: index + 1,
+    .map(([name, data]) => ({
       name,
-      count: data.count,
-      keys: data.keys,
+      appCount: data.appIds.size,
+      keyCount: data.keys.length,
+    }))
+    .sort((a, b) => b.keyCount - a.keyCount)
+    .slice(0, 5)
+    .map((item, index) => ({
+      rank: index + 1,
+      ...item,
     }))
 
   const getHsmColor = (hsm: string): { badge: string; avatarIndex: number } => {
@@ -135,7 +138,6 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
         </CardHeader>
         <CardContent className="space-y-2 flex-1 overflow-y-auto">
           {topInstansi.map((item) => {
-            const percentage = ((item.count / keys.length) * 100).toFixed(0)
             return (
               <div
                 key={item.name}
@@ -158,14 +160,14 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-foreground truncate">{item.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {item.count} {item.count === 1 ? 'key' : 'keys'}
+                    {item.appCount} {item.appCount === 1 ? 'app' : 'apps'}
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="font-mono text-sm font-semibold text-foreground">{item.count}</p>
+                  <p className="font-mono text-sm font-semibold text-foreground">{item.keyCount}</p>
                   <div className="flex items-center justify-end gap-1 text-xs text-emerald-400">
                     <TrendingUp className="h-3 w-3" />
-                    +{percentage}%
+                    +{((item.keyCount / keys.length) * 100).toFixed(0)}%
                   </div>
                 </div>
               </div>
