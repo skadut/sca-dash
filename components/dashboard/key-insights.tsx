@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Clock, Trophy, TrendingUp, ArrowRight } from "lucide-react"
+import { Clock, Trophy, TrendingUp } from "lucide-react"
 import type { Key } from "@/lib/types"
 
 interface KeyInsightsProps {
@@ -10,12 +10,12 @@ interface KeyInsightsProps {
 }
 
 export function KeyInsights({ keys }: KeyInsightsProps) {
-  // Get top 5 most recent keys
+  // Get top 3 most recent keys
   const recentKeys = [...keys]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 5)
+    .slice(0, 3)
 
-  // Get top 5 institutions by key count
+  // Get top 3 institutions by key count
   const instansiCounts = keys.reduce((acc, key) => {
     const name = key.nama_instansi
     if (!acc[name]) {
@@ -28,7 +28,7 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
 
   const topInstansi = Object.entries(instansiCounts)
     .sort(([, a], [, b]) => b.count - a.count)
-    .slice(0, 5)
+    .slice(0, 3)
     .map(([name, data], index) => ({
       rank: index + 1,
       name,
@@ -74,17 +74,12 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
       {/* Recent Keys */}
       <Card className="border-border/50 bg-card">
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Clock className="h-5 w-5 text-cyan-400" />
-                Recent Keys
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">Latest activity</p>
-            </div>
-            <button className="text-sm text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors">
-              View all <ArrowRight className="h-4 w-4" />
-            </button>
+          <div>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="h-5 w-5 text-cyan-400" />
+              Recent Keys
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">Latest activity</p>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -120,7 +115,7 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
             <div>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-amber-400" />
-                Top Institutions
+                Top Institution
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">Most keys generated</p>
             </div>
