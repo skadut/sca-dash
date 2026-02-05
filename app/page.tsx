@@ -13,6 +13,7 @@ import { KeySecretRelationship } from "@/components/dashboard/key-secret-relatio
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { CombinedHSMVisualization } from "@/components/dashboard/combined-hsm-visualization"
 import { KeyInventoryStats } from "@/components/dashboard/key-inventory"
+import { KeyInsights } from "@/components/dashboard/key-insights"
 import { KeyTable } from "@/components/dashboard/key-table"
 import { KeyTrafficGraph } from "@/components/dashboard/key-traffic-graph"
 import { StatsCardsSkeleton, TableSkeleton, GraphSkeleton } from "@/components/dashboard/loading-skeleton"
@@ -151,6 +152,7 @@ export default function DashboardPage() {
                 {activeMenu === "inventory" && (
                   <>
                     <KeyInventoryStats keys={keys} />
+                    <KeyInsights keys={keys} />
                     <KeyTable keys={keys} />
                   </>
                 )}
