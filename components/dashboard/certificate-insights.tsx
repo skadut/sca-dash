@@ -136,42 +136,48 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
             <p className="text-sm text-muted-foreground mt-1">Nearing expiration</p>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {certificateStages.map((cert) => {
-            const progressColor = getProgressColor(cert.validity)
-            const progressPercentage = getProgressPercentage(cert.daysUntilExpiry)
-            return (
-              <div
-                key={cert.id}
-                className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm text-foreground truncate">{cert.app_id_label}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {cert.daysUntilExpiry} days left
-                    </p>
+        <CardContent className="space-y-2">
+          {certificateStages.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No active certificates</p>
+          ) : (
+            certificateStages.map((cert) => {
+              const progressColor = getProgressColor(cert.validity)
+              const progressPercentage = getProgressPercentage(cert.daysUntilExpiry)
+              return (
+                <div
+                  key={cert.id}
+                  className="p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors border border-border/30"
+                >
+                  <div className="flex items-center justify-between gap-3 mb-2.5">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-foreground truncate">{cert.app_id_label}</p>
+                    </div>
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs font-medium flex-shrink-0 ${
+                        cert.validity === 'expired' ? 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' :
+                        cert.validity === 'expiring' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                        'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                      }`}
+                    >
+                      {cert.validity === 'expired' ? 'Expired' : cert.validity === 'expiring' ? 'Expiring' : 'Active'}
+                    </Badge>
                   </div>
-                  <Badge 
-                    variant="outline" 
-                    className={`text-xs whitespace-nowrap flex-shrink-0 ${
-                      cert.validity === 'expired' ? 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' :
-                      cert.validity === 'expiring' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                      'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                    }`}
-                  >
-                    {cert.validity === 'expired' ? 'Expired' : cert.validity === 'expiring' ? 'Expiring' : 'Active'}
-                  </Badge>
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${progressColor}`}
+                        style={{ width: `${progressPercentage}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-mono text-muted-foreground whitespace-nowrap flex-shrink-0">
+                      {cert.daysUntilExpiry}d
+                    </span>
+                  </div>
                 </div>
-                <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-300 ${progressColor}`}
-                    style={{ width: `${progressPercentage}%` }}
-                  />
-                </div>
-              </div>
-            )
-          })}
+              )
+            })
+          )}
         </CardContent>
       </Card>
     </div>
