@@ -100,7 +100,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
             <p className="text-sm text-muted-foreground mt-1">Latest activity</p>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2 flex-1 overflow-y-auto">
+        <CardContent className="space-y-2 flex-1 overflow-y-auto overflow-x-hidden">
           {recentCerts.map((cert) => {
             const hsmColor = getHsmColor(cert.hsm)
             return (
@@ -139,7 +139,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
             <p className="text-sm text-muted-foreground mt-1">Validity health status</p>
           </div>
         </CardHeader>
-        <CardContent className="space-y-1.5 flex-1">
+        <CardContent className="space-y-1.5 flex-1 overflow-hidden">
           {certificateStages.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">No active certificates</p>
           ) : (
