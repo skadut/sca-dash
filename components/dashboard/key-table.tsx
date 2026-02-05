@@ -43,6 +43,23 @@ export function KeyTable({ keys }: KeyTableProps) {
     return Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
   }
 
+  const formatDate = (dateStr: string): string => {
+    // Handle format YYYY/MM/DD and convert to "MMM D, YYYY"
+    const parts = dateStr.split('/')
+    if (parts.length === 3) {
+      const year = parseInt(parts[0])
+      const month = parseInt(parts[1]) - 1
+      const day = parseInt(parts[2])
+      const date = new Date(year, month, day)
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
+    }
+    return dateStr
+  }
+
   const filteredAndSortedKeys = useMemo(() => {
     let filtered = keys.filter((key) => {
       const hasSecret = key.secret_data && key.secret_data.trim() !== ''
@@ -244,7 +261,7 @@ export function KeyTable({ keys }: KeyTableProps) {
                 </th>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   <button onClick={() => handleSort('key_expired')} className="flex items-center gap-1 hover:text-foreground">
-                    Expires <ArrowUpDown className="h-3 w-3" />
+                    Expired <ArrowUpDown className="h-3 w-3" />
                   </button>
                 </th>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -288,8 +305,8 @@ export function KeyTable({ keys }: KeyTableProps) {
                       </Badge>
                     </td>
                     <td className="p-3">{getHsmBadge(key.hsm)}</td>
-                    <td className="p-3 text-sm font-mono">{key.key_created}</td>
-                    <td className="p-3 text-sm font-mono">{key.key_expired}</td>
+                    <td className="p-3 text-sm font-mono">{formatDate(key.key_created)}</td>
+                    <td className="p-3 text-sm font-mono">{formatDate(key.key_expired)}</td>
                     <td className="p-3">
                       {status === 'revoked' ? (
                         <span className="text-sm text-muted-foreground">not valid</span>

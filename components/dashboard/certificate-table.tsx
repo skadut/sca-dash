@@ -225,12 +225,12 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
                 </th>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   <button onClick={() => handleSort('created_date')} className="flex items-center gap-1 hover:text-foreground">
-                    Date Created <ArrowUpDown className="h-3 w-3" />
+                    Created <ArrowUpDown className="h-3 w-3" />
                   </button>
                 </th>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   <button onClick={() => handleSort('expired_date')} className="flex items-center gap-1 hover:text-foreground">
-                    Expired Date <ArrowUpDown className="h-3 w-3" />
+                    Expired <ArrowUpDown className="h-3 w-3" />
                   </button>
                 </th>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -263,8 +263,8 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
                 return (
                   <tr key={cert.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
                     <td className="p-3 text-sm font-mono">{cert.app_id_label}</td>
-                    <td className="p-3 text-sm font-mono">{cert.created_date}</td>
-                    <td className="p-3 text-sm font-mono">{cert.expired_date}</td>
+                    <td className="p-3 text-sm font-mono">{formatDate(cert.created_date)}</td>
+                    <td className="p-3 text-sm font-mono">{formatDate(cert.expired_date)}</td>
                     <td className="p-3">{getHSMBadge(cert.hsm)}</td>
                     <td className="p-3">
                       <div className="flex gap-1.5 flex-wrap">
