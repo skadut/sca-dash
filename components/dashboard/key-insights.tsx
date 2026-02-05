@@ -47,6 +47,8 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
     }
     return { badge: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20', avatarIndex: 3 }
   }
+
+  const getTimeAgo = (dateStr: string): string => {
     const date = new Date(dateStr)
     const now = new Date()
     const diffMs = now.getTime() - date.getTime()
