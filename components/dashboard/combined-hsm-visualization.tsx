@@ -1,6 +1,6 @@
 "use client"
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, LabelList } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Certificate, Key } from "@/lib/types"
 
@@ -82,21 +82,22 @@ export function CombinedHSMVisualization({ certificates, keys }: CombinedHSMVisu
               formatter={(value) => (value === "certificates" ? "Certificates" : "Keys")}
               wrapperStyle={{ color: "hsl(var(--foreground))" }}
             />
-            <Bar dataKey="certificates" fill={COLORS.certificates} radius={[4, 4, 0, 0]} />
-            <Bar dataKey="keys" fill={COLORS.keys} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="certificates" fill={COLORS.certificates} radius={[4, 4, 0, 0]}>
+              <LabelList dataKey="certificates" position="top" fill="hsl(var(--foreground))" fontSize={12} />
+            </Bar>
+            <Bar dataKey="keys" fill={COLORS.keys} radius={[4, 4, 0, 0]}>
+              <LabelList dataKey="keys" position="top" fill="hsl(var(--foreground))" fontSize={12} />
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
 
-        {/* HSM Type Identifiers and Stats Summary */}
+        {/* HSM Type Stats Summary */}
         <div className="mt-6 space-y-3">
           {data.map((item) => (
             <div key={item.hsm} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50">
               <div className="flex items-center gap-3">
                 <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getHSMColor(item.hsm) }} />
-                <div>
-                  <span className="font-medium text-foreground block">{item.name}</span>
-                  <span className="text-xs text-muted-foreground">HSM Module Type</span>
-                </div>
+                <span className="font-medium text-foreground">{item.name}</span>
               </div>
               <div className="flex items-center gap-6 text-sm">
                 <div className="text-right">
