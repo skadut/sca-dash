@@ -13,6 +13,7 @@ import { KeySecretRelationship } from "@/components/dashboard/key-secret-relatio
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { CombinedHSMVisualization } from "@/components/dashboard/combined-hsm-visualization"
 import { KeyInventoryToggle } from "@/components/dashboard/key-inventory-toggle"
+import { CertificateAccessToggle } from "@/components/dashboard/certificate-access-toggle"
 import { KeyTable } from "@/components/dashboard/key-table"
 import { StatsCardsSkeleton, TableSkeleton, GraphSkeleton } from "@/components/dashboard/loading-skeleton"
 import { Shield, AlertCircle, RefreshCw, Info } from "lucide-react"
@@ -154,7 +155,7 @@ export default function DashboardPage() {
                 )}
                 {activeMenu === "certificates" && (
                   <>
-                    <StatsCards certificates={certificates} />
+                    <CertificateAccessToggle certificates={certificates} />
                     <CertificateTable certificates={certificates} />
                   </>
                 )}
