@@ -129,7 +129,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
       </Card>
 
       {/* Certificate Stages - Health Bar View */}
-      <Card className="border-border/50 bg-card">
+      <Card className="border-border/50 bg-card flex flex-col">
         <CardHeader className="pb-4">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -139,22 +139,22 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
             <p className="text-sm text-muted-foreground mt-1">Validity health status</p>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-1.5 flex-1 overflow-y-auto">
           {certificateStages.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">No active certificates</p>
           ) : (
             certificateStages.map((cert) => {
               const healthColor = getHealthBarColor(cert.daysUntilExpiry, cert.validity)
               const healthPercentage = getHealthPercentage(cert.daysUntilExpiry)
-              const statusLabel = cert.validity === 'expired' ? 'Expired' : cert.validity === 'expiring' ? 'Critical' : 'Healthy'
+              const statusLabel = cert.validity === 'expired' ? 'Expired' : cert.validity === 'expiring' ? 'Critical' : 'Safe'
               
               return (
                 <div
                   key={cert.id}
-                  className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                  className="p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                 >
                   {/* Certificate Name and Status */}
-                  <div className="flex items-center justify-between gap-3 mb-2.5">
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
                     <p className="font-medium text-sm text-foreground truncate">{cert.app_id_label}</p>
                     <Badge 
                       variant="outline" 
@@ -169,7 +169,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
                   </div>
                   
                   {/* Health Bar Container */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5">
                     {/* Health Bar */}
                     <div className="flex-1 h-2 bg-red-900/40 rounded-full overflow-hidden">
                       <div
@@ -179,7 +179,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
                     </div>
                     
                     {/* Days Left Label */}
-                    <span className="text-sm font-mono font-semibold text-foreground whitespace-nowrap flex-shrink-0 min-w-[60px] text-right">
+                    <span className="text-sm font-mono font-semibold text-foreground whitespace-nowrap flex-shrink-0 min-w-[55px] text-right">
                       {cert.daysUntilExpiry} days
                     </span>
                   </div>
