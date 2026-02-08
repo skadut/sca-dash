@@ -29,7 +29,20 @@ const getInitials = (text: string) => {
 }
 
 const getTimeAgo = (dateString: string): string => {
-  const date = new Date(dateString)
+  // Parse date string in format YYYYMMDD or ISO format
+  let date: Date
+  
+  if (dateString.length === 8 && /^\d{8}$/.test(dateString)) {
+    // Format: YYYYMMDD
+    const year = parseInt(dateString.substring(0, 4))
+    const month = parseInt(dateString.substring(4, 6)) - 1 // Month is 0-indexed
+    const day = parseInt(dateString.substring(6, 8))
+    date = new Date(year, month, day)
+  } else {
+    // Try to parse as ISO or other format
+    date = new Date(dateString)
+  }
+  
   const now = new Date()
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
 
