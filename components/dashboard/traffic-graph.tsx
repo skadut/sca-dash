@@ -100,8 +100,7 @@ export function TrafficGraph({ certificates }: TrafficGraphProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold">Certificate Traffic Analytics</h2>
-          <p className="text-sm text-muted-foreground mt-1">{currentDate}</p>
+          <p className="text-sm text-muted-foreground">{currentDate}</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-card border rounded-lg">
           <Clock className="h-4 w-4 text-muted-foreground" />
@@ -198,15 +197,15 @@ export function TrafficGraph({ certificates }: TrafficGraphProps) {
             }}
             className="h-[400px] w-full"
           >
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData.data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+            <AreaChart data={chartData.data} margin={{ top: 20, right: 30, left: 20, bottom: 80 }} width={100} height={400}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis
                   dataKey={timeSpan === "monthly" ? "month" : "period"}
                   tick={{ fontSize: 12 }}
-                  angle={timeSpan === "monthly" ? 0 : -45}
-                  textAnchor={timeSpan === "monthly" ? "middle" : "end"}
-                  height={60}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                  interval={0}
                   className="fill-muted-foreground"
                 />
                 <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" />
@@ -269,8 +268,7 @@ export function TrafficGraph({ certificates }: TrafficGraphProps) {
                   />
                 )}
               </AreaChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+            </ChartContainer>
         </CardContent>
       </Card>
     </div>

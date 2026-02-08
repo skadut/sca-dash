@@ -22,7 +22,7 @@ export const mockKeys: Key[] = [
     created_at: '2024-01-15T08:00:00Z',
     updated_at: '2024-12-20T10:30:00Z',
     revoked_key_status: false,
-    hsm: 'klavis-spbe',
+    hsm: 'Klavis-SPBE',
   },
   {
     id: 2,
@@ -45,7 +45,7 @@ export const mockKeys: Key[] = [
     created_at: '2023-06-10T09:00:00Z',
     updated_at: '2024-11-15T14:20:00Z',
     revoked_key_status: false,
-    hsm: 'klavis-iiv',
+    hsm: 'Klavis-IIV',
   },
   {
     id: 3,
@@ -68,7 +68,7 @@ export const mockKeys: Key[] = [
     created_at: '2024-03-20T10:00:00Z',
     updated_at: '2024-12-18T16:45:00Z',
     revoked_key_status: false,
-    hsm: 'thales-luna',
+    hsm: 'Thales-Luna',
   },
   {
     id: 4,
@@ -91,7 +91,7 @@ export const mockKeys: Key[] = [
     created_at: '2024-10-01T08:30:00Z',
     updated_at: '2024-12-22T11:00:00Z',
     revoked_key_status: false,
-    hsm: 'klavis-spbe',
+    hsm: 'Klavis-SPBE',
   },
   {
     id: 5,
@@ -114,7 +114,7 @@ export const mockKeys: Key[] = [
     created_at: '2024-12-01T07:00:00Z',
     updated_at: '2024-12-23T09:15:00Z',
     revoked_key_status: false,
-    hsm: 'klavis-iiv',
+    hsm: 'Klavis-IIV',
   },
   {
     id: 6,
@@ -137,7 +137,7 @@ export const mockKeys: Key[] = [
     created_at: '2023-01-01T00:00:00Z',
     updated_at: '2024-12-20T18:00:00Z',
     revoked_key_status: false,
-    hsm: 'thales-luna',
+    hsm: 'Thales-Luna',
   },
   {
     id: 7,
@@ -160,7 +160,7 @@ export const mockKeys: Key[] = [
     created_at: '2023-12-01T08:00:00Z',
     updated_at: '2024-11-30T10:00:00Z',
     revoked_key_status: true,
-    hsm: 'klavis-spbe',
+    hsm: 'Klavis-SPBE',
   },
   {
     id: 8,
@@ -183,6 +183,6 @@ export const mockKeys: Key[] = [
     created_at: '2024-08-15T09:30:00Z',
     updated_at: '2024-12-19T15:20:00Z',
     revoked_key_status: false,
-    hsm: 'klavis-iiv',
+    hsm: 'Klavis-IIV',
   },
 ]

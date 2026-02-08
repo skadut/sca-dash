@@ -5,16 +5,16 @@ import useSWR from "swr"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { CertificateTable } from "@/components/dashboard/certificate-table"
 import { NavigationTabs } from "@/components/dashboard/navigation-tabs"
-import { TrafficGraph } from "@/components/dashboard/traffic-graph"
+import { UtilityTrends } from "@/components/dashboard/utility-trends"
 import { DataModeToggle } from "@/components/dashboard/data-mode-toggle"
 import { ThemeToggle } from "@/components/dashboard/theme-toggle"
 import { FileDistribution } from "@/components/dashboard/file-distribution"
 import { KeySecretRelationship } from "@/components/dashboard/key-secret-relationship"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { CombinedHSMVisualization } from "@/components/dashboard/combined-hsm-visualization"
-import { KeyInventoryStats } from "@/components/dashboard/key-inventory"
+import { KeyInventoryToggle } from "@/components/dashboard/key-inventory-toggle"
+import { CertificateAccessToggle } from "@/components/dashboard/certificate-access-toggle"
 import { KeyTable } from "@/components/dashboard/key-table"
-import { KeyTrafficGraph } from "@/components/dashboard/key-traffic-graph"
 import { StatsCardsSkeleton, TableSkeleton, GraphSkeleton } from "@/components/dashboard/loading-skeleton"
 import { Shield, AlertCircle, RefreshCw, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -143,20 +143,19 @@ export default function DashboardPage() {
                       <KeySecretRelationship keys={keys} />
                     </div>
                     
-                    {/* Traffic Graphs */}
-                    <TrafficGraph certificates={certificates} />
-                    <KeyTrafficGraph keys={keys} />
+                    {/* Traffic Graph */}
+                    <UtilityTrends certificates={certificates} keys={keys} />
                   </>
                 )}
                 {activeMenu === "inventory" && (
                   <>
-                    <KeyInventoryStats keys={keys} />
+                    <KeyInventoryToggle keys={keys} />
                     <KeyTable keys={keys} />
                   </>
                 )}
                 {activeMenu === "certificates" && (
                   <>
-                    <StatsCards certificates={certificates} />
+                    <CertificateAccessToggle certificates={certificates} />
                     <CertificateTable certificates={certificates} />
                   </>
                 )}

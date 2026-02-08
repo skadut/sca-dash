@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
-import { XAxis, YAxis, CartesianGrid, ResponsiveContainer, Area, AreaChart } from "recharts"
+import { XAxis, YAxis, CartesianGrid, Area, AreaChart } from "recharts"
 import type { Key } from "@/lib/types"
 import { CalendarDays, TrendingUp, Activity, Clock } from "lucide-react"
 
@@ -103,8 +103,7 @@ export function KeyTrafficGraph({ keys }: KeyTrafficGraphProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold">Key Traffic Analytics</h2>
-          <p className="text-sm text-muted-foreground mt-1">{currentDate}</p>
+          <p className="text-sm text-muted-foreground">{currentDate}</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-card border rounded-lg">
           <Clock className="h-4 w-4 text-muted-foreground" />
@@ -202,8 +201,7 @@ export function KeyTrafficGraph({ keys }: KeyTrafficGraphProps) {
             }}
             className="h-[400px] w-full"
           >
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData.data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+            <AreaChart data={chartData.data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }} width={1019} height={400}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis
                   dataKey={timeSpan === "monthly" ? "month" : "period"}
@@ -273,8 +271,7 @@ export function KeyTrafficGraph({ keys }: KeyTrafficGraphProps) {
                   />
                 )}
               </AreaChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+            </ChartContainer>
         </CardContent>
       </Card>
     </div>

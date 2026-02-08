@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import type { Certificate } from "@/lib/types"
 import { getValidityStatus, getCertificateStatus } from "@/lib/certificate-utils"
-import { ShieldCheck, ShieldAlert, ShieldX, KeyRound, Ban, Key } from "lucide-react"
+import { ShieldCheck, ShieldAlert, ShieldX, Ban, FileText } from "lucide-react"
 
 interface StatsCardsProps {
   certificates: Certificate[]
@@ -26,15 +26,12 @@ export function StatsCards({ certificates }: StatsCardsProps) {
       getCertificateStatus(c.expired_date, c.revoked_app_status) === "active",
   ).length
 
-  // Calculate change percentage (mock for demo)
-  const totalChange = "+12%"
-
   const stats = [
     {
-      label: "Total Certificates",
+      label: "Certificates",
       value: total,
-      change: totalChange,
-      icon: KeyRound,
+      sublabel: "Generated Certificate",
+      icon: FileText,
       iconColor: "text-cyan-400",
       iconBg: "bg-cyan-500/10",
       glowColor: "text-cyan-400",
@@ -112,6 +109,7 @@ export function StatsCards({ certificates }: StatsCardsProps) {
                     </span>
                   )}
                 </div>
+                {stat.sublabel && <p className="text-xs text-muted-foreground mt-2 font-sans">{stat.sublabel}</p>}
                 {stat.subtitle && (
                   <p className="text-xs text-muted-foreground mt-2 font-sans">
                     {stat.subtitle}

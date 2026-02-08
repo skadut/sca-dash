@@ -16,10 +16,25 @@ export function KeySecretRelationship({ keys }: KeySecretRelationshipProps) {
 
   const data = [
     { name: "With Secret", value: withSecret, color: "#10b981" },
-    { name: "Without Secret", value: withoutSecret, color: "#ef4444" },
+    { name: "Without Secret", value: withoutSecret, color: "#f59e0b" },
   ]
 
   const percentage = keys.length > 0 ? ((withSecret / keys.length) * 100).toFixed(1) : "0"
+
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0]
+      return (
+        <div className="bg-background border border-border rounded-lg shadow-lg p-3">
+          <p className="font-semibold text-foreground mb-2">{data.name}</p>
+          <p className="text-sm" style={{ color: data.payload.color }}>
+            Count: {data.value}
+          </p>
+        </div>
+      )
+    }
+    return null
+  }
 
   return (
     <Card className="border-border/50 h-full">
@@ -47,16 +62,7 @@ export function KeySecretRelationship({ keys }: KeySecretRelationshipProps) {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip
-                formatter={(value) => [`${value} keys`, "Count"]}
-                contentStyle={{
-                  backgroundColor: "hsl(var(--background))",
-                  border: `1px solid hsl(var(--border))`,
-                  borderRadius: "0.5rem",
-                  color: "hsl(var(--foreground))",
-                }}
-                labelStyle={{ color: "hsl(var(--foreground))" }}
-              />
+              <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ color: "hsl(var(--foreground))" }} />
             </PieChart>
           </ResponsiveContainer>
@@ -73,12 +79,12 @@ export function KeySecretRelationship({ keys }: KeySecretRelationshipProps) {
             <p className="text-xs text-muted-foreground mt-1">{percentage}% of total keys</p>
           </div>
 
-          <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+          <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
             <div className="flex items-center gap-2 mb-2">
-              <ShieldX className="h-4 w-4 text-red-400" />
+              <ShieldX className="h-4 w-4 text-amber-400" />
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Without Secret</p>
             </div>
-            <p className="text-2xl font-bold font-mono text-red-400">{withoutSecret}</p>
+            <p className="text-2xl font-bold font-mono text-amber-400">{withoutSecret}</p>
             <p className="text-xs text-muted-foreground mt-1">{(100 - parseFloat(percentage)).toFixed(1)}% of total keys</p>
           </div>
         </div>
