@@ -28,6 +28,7 @@ export interface Key {
   secret_id: string
   secret_label: string
   secret_data: string
+  created_date: string // YYYYMMDD format
   created_at: string
   updated_at: string
   revoked_key_status: boolean
