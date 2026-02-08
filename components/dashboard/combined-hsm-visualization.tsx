@@ -90,7 +90,7 @@ export function CombinedHSMVisualization({ certificates, keys }: CombinedHSMVisu
         {/* Stats Summary */}
         <div className="mt-6 space-y-3">
           {data.map((item) => (
-            <div key={item.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+            <div key={item.hsm} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
               <div className="flex items-center gap-3">
                 <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getHSMColor(item.hsm) }} />
                 <span className="font-medium text-foreground">{item.name}</span>
