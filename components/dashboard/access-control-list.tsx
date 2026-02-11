@@ -72,13 +72,19 @@ const CustomStackedBarTooltip = ({ active, payload }: any) => {
 export function AccessControlList({ data }: AccessControlListProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
-  // HSM color configuration
-  const getHSMColor = (hsm: string): string => {
-    const hsmLower = hsm.toLowerCase()
-    if (hsmLower.includes('spbe')) return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
-    if (hsmLower.includes('iiv')) return 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-    if (hsmLower.includes('thales') || hsmLower.includes('luna')) return 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-    return 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+  // Get encryption type badge color
+  const getEncryptionColor = (keyId?: string): string => {
+    if (!keyId) return 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+    if (keyId.toLowerCase().includes('aes')) return 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+    if (keyId.toLowerCase().includes('rsa')) return 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+    return 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+  }
+
+  const getEncryptionLabel = (keyId?: string): string => {
+    if (!keyId) return 'Unknown'
+    if (keyId.toLowerCase().includes('aes')) return 'AES-256'
+    if (keyId.toLowerCase().includes('rsa')) return 'RSA-3072'
+    return 'Unknown'
   }
 
   // Calculate statistics
@@ -331,31 +337,50 @@ export function AccessControlList({ data }: AccessControlListProps) {
                 <p>No results found</p>
               </div>
             ) : (
-              filteredData.map((cert) => (
-                <Card key={cert.app_id_label} className="hover:shadow-lg transition-all hover:border-primary/50 overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h4 className="font-semibold text-sm truncate text-primary">{cert.app_id_label}</h4>
-                        <p className="text-xs text-muted-foreground mt-1">{cert.used_by.length} application(s)</p>
-                      </div>
-                      <Badge variant="outline" className={cn('shrink-0 font-mono text-xs', getHSMColor(cert.hsm))}>{cert.hsm}</Badge>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="space-y-3">
-                    {/* Applications List */}
-                    <div className="space-y-2">
-                      {cert.used_by.map((app, appIndex) => (
-                        <div key={appIndex} className="p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                          <p className="text-xs font-medium text-foreground truncate">{app.nama_aplikasi}</p>
-                          <p className="text-xs text-muted-foreground truncate">{app.key_id || app.nama_instansi}</p>
+              filteredData.map((cert) => {
+                // Get unique encryption types for this certificate
+                const encryptionTypes = Array.from(
+                  new Set(cert.used_by.map(app => getEncryptionLabel(app.key_id)))
+                )
+                
+                return (
+                  <Card key={cert.app_id_label} className="hover:shadow-lg transition-all hover:border-primary/50 overflow-hidden">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-sm truncate text-primary">{cert.app_id_label}</h4>
+                          <p className="text-xs text-muted-foreground mt-1">{cert.used_by.length} application(s)</p>
+                          {/* Encryption Type Badges */}
+                          <div className="flex gap-1.5 mt-2 flex-wrap">
+                            {encryptionTypes.map((encType) => (
+                              <Badge 
+                                key={encType}
+                                variant="outline" 
+                                className={cn('font-mono text-xs', getEncryptionColor(encType))}
+                              >
+                                {encType}
+                              </Badge>
+                            ))}
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+                        <Badge variant="outline" className={cn('shrink-0 font-mono text-xs', getHSMColor(cert.hsm))}>{cert.hsm}</Badge>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="space-y-3">
+                      {/* Applications List */}
+                      <div className="space-y-2">
+                        {cert.used_by.map((app, appIndex) => (
+                          <div key={appIndex} className="p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                            <p className="text-xs font-medium text-foreground truncate">{app.nama_aplikasi}</p>
+                            <p className="text-xs text-muted-foreground truncate font-mono">{app.key_id}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })
             )}
           </div>
         </CardContent>
