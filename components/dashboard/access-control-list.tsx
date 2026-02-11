@@ -133,7 +133,9 @@ export function AccessControlList({ data }: AccessControlListProps) {
   }
 
   // Calculate statistics
-  const certArray = data?.data || []
+  const certArray = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
+  
+  console.log('[v0] certArray:', { isArray: Array.isArray(certArray), length: certArray.length, data })
   
   const totalCertificates = certArray.length
   const totalApplications = certArray.reduce((acc, cert) => {
