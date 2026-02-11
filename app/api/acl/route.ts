@@ -13,36 +13,57 @@ async function fetchFromExternalAPI(): Promise<CertificateRelations | null> {
   }
 
   try {
-    const url = `https://${ACL_API_URL}:${ACL_API_PORT}/cert-related-all`
-    
-    console.log('[v0] Fetching ACL data from:', url)
+    console.log('[v0] Fetching ACL data from:', `${ACL_API_URL}:${ACL_API_PORT}/cert-related-all`)
 
-    const agent = new https.Agent({
-      ca: Buffer.from(TLS_CA_CERT, 'base64'),
-      cert: Buffer.from(TLS_CERT, 'base64'),
-      key: Buffer.from(TLS_KEY, 'base64'),
-      rejectUnauthorized: true,
+    // Use native https module for mTLS support
+    return new Promise((resolve, reject) => {
+      const options = {
+        hostname: ACL_API_URL,
+        port: parseInt(ACL_API_PORT),
+        path: '/cert-related-all',
+        method: 'GET',
+        ca: Buffer.from(TLS_CA_CERT, 'base64'),
+        cert: Buffer.from(TLS_CERT, 'base64'),
+        key: Buffer.from(TLS_KEY, 'base64'),
+        rejectUnauthorized: true,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+
+      const req = https.request(options, (res) => {
+        let data = ''
+
+        res.on('data', (chunk) => {
+          data += chunk
+        })
+
+        res.on('end', () => {
+          if (res.statusCode === 200) {
+            try {
+              const jsonData = JSON.parse(data)
+              console.log('[v0] ACL data fetched successfully')
+              resolve(jsonData as CertificateRelations)
+            } catch (parseError) {
+              console.error('[v0] Error parsing ACL response:', parseError)
+              resolve(null)
+            }
+          } else {
+            console.error('[v0] ACL API response not ok:', res.statusCode)
+            resolve(null)
+          }
+        })
+      })
+
+      req.on('error', (error) => {
+        console.error('[v0] Error fetching ACL data:', error)
+        resolve(null)
+      })
+
+      req.end()
     })
-
-    const response = await fetch(url, {
-      method: 'GET',
-      // @ts-ignore - Node.js fetch supports agent
-      agent,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-
-    if (!response.ok) {
-      console.error('[v0] ACL API response not ok:', response.status)
-      return null
-    }
-
-    const data = await response.json()
-    console.log('[v0] ACL data fetched successfully')
-    return data as CertificateRelations
   } catch (error) {
-    console.error('[v0] Error fetching ACL data:', error)
+    console.error('[v0] Error setting up ACL request:', error)
     return null
   }
 }
