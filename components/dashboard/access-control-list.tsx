@@ -31,6 +31,22 @@ const CustomPieTooltip = ({ active, payload }: any) => {
   return null
 }
 
+// Custom tooltip for bar chart
+const CustomBarTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0]
+    const color = data.fill || '#3b82f6'
+    
+    return (
+      <div className="bg-black/90 border border-white/10 rounded-lg px-4 py-3 shadow-lg backdrop-blur-sm">
+        <p className="text-white font-semibold text-sm">{data.payload.name}</p>
+        <p className="font-medium text-sm mt-1" style={{ color }}>certificates: {data.value}</p>
+      </div>
+    )
+  }
+  return null
+}
+
 // Custom treemap content renderer
 const CustomTreemapContent = (props: any) => {
   const { x, y, width, height, payload } = props
@@ -249,13 +265,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--muted-foreground)" opacity={0.2} />
                 <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} tick={{ fontSize: 12 }} />
                 <YAxis />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'var(--background)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '8px',
-                  }}
-                />
+                <Tooltip content={<CustomBarTooltip />} />
                 <Bar dataKey="applications" radius={[8, 8, 0, 0]}>
                   {chartData.slice(0, 8).map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
