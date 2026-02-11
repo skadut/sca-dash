@@ -30,6 +30,13 @@ export default function DashboardPage() {
   const [activeMenu, setActiveMenu] = useState<'dashboard' | 'inventory' | 'certificates' | 'acl'>('dashboard')
   const [dataMode, setDataMode] = useState<DataMode>('mock')
   const [activeTab, setActiveTab] = useState<'status' | 'traffic'>('status')
+  const [pageKey, setPageKey] = useState(0)
+
+  // Trigger re-render and animation when changing pages
+  const handleMenuChange = (menu: 'dashboard' | 'inventory' | 'certificates' | 'acl') => {
+    setActiveMenu(menu)
+    setPageKey((prev) => prev + 1)
+  }
 
   const { data, error, isLoading, mutate } = useSWR<{
     certificates: Certificate[]
@@ -143,7 +150,7 @@ export default function DashboardPage() {
                 <TableSkeleton />
               </>
             ) : (
-              <div className="page-content">
+              <div className="page-content" key={pageKey}>
                 {activeMenu === 'dashboard' && (
                   <>
                     <div className="page-enter">
@@ -171,7 +178,7 @@ export default function DashboardPage() {
                 {activeMenu === 'certificates' && (
                   <>
                     <div className="page-enter">
-                      <CertificateAccessToggle certificates={certificates} />
+                      <CertificateAccessToggle key={pageKey} certificates={certificates} />
                     </div>
                     <div className="page-enter" style={{ animationDelay: '50ms' }}>
                       <CertificateTable certificates={certificates} />
