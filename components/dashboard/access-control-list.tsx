@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, Treemap } from 'recharts'
 import { Search, Building2, Zap, Users, Database } from 'lucide-react'
 import type { CertificateUsageData } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -31,6 +31,55 @@ const CustomPieTooltip = ({ active, payload }: any) => {
   return null
 }
 
+// Custom treemap content renderer
+const CustomTreemapContent = (props: any) => {
+  const { x, y, width, height, name, value, color } = props
+  
+  if (width < 50 || height < 35) {
+    return null
+  }
+
+  return (
+    <g>
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        style={{
+          fill: color,
+          stroke: '#fff',
+          strokeWidth: 2,
+          opacity: 0.8,
+        }}
+      />
+      <text
+        x={x + width / 2}
+        y={y + height / 2 - 8}
+        textAnchor="middle"
+        fill="#fff"
+        fontSize={12}
+        fontWeight="bold"
+        className="pointer-events-none"
+      >
+        {name.substring(0, 15)}
+      </text>
+      <text
+        x={x + width / 2}
+        y={y + height / 2 + 10}
+        textAnchor="middle"
+        fill="#fff"
+        fontSize={11}
+        className="pointer-events-none"
+      >
+        {value} app{value !== 1 ? 's' : ''}
+      </text>
+    </g>
+  )
+}
+  return null
+}
+
 export function AccessControlList({ data }: AccessControlListProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -41,6 +90,16 @@ export function AccessControlList({ data }: AccessControlListProps) {
     if (hsmLower.includes('iiv')) return 'bg-purple-500/10 text-purple-400 border-purple-500/20'
     if (hsmLower.includes('thales') || hsmLower.includes('luna')) return 'bg-blue-500/10 text-blue-400 border-blue-500/20'
     return 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+  }
+
+  // Distinct colors for bar chart
+  const chartColors = [
+    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899',
+    '#06b6d4', '#14b8a6', '#f97316', '#6366f1', '#d946ef', '#0891b2'
+  ]
+
+  const getChartColor = (index: number): string => {
+    return chartColors[index % chartColors.length]
   }
 
   // Calculate statistics
@@ -58,17 +117,18 @@ export function AccessControlList({ data }: AccessControlListProps) {
     })
   ).size
 
-  // Prepare data for chart
+  // Prepare data for chart with distinct colors
   const chartData = certArray
     .filter((cert) => cert && cert.used_by)
-    .map((cert) => ({
+    .map((cert, index) => ({
       name: cert.app_id_label.replace('CS', '').substring(0, 12),
       applications: cert.used_by.length,
       certId: cert.app_id_label,
+      fill: getChartColor(index),
     }))
     .sort((a, b) => b.applications - a.applications)
 
-  // Prepare pie chart data for institution distribution
+  // Prepare treemap data for institution distribution
   const institutionMap = new Map<string, number>()
   certArray.forEach((cert) => {
     if (!cert || !cert.used_by) return
@@ -77,11 +137,14 @@ export function AccessControlList({ data }: AccessControlListProps) {
     })
   })
 
-  const pieData = Array.from(institutionMap.entries()).map(([name, count], index) => ({
-    name: name.substring(0, 20),
-    value: count,
-    color: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'][index % 6],
-  }))
+  const treemapData = {
+    name: 'Institutions',
+    children: Array.from(institutionMap.entries()).map(([name, count], index) => ({
+      name: name,
+      value: count,
+      color: chartColors[index % chartColors.length],
+    })),
+  }
 
   // Filter certificates
   const filteredData = certArray.filter((cert) => {
@@ -179,42 +242,33 @@ export function AccessControlList({ data }: AccessControlListProps) {
                     borderRadius: '8px',
                   }}
                 />
-                <Bar dataKey="applications" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="applications" radius={[8, 8, 0, 0]}>
+                  {chartData.slice(0, 8).map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Pie Chart */}
+        {/* Treemap Chart */}
         <Card>
           <CardHeader>
             <CardTitle>Institution Distribution</CardTitle>
-            <CardDescription>Applications by institution</CardDescription>
+            <CardDescription>Hierarchical view of applications by institution</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={true}
-                  label={({ name, value }) => `${name}: ${value}`}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                  labelProps={{
-                    fill: '#ffffff',
-                    fontSize: 13,
-                    fontWeight: 500,
-                  }}
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomPieTooltip />} />
-              </PieChart>
+              <Treemap
+                data={treemapData.children}
+                dataKey="value"
+                stroke="#fff"
+                fill="#8884d8"
+                content={<CustomTreemapContent />}
+              >
+                <Tooltip content={<CustomTreemapTooltip />} />
+              </Treemap>
             </ResponsiveContainer>
           </CardContent>
         </Card>
