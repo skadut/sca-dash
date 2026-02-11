@@ -178,7 +178,7 @@ export default function DashboardPage() {
                 {activeMenu === 'certificates' && (
                   <>
                     <div className="page-enter">
-                      <CertificateAccessToggle key={pageKey} certificates={certificates} />
+                      <CertificateAccessToggle certificates={certificates} />
                     </div>
                     <div className="page-enter" style={{ animationDelay: '50ms' }}>
                       <CertificateTable certificates={certificates} />
