@@ -87,6 +87,15 @@ export function AccessControlList({ data }: AccessControlListProps) {
     return 'Unknown'
   }
 
+  // HSM color configuration
+  const getHSMColor = (hsm: string): string => {
+    const hsmLower = hsm.toLowerCase()
+    if (hsmLower.includes('spbe')) return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+    if (hsmLower.includes('iiv')) return 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+    if (hsmLower.includes('thales') || hsmLower.includes('luna')) return 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+    return 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+  }
+
   // Calculate statistics
   const certArray = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
   
