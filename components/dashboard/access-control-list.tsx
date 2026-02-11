@@ -179,8 +179,6 @@ export function AccessControlList({ data }: AccessControlListProps) {
     })),
   }
 
-  console.log('[v0] Treemap data:', treemapData)
-
   // Filter certificates
   const filteredData = certArray.filter((cert) => {
     if (!cert || !cert.used_by) return false

@@ -70,7 +70,7 @@ export default function DashboardPage() {
 
   const certificates = data?.certificates || []
   const keys = keysData?.keys || []
-  const aclData2 = aclData?.data || {}
+  const aclData2 = aclData || { data: [] }
   const isConnected = data?.isUsingMockData === false
 
   return (
