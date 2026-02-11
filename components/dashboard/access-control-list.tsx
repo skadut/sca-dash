@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, Treemap } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Treemap } from 'recharts'
 import { Search, Building2, Zap, Users, Database } from 'lucide-react'
 import type { CertificateUsageData } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -13,22 +13,14 @@ interface AccessControlListProps {
   data: CertificateUsageData
 }
 
-// Custom tooltip component for pie chart
-const CustomPieTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0]
-    const color = data.payload.color || '#10b981'
-    const count = data.value
-    const label = count === 1 ? 'application' : 'applications'
-    
-    return (
-      <div className="bg-black/90 border border-white/10 rounded-lg px-4 py-3 shadow-lg backdrop-blur-sm">
-        <p className="text-white font-semibold text-sm">{data.payload.name}</p>
-        <p className="font-medium text-sm mt-1" style={{ color }}>{count} {label}</p>
-      </div>
-    )
-  }
-  return null
+// Distinct colors for bar chart
+const chartColors = [
+  '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899',
+  '#06b6d4', '#14b8a6', '#f97316', '#6366f1', '#d946ef', '#0891b2'
+]
+
+const getChartColor = (index: number): string => {
+  return chartColors[index % chartColors.length]
 }
 
 // Custom tooltip for bar chart
@@ -41,6 +33,20 @@ const CustomBarTooltip = ({ active, payload }: any) => {
       <div className="bg-black/90 border border-white/10 rounded-lg px-4 py-3 shadow-lg backdrop-blur-sm">
         <p className="text-white font-semibold text-sm">{data.payload.name}</p>
         <p className="font-medium text-sm mt-1" style={{ color }}>certificates: {data.value}</p>
+      </div>
+    )
+  }
+  return null
+}
+
+// Custom tooltip for treemap
+const CustomTreemapTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload
+    return (
+      <div className="bg-black/90 border border-white/10 rounded-lg px-4 py-3 shadow-lg backdrop-blur-sm">
+        <p className="text-white font-semibold text-sm">{data.name}</p>
+        <p className="font-medium text-sm mt-1" style={{ color: data.color }}>Certificates: {data.value}</p>
       </div>
     )
   }
@@ -96,22 +102,9 @@ const CustomTreemapContent = (props: any) => {
   )
 }
 
-// Custom tooltip for treemap
-const CustomTreemapTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload
-    return (
-      <div className="bg-black/90 border border-white/10 rounded-lg px-4 py-3 shadow-lg backdrop-blur-sm">
-        <p className="text-white font-semibold text-sm">{data.name}</p>
-        <p className="font-medium text-sm mt-1" style={{ color: data.color }}>Certificates: {data.value}</p>
-      </div>
-    )
-  }
-  return null
-}
-
 export function AccessControlList({ data }: AccessControlListProps) {
   const [searchQuery, setSearchQuery] = useState('')
+  const [treemapData, setTreemapData] = useState<any>({ children: [] })
 
   // HSM color configuration
   const getHSMColor = (hsm: string): string => {
@@ -122,20 +115,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
     return 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
   }
 
-  // Distinct colors for bar chart
-  const chartColors = [
-    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899',
-    '#06b6d4', '#14b8a6', '#f97316', '#6366f1', '#d946ef', '#0891b2'
-  ]
-
-  const getChartColor = (index: number): string => {
-    return chartColors[index % chartColors.length]
-  }
-
   // Calculate statistics
   const certArray = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
-  
-  console.log('[v0] certArray:', { isArray: Array.isArray(certArray), length: certArray.length, data })
   
   const totalCertificates = certArray.length
   const totalApplications = certArray.reduce((acc, cert) => {
@@ -149,7 +130,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
     })
   ).size
 
-  // Prepare data for chart with distinct colors
+  // Prepare data for bar chart with distinct colors
   const chartData = certArray
     .filter((cert) => cert && cert.used_by)
     .map((cert, index) => ({
@@ -160,26 +141,49 @@ export function AccessControlList({ data }: AccessControlListProps) {
     }))
     .sort((a, b) => b.applications - a.applications)
 
-  // Prepare treemap data for institution distribution (counting certificates per institution)
-  const institutionCertMap = new Map<string, Set<string>>()
-  certArray.forEach((cert) => {
-    if (!cert || !cert.used_by) return
-    cert.used_by.forEach((app) => {
-      if (!institutionCertMap.has(app.nama_instansi)) {
-        institutionCertMap.set(app.nama_instansi, new Set())
-      }
-      institutionCertMap.get(app.nama_instansi)?.add(cert.app_id_label)
-    })
-  })
+  // Fetch treemap data from /cert-usage-all endpoint
+  useEffect(() => {
+    const fetchTreemapData = async () => {
+      try {
+        const response = await fetch('/api/cert-usage-all')
+        if (!response.ok) {
+          console.error('[v0] Failed to fetch cert-usage-all data:', response.statusText)
+          return
+        }
+        const result = await response.json()
+        
+        // Count unique certificates per institution
+        const institutionCertMap = new Map<string, Set<string>>()
+        const certUsageData = result.data || result
+        
+        const certArray = Array.isArray(certUsageData.data) ? certUsageData.data : Array.isArray(certUsageData) ? certUsageData : []
+        
+        certArray.forEach((cert: any) => {
+          if (!cert || !cert.used_by) return
+          cert.used_by.forEach((app: any) => {
+            if (!institutionCertMap.has(app.nama_instansi)) {
+              institutionCertMap.set(app.nama_instansi, new Set())
+            }
+            institutionCertMap.get(app.nama_instansi)?.add(cert.app_id_label)
+          })
+        })
 
-  const treemapData = {
-    name: 'Institutions',
-    children: Array.from(institutionCertMap.entries()).map(([name, certSet], index) => ({
-      name: name,
-      value: certSet.size,
-      color: chartColors[index % chartColors.length],
-    })),
-  }
+        const treemapChildren = Array.from(institutionCertMap.entries()).map(([name, certSet], index) => ({
+          name: name,
+          value: certSet.size,
+          color: chartColors[index % chartColors.length],
+        }))
+
+        setTreemapData({
+          children: treemapChildren,
+        })
+      } catch (error) {
+        console.error('[v0] Error fetching treemap data:', error)
+      }
+    }
+
+    fetchTreemapData()
+  }, [])
 
   // Filter certificates
   const filteredData = certArray.filter((cert) => {
@@ -290,7 +294,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
           <CardContent>
             {treemapData.children.length === 0 ? (
               <div className="h-80 flex items-center justify-center text-muted-foreground">
-                <p>No data available</p>
+                <p>Loading institution data...</p>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
