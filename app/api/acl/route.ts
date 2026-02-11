@@ -13,7 +13,15 @@ async function fetchFromExternalAPI(): Promise<CertificateRelations | null> {
   }
 
   try {
-    console.log('[v0] Fetching ACL data from:', `${ACL_API_URL}:${ACL_API_PORT}/cert-related-all`)
+    // Parse the URL to extract hostname (remove protocol if present)
+    let hostname = ACL_API_URL
+    if (hostname.includes('://')) {
+      hostname = hostname.split('://')[1]
+    }
+    // Remove trailing slash if present
+    hostname = hostname.replace(/\/$/, '')
+
+    console.log('[v0] Fetching ACL data from:', `${hostname}:${ACL_API_PORT}/cert-related-all`)
 
     // Helper function to decode certificate - handles both PEM and base64 formats
     const decodeCert = (certData: string): string => {
@@ -32,7 +40,7 @@ async function fetchFromExternalAPI(): Promise<CertificateRelations | null> {
     // Use native https module for mTLS support
     return new Promise((resolve, reject) => {
       const options = {
-        hostname: ACL_API_URL,
+        hostname: hostname,
         port: parseInt(ACL_API_PORT),
         path: '/cert-related-all',
         method: 'GET',
