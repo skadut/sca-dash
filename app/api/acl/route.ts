@@ -15,6 +15,20 @@ async function fetchFromExternalAPI(): Promise<CertificateRelations | null> {
   try {
     console.log('[v0] Fetching ACL data from:', `${ACL_API_URL}:${ACL_API_PORT}/cert-related-all`)
 
+    // Helper function to decode certificate - handles both PEM and base64 formats
+    const decodeCert = (certData: string): string => {
+      // If it already looks like PEM (contains -----BEGIN), return as-is
+      if (certData.includes('-----BEGIN')) {
+        return certData
+      }
+      // Otherwise, decode from base64
+      try {
+        return Buffer.from(certData, 'base64').toString('utf-8')
+      } catch {
+        return certData // Return original if decode fails
+      }
+    }
+
     // Use native https module for mTLS support
     return new Promise((resolve, reject) => {
       const options = {
@@ -22,9 +36,9 @@ async function fetchFromExternalAPI(): Promise<CertificateRelations | null> {
         port: parseInt(ACL_API_PORT),
         path: '/cert-related-all',
         method: 'GET',
-        ca: Buffer.from(TLS_CA_CERT, 'base64'),
-        cert: Buffer.from(TLS_CERT, 'base64'),
-        key: Buffer.from(TLS_KEY, 'base64'),
+        ca: decodeCert(TLS_CA_CERT),
+        cert: decodeCert(TLS_CERT),
+        key: decodeCert(TLS_KEY),
         rejectUnauthorized: true,
         headers: {
           'Content-Type': 'application/json',
@@ -56,7 +70,7 @@ async function fetchFromExternalAPI(): Promise<CertificateRelations | null> {
       })
 
       req.on('error', (error) => {
-        console.error('[v0] Error fetching ACL data:', error)
+        console.error('[v0] ACL API error:', error)
         resolve(null)
       })
 
