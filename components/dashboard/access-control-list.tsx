@@ -20,7 +20,7 @@ const institutionBaseColors = [
   '#84cc16', '#65a30d', '#ea580c', '#dc2626', '#7c3aed', '#9333ea'
 ]
 
-// Generate gradient shades for a base color (hex)
+// Generate gradient shades for a base color (hex) with smoother, more subtle transitions
 const generateGradientShades = (baseColor: string, count: number): string[] => {
   if (count <= 1) return [baseColor]
   
@@ -31,16 +31,18 @@ const generateGradientShades = (baseColor: string, count: number): string[] => {
   const b = parseInt(hex.substring(4, 6), 16)
   
   const shades: string[] = []
+  // Use a non-linear interpolation for smoother, more subtle gradient
   for (let i = 0; i < count; i++) {
-    const ratio = i / (count - 1)
-    // Create gradient from darker to lighter
-    const darkRatio = 0.3 + ratio * 0.7
-    const newR = Math.floor(r * darkRatio)
-    const newG = Math.floor(g * darkRatio)
-    const newB = Math.floor(b * darkRatio)
+    const ratio = count === 1 ? 0.5 : i / (count - 1)
+    // Use a smoother curve: from 40% (dark) to 100% (light) for more subtle effect
+    const easeRatio = 0.4 + ratio * 0.6
     
-    const hex = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`
-    shades.push(hex)
+    const newR = Math.floor(r * easeRatio)
+    const newG = Math.floor(g * easeRatio)
+    const newB = Math.floor(b * easeRatio)
+    
+    const hexColor = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`
+    shades.push(hexColor)
   }
   
   return shades
@@ -247,9 +249,16 @@ export function AccessControlList({ data }: AccessControlListProps) {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={stackedBarDataWithColors} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+            <BarChart data={stackedBarDataWithColors} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--muted-foreground)" opacity={0.2} />
-              <XAxis dataKey="nama_instansi" angle={-45} textAnchor="end" height={120} tick={{ fontSize: 12 }} />
+              <XAxis 
+                dataKey="nama_instansi" 
+                angle={-45} 
+                textAnchor="end" 
+                height={120} 
+                tick={{ fontSize: 12 }}
+                label={{ value: 'Instansi', position: 'bottom', offset: 50 }}
+              />
               <YAxis />
               <Tooltip content={<CustomStackedBarTooltip />} />
               {allCertIds.map((certId, index) => {
