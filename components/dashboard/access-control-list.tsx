@@ -44,14 +44,26 @@ export function AccessControlList({ data }: AccessControlListProps) {
   }
 
   // Calculate statistics
+  console.log('[v0] ACL data received:', data)
+  
   const totalCertificates = Object.keys(data).length
-  const totalApplications = Object.values(data).reduce((acc, cert) => acc + cert.used_by.length, 0)
+  const totalApplications = Object.values(data).reduce((acc, cert) => {
+    if (!cert || !cert.used_by) {
+      console.log('[v0] Invalid cert structure:', cert)
+      return acc
+    }
+    return acc + cert.used_by.length
+  }, 0)
   const totalInstitutions = new Set(
-    Object.values(data).flatMap((cert) => cert.used_by.map((app) => app.nama_instansi))
+    Object.values(data).flatMap((cert) => {
+      if (!cert || !cert.used_by) return []
+      return cert.used_by.map((app) => app.nama_instansi)
+    })
   ).size
 
   // Prepare data for chart
   const chartData = Object.entries(data)
+    .filter(([_, cert]) => cert && cert.used_by)
     .map(([certId, cert]) => ({
       name: certId.replace('CS', '').substring(0, 12),
       applications: cert.used_by.length,
@@ -62,6 +74,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
   // Prepare pie chart data for institution distribution
   const institutionMap = new Map<string, number>()
   Object.values(data).forEach((cert) => {
+    if (!cert || !cert.used_by) return
     cert.used_by.forEach((app) => {
       institutionMap.set(app.nama_instansi, (institutionMap.get(app.nama_instansi) || 0) + 1)
     })
@@ -75,13 +88,17 @@ export function AccessControlList({ data }: AccessControlListProps) {
 
   // Filter certificates
   const filteredData = Object.entries(data).filter(
-    ([certId, cert]) =>
-      certId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cert.used_by.some(
-        (app) =>
-          app.nama_instansi.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          app.nama_aplikasi.toLowerCase().includes(searchQuery.toLowerCase())
+    ([certId, cert]) => {
+      if (!cert || !cert.used_by) return false
+      return (
+        certId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        cert.used_by.some(
+          (app) =>
+            app.nama_instansi.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            app.nama_aplikasi.toLowerCase().includes(searchQuery.toLowerCase())
+        )
       )
+    }
   )
 
   // Get color for certificate
