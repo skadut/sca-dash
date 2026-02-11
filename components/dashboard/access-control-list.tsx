@@ -153,18 +153,21 @@ export function AccessControlList({ data }: AccessControlListProps) {
   useEffect(() => {
     const fetchTreemapData = async () => {
       try {
+        console.log('[v0] Fetching treemap data from /api/cert-usage-all')
         const response = await fetch('/api/cert-usage-all')
         if (!response.ok) {
           console.error('[v0] Failed to fetch cert-usage-all data:', response.statusText)
           return
         }
         const result = await response.json()
+        console.log('[v0] Received cert-usage-all response:', result)
         
         // Count unique certificates per institution
         const institutionCertMap = new Map<string, Set<string>>()
         const certUsageData = result.data || result
         
         const certArray = Array.isArray(certUsageData.data) ? certUsageData.data : Array.isArray(certUsageData) ? certUsageData : []
+        console.log('[v0] Treemap certArray:', { length: certArray.length, first: certArray[0] })
         
         certArray.forEach((cert: any) => {
           if (!cert || !cert.used_by) return
@@ -181,6 +184,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
           value: certSet.size,
           color: chartColors[index % chartColors.length],
         }))
+        
+        console.log('[v0] Treemap children generated:', { count: treemapChildren.length, sample: treemapChildren[0] })
 
         setTreemapData({
           children: treemapChildren,
