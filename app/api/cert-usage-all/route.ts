@@ -4,9 +4,9 @@ import { mockACLData } from '@/lib/mock-acl-data'
 export async function GET(request: Request) {
   try {
     // Return mock data for cert-usage-all endpoint
-    // This is the same data used by the ACL endpoint
+    // This is the same data structure as the ACL endpoint
     return NextResponse.json({
-      data: mockACLData.data,
+      data: mockACLData,
       isUsingMockData: true,
       message: 'Certificate usage data',
     })
