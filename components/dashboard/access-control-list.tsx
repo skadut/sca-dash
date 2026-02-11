@@ -17,10 +17,12 @@ interface AccessControlListProps {
 const CustomPieTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0]
+    const color = data.payload.color || '#10b981'
+    
     return (
       <div className="bg-black/90 border border-white/10 rounded-lg px-4 py-3 shadow-lg backdrop-blur-sm">
         <p className="text-white font-semibold text-sm">{data.payload.name}</p>
-        <p className="text-emerald-400 font-medium text-sm mt-1">Count: {data.value}</p>
+        <p className="font-medium text-sm mt-1" style={{ color }}>Count: {data.value}</p>
       </div>
     )
   }
