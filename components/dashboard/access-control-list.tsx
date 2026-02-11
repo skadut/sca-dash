@@ -33,11 +33,13 @@ const CustomPieTooltip = ({ active, payload }: any) => {
 
 // Custom treemap content renderer
 const CustomTreemapContent = (props: any) => {
-  const { x, y, width, height, name, value, color } = props
+  const { x, y, width, height, payload } = props
   
-  if (width < 50 || height < 35) {
+  if (width < 50 || height < 35 || !payload) {
     return null
   }
+
+  const { name, value, color } = payload
 
   return (
     <g>
@@ -62,7 +64,7 @@ const CustomTreemapContent = (props: any) => {
         fontWeight="bold"
         className="pointer-events-none"
       >
-        {name.substring(0, 15)}
+        {String(name).substring(0, 15)}
       </text>
       <text
         x={x + width / 2}
