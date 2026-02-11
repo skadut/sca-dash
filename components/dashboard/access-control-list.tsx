@@ -78,6 +78,20 @@ const CustomTreemapContent = (props: any) => {
   )
 }
 
+// Custom tooltip for treemap
+const CustomTreemapTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload
+    return (
+      <div className="bg-black/90 border border-white/10 rounded-lg px-4 py-3 shadow-lg backdrop-blur-sm">
+        <p className="text-white font-semibold text-sm">{data.name}</p>
+        <p className="font-medium text-sm mt-1" style={{ color: data.color }}>Applications: {data.value}</p>
+      </div>
+    )
+  }
+  return null
+}
+
 export function AccessControlList({ data }: AccessControlListProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
