@@ -179,6 +179,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
     })),
   }
 
+  console.log('[v0] Treemap data:', treemapData)
+
   // Filter certificates
   const filteredData = certArray.filter((cert) => {
     if (!cert || !cert.used_by) return false
@@ -283,20 +285,26 @@ export function AccessControlList({ data }: AccessControlListProps) {
         <Card>
           <CardHeader>
             <CardTitle>Institution Distribution</CardTitle>
-            <CardDescription>Hierarchical view of applications by institution</CardDescription>
+            <CardDescription>Hierarchical view of certificates by institution</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <Treemap
-                data={treemapData.children}
-                dataKey="value"
-                stroke="#fff"
-                fill="#8884d8"
-                content={<CustomTreemapContent />}
-              >
-                <Tooltip content={<CustomTreemapTooltip />} />
-              </Treemap>
-            </ResponsiveContainer>
+            {treemapData.children.length === 0 ? (
+              <div className="h-80 flex items-center justify-center text-muted-foreground">
+                <p>No data available</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <Treemap
+                  data={treemapData.children}
+                  dataKey="value"
+                  stroke="#fff"
+                  fill="#8884d8"
+                  content={<CustomTreemapContent />}
+                >
+                  <Tooltip content={<CustomTreemapTooltip />} />
+                </Treemap>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
