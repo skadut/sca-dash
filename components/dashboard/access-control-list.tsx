@@ -118,6 +118,14 @@ export function AccessControlList({ data }: AccessControlListProps) {
   // Calculate statistics
   const certArray = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
   
+  console.log('[v0] ACL Component - data:', { 
+    hasData: !!data, 
+    hasdataData: !!data?.data,
+    isArray: Array.isArray(data?.data),
+    certArrayLength: certArray.length,
+    firstCert: certArray[0]
+  })
+  
   const totalCertificates = certArray.length
   const totalApplications = certArray.reduce((acc, cert) => {
     if (!cert || !cert.used_by) return acc
