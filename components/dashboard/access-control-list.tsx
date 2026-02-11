@@ -48,15 +48,19 @@ const generateGradientShades = (baseColor: string, count: number): string[] => {
   return shades
 }
 
-// Custom tooltip for stacked bar chart
+// Custom tooltip for stacked bar chart - displays certificates used by institution
 const CustomStackedBarTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
+    const institutionName = payload[0].payload.nama_instansi
+    // Get all certificate entries for this institution
+    const certEntries = payload.filter((entry: any) => entry.value === 1).map((entry: any) => entry.dataKey)
+    
     return (
       <div className="bg-black/90 border border-white/10 rounded-lg px-4 py-3 shadow-lg backdrop-blur-sm">
-        <p className="text-white font-semibold text-sm">{payload[0].payload.nama_instansi}</p>
-        {payload.map((entry: any, index: number) => (
-          <p key={index} className="font-medium text-sm mt-1" style={{ color: entry.color }}>
-            {entry.name}: {entry.value}
+        <p className="text-white font-semibold text-sm">{institutionName}</p>
+        {certEntries.map((cert: string, index: number) => (
+          <p key={index} className="font-medium text-sm mt-1 text-cyan-400">
+            {cert}: 1
           </p>
         ))}
       </div>
@@ -256,8 +260,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
                 angle={-45} 
                 textAnchor="end" 
                 height={120} 
-                tick={{ fontSize: 12 }}
-                label={{ value: 'Instansi', position: 'bottom', offset: 50 }}
+                tick={false}
+                label={{ value: 'Instansi', position: 'bottom', offset: 10 }}
               />
               <YAxis />
               <Tooltip content={<CustomStackedBarTooltip />} />
