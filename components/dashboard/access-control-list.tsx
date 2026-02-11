@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Search, Building2, Zap, Users, Database } from 'lucide-react'
 import type { CertificateUsageData } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -13,7 +13,7 @@ interface AccessControlListProps {
   data: CertificateUsageData
 }
 
-// Distinct colors for bar chart
+// Distinct colors for chart segments
 const chartColors = [
   '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899',
   '#06b6d4', '#14b8a6', '#f97316', '#6366f1', '#d946ef', '#0891b2'
@@ -21,22 +21,6 @@ const chartColors = [
 
 const getChartColor = (index: number): string => {
   return chartColors[index % chartColors.length]
-}
-
-// Custom tooltip for bar chart
-const CustomBarTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0]
-    const color = data.fill || '#3b82f6'
-    
-    return (
-      <div className="bg-black/90 border border-white/10 rounded-lg px-4 py-3 shadow-lg backdrop-blur-sm">
-        <p className="text-white font-semibold text-sm">{data.payload.name}</p>
-        <p className="font-medium text-sm mt-1" style={{ color }}>certificates: {data.value}</p>
-      </div>
-    )
-  }
-  return null
 }
 
 // Custom tooltip for stacked bar chart
@@ -83,17 +67,6 @@ export function AccessControlList({ data }: AccessControlListProps) {
     })
   ).size
 
-  // Prepare data for bar chart with distinct colors
-  const chartData = certArray
-    .filter((cert) => cert && cert.used_by)
-    .map((cert, index) => ({
-      name: cert.app_id_label.replace('CS', '').substring(0, 12),
-      applications: cert.used_by.length,
-      certId: cert.app_id_label,
-      fill: getChartColor(index),
-    }))
-    .sort((a, b) => b.applications - a.applications)
-
   // Prepare stacked bar chart data: applications per certificate, grouped by institution
   const stackedBarData = Array.from(
     certArray.reduce((institutionMap, cert) => {
@@ -122,7 +95,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
       typeof val === 'number' ? sum + val : sum, 0
     ) as number
     return bTotal - aTotal
-  }).slice(0, 10)
+  })
 
   // Get all unique certificate IDs for the stacked bar
   const allCertIds = Array.from(
@@ -208,55 +181,29 @@ export function AccessControlList({ data }: AccessControlListProps) {
         </Card>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Bar Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Applications per Certificate</CardTitle>
-            <CardDescription>Distribution across certificates</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData.slice(0, 8)}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--muted-foreground)" opacity={0.2} />
-                <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} tick={{ fontSize: 12 }} />
-                <YAxis />
-                <Tooltip content={<CustomBarTooltip />} />
-                <Bar dataKey="applications" radius={[8, 8, 0, 0]}>
-                  {chartData.slice(0, 8).map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* Stacked Bar Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Applications per Certificate</CardTitle>
+          <CardDescription>Distribution of applications across certificates by institution</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={stackedBarData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--muted-foreground)" opacity={0.2} />
+              <XAxis dataKey="nama_instansi" angle={-45} textAnchor="end" height={120} tick={{ fontSize: 12 }} />
+              <YAxis />
+              <Tooltip content={<CustomStackedBarTooltip />} />
+              <Legend wrapperStyle={{ paddingTop: '20px' }} />
+              {allCertIds.map((certId, index) => (
+                <Bar key={certId} dataKey={certId} stackId="a" fill={getChartColor(index)} name={certId.replace('CS', '').substring(0, 12)} />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
-        {/* Stacked Bar Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Applications per Certificate by Institution</CardTitle>
-            <CardDescription>Stacked distribution across institutions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={stackedBarData} layout="vertical" margin={{ top: 5, right: 30, left: 200, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--muted-foreground)" opacity={0.2} />
-                <XAxis type="number" />
-                <YAxis dataKey="nama_instansi" type="category" width={190} tick={{ fontSize: 11 }} />
-                <Tooltip content={<CustomStackedBarTooltip />} />
-                <Legend />
-                {allCertIds.map((certId, index) => (
-                  <Bar key={certId} dataKey={certId} stackId="a" fill={getChartColor(index)} name={certId.replace('CS', '').substring(0, 10)} />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Search and Grid */}
+      {/* Certificate Usage Section */}
       <Card>
         <CardHeader>
           <CardTitle>Certificate Usage</CardTitle>
