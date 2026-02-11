@@ -268,15 +268,15 @@ export function AccessControlList({ data }: AccessControlListProps) {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={stackedBarDataWithColors} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+            <BarChart data={stackedBarDataWithColors} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--muted-foreground)" opacity={0.2} />
               <XAxis 
                 dataKey="nama_instansi" 
                 angle={-45} 
                 textAnchor="end" 
-                height={120} 
+                height={60} 
                 tick={false}
-                label={{ value: 'Instansi', position: 'bottom', offset: 10 }}
+                label={{ value: 'Instansi', position: 'bottom', offset: -5 }}
               />
               <YAxis />
               <Tooltip content={<CustomStackedBarTooltip />} />
