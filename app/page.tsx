@@ -19,7 +19,7 @@ import { StatsCardsSkeleton, TableSkeleton, GraphSkeleton } from '@/components/d
 import { Shield, AlertCircle, RefreshCw, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import type { Certificate, Key, CertificateRelations } from '@/lib/types'
+import type { Certificate, Key, CertificateUsageData } from '@/lib/types'
 import { AccessControlList } from '@/components/dashboard/access-control-list'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -59,7 +59,7 @@ export default function DashboardPage() {
   })
 
   const { data: aclData, error: aclError, isLoading: aclLoading } = useSWR<{
-    data: CertificateRelations
+    data: CertificateUsageData
     isUsingMockData: boolean
     connectionFailed?: boolean
     message?: string
@@ -70,7 +70,7 @@ export default function DashboardPage() {
 
   const certificates = data?.certificates || []
   const keys = keysData?.keys || []
-  const aclRelations = aclData?.data || { relations: {}, status: 'unknown', total_cert_apps: 0 }
+  const aclData2 = aclData?.data || {}
   const isConnected = data?.isUsingMockData === false
 
   return (
@@ -209,7 +209,7 @@ export default function DashboardPage() {
                       </div>
                     ) : (
                       <div className="page-enter">
-                        <AccessControlList data={aclRelations} />
+                        <AccessControlList data={aclData2} />
                       </div>
                     )}
                   </>

@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
 import https from 'https'
-import type { CertificateRelations } from '@/lib/types'
+import type { CertificateUsageData } from '@/lib/types'
 import { mockACLData } from '@/lib/mock-acl-data'
 
 // Fetch from external API with mTLS
-async function fetchFromExternalAPI(): Promise<CertificateRelations | null> {
+async function fetchFromExternalAPI(): Promise<CertificateUsageData | null> {
   const { ACL_API_URL, ACL_API_PORT, TLS_CA_CERT, TLS_CERT, TLS_KEY, TLS_VERIFY } = process.env
 
   if (!ACL_API_URL || !ACL_API_PORT || !TLS_CA_CERT || !TLS_CERT || !TLS_KEY) {
@@ -21,7 +21,7 @@ async function fetchFromExternalAPI(): Promise<CertificateRelations | null> {
     // Remove trailing slash if present
     hostname = hostname.replace(/\/$/, '')
 
-    console.log('[v0] Fetching ACL data from:', `${hostname}:${ACL_API_PORT}/cert-related-all`)
+    console.log('[v0] Fetching ACL data from:', `${hostname}:${ACL_API_PORT}/cert-usage-all`)
     console.log('[v0] Certificate verification:', TLS_VERIFY !== 'false' ? 'enabled' : 'disabled')
 
     // Helper function to decode certificate - handles both PEM and base64 formats
@@ -52,7 +52,7 @@ async function fetchFromExternalAPI(): Promise<CertificateRelations | null> {
       const options: any = {
         hostname: hostname,
         port: parseInt(ACL_API_PORT),
-        path: '/cert-related-all',
+        path: '/cert-usage-all',
         method: 'GET',
         ca: caCert,
         cert: clientCert,
@@ -76,7 +76,7 @@ async function fetchFromExternalAPI(): Promise<CertificateRelations | null> {
             try {
               const jsonData = JSON.parse(data)
               console.log('[v0] ACL data fetched successfully from API')
-              resolve(jsonData as CertificateRelations)
+              resolve(jsonData as CertificateUsageData)
             } catch (parseError) {
               console.error('[v0] Error parsing ACL response:', parseError)
               resolve(null)

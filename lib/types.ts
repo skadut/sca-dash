@@ -47,10 +47,11 @@ export type CertificateStatus = "active" | "inactive" | "revoked"
 export type ValidityStatus = "valid" | "expiring" | "expired"
 export type KeyStatus = "active" | "expired" | "revoked"
 
-export interface CertificateRelations {
-  relations: {
-    [certificateId: string]: string[]
-  }
-  status: string
-  total_cert_apps: number
+export interface CertificateUsage {
+  nama_instansi: string
+  nama_aplikasi: string
+}
+
+export interface CertificateUsageData {
+  [certificateId: string]: CertificateUsage[]
 }
