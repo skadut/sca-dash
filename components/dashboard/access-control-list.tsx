@@ -34,6 +34,15 @@ const CustomPieTooltip = ({ active, payload }: any) => {
 export function AccessControlList({ data }: AccessControlListProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
+  // HSM color configuration
+  const getHSMColor = (hsm: string): string => {
+    const hsmLower = hsm.toLowerCase()
+    if (hsmLower.includes('spbe')) return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+    if (hsmLower.includes('iiv')) return 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+    if (hsmLower.includes('thales') || hsmLower.includes('luna')) return 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+    return 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+  }
+
   // Calculate statistics
   const totalCertificates = Object.keys(data).length
   const totalApplications = Object.values(data).reduce((acc, cert) => acc + cert.used_by.length, 0)
@@ -237,7 +246,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
                         <h4 className="font-semibold text-sm truncate text-primary">{certId}</h4>
                         <p className="text-xs text-muted-foreground mt-1">{cert.used_by.length} application(s)</p>
                       </div>
-                      <Badge className={cn('shrink-0 bg-blue-500/10 text-blue-600 border-blue-200')}>{cert.hsm}</Badge>
+                      <Badge variant="outline" className={cn('shrink-0 font-mono text-xs', getHSMColor(cert.hsm))}>{cert.hsm}</Badge>
                     </div>
                   </CardHeader>
 
