@@ -90,7 +90,7 @@ const CustomTreemapContent = (props: any) => {
         fontSize={11}
         className="pointer-events-none"
       >
-        {value} app{value !== 1 ? 's' : ''}
+        {value} cert{value !== 1 ? 's' : ''}
       </text>
     </g>
   )
@@ -103,7 +103,7 @@ const CustomTreemapTooltip = ({ active, payload }: any) => {
     return (
       <div className="bg-black/90 border border-white/10 rounded-lg px-4 py-3 shadow-lg backdrop-blur-sm">
         <p className="text-white font-semibold text-sm">{data.name}</p>
-        <p className="font-medium text-sm mt-1" style={{ color: data.color }}>Applications: {data.value}</p>
+        <p className="font-medium text-sm mt-1" style={{ color: data.color }}>Certificates: {data.value}</p>
       </div>
     )
   }
@@ -158,20 +158,23 @@ export function AccessControlList({ data }: AccessControlListProps) {
     }))
     .sort((a, b) => b.applications - a.applications)
 
-  // Prepare treemap data for institution distribution
-  const institutionMap = new Map<string, number>()
+  // Prepare treemap data for institution distribution (counting certificates per institution)
+  const institutionCertMap = new Map<string, Set<string>>()
   certArray.forEach((cert) => {
     if (!cert || !cert.used_by) return
     cert.used_by.forEach((app) => {
-      institutionMap.set(app.nama_instansi, (institutionMap.get(app.nama_instansi) || 0) + 1)
+      if (!institutionCertMap.has(app.nama_instansi)) {
+        institutionCertMap.set(app.nama_instansi, new Set())
+      }
+      institutionCertMap.get(app.nama_instansi)?.add(cert.app_id_label)
     })
   })
 
   const treemapData = {
     name: 'Institutions',
-    children: Array.from(institutionMap.entries()).map(([name, count], index) => ({
+    children: Array.from(institutionCertMap.entries()).map(([name, certSet], index) => ({
       name: name,
-      value: count,
+      value: certSet.size,
       color: chartColors[index % chartColors.length],
     })),
   }
