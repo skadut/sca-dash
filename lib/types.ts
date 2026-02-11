@@ -52,6 +52,12 @@ export interface CertificateUsage {
   nama_aplikasi: string
 }
 
+export interface CertificateUsageWithHSM {
+  app_id_label: string
+  hsm: string
+  used_by: CertificateUsage[]
+}
+
 export interface CertificateUsageData {
-  [certificateId: string]: CertificateUsage[]
+  [certificateId: string]: CertificateUsageWithHSM
 }

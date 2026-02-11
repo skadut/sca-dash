@@ -36,24 +36,24 @@ export function AccessControlList({ data }: AccessControlListProps) {
 
   // Calculate statistics
   const totalCertificates = Object.keys(data).length
-  const totalApplications = Object.values(data).reduce((acc, apps) => acc + apps.length, 0)
+  const totalApplications = Object.values(data).reduce((acc, cert) => acc + cert.used_by.length, 0)
   const totalInstitutions = new Set(
-    Object.values(data).flatMap((apps) => apps.map((app) => app.nama_instansi))
+    Object.values(data).flatMap((cert) => cert.used_by.map((app) => app.nama_instansi))
   ).size
 
   // Prepare data for chart
   const chartData = Object.entries(data)
-    .map(([certId, apps]) => ({
+    .map(([certId, cert]) => ({
       name: certId.replace('CS', '').substring(0, 12),
-      applications: apps.length,
+      applications: cert.used_by.length,
       certId: certId,
     }))
     .sort((a, b) => b.applications - a.applications)
 
   // Prepare pie chart data for institution distribution
   const institutionMap = new Map<string, number>()
-  Object.values(data).forEach((apps) => {
-    apps.forEach((app) => {
+  Object.values(data).forEach((cert) => {
+    cert.used_by.forEach((app) => {
       institutionMap.set(app.nama_instansi, (institutionMap.get(app.nama_instansi) || 0) + 1)
     })
   })
@@ -66,9 +66,9 @@ export function AccessControlList({ data }: AccessControlListProps) {
 
   // Filter certificates
   const filteredData = Object.entries(data).filter(
-    ([certId, apps]) =>
+    ([certId, cert]) =>
       certId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      apps.some(
+      cert.used_by.some(
         (app) =>
           app.nama_instansi.toLowerCase().includes(searchQuery.toLowerCase()) ||
           app.nama_aplikasi.toLowerCase().includes(searchQuery.toLowerCase())
@@ -229,22 +229,22 @@ export function AccessControlList({ data }: AccessControlListProps) {
                 <p>No results found</p>
               </div>
             ) : (
-              filteredData.map(([certId, apps], index) => (
+              filteredData.map(([certId, cert], index) => (
                 <Card key={certId} className="hover:shadow-lg transition-all hover:border-primary/50 overflow-hidden">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <h4 className="font-semibold text-sm truncate text-primary">{certId}</h4>
-                        <p className="text-xs text-muted-foreground mt-1">{apps.length} application(s)</p>
+                        <p className="text-xs text-muted-foreground mt-1">{cert.used_by.length} application(s)</p>
                       </div>
-                      <Badge className={cn('shrink-0', getCertificateColor(index))}>{apps.length}</Badge>
+                      <Badge className={cn('shrink-0 bg-blue-500/10 text-blue-600 border-blue-200')}>{cert.hsm}</Badge>
                     </div>
                   </CardHeader>
 
                   <CardContent className="space-y-3">
                     {/* Applications List */}
                     <div className="space-y-2">
-                      {apps.map((app, appIndex) => (
+                      {cert.used_by.map((app, appIndex) => (
                         <div key={appIndex} className="p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                           <p className="text-xs font-medium text-foreground truncate">{app.nama_aplikasi}</p>
                           <p className="text-xs text-muted-foreground truncate">{app.nama_instansi}</p>
