@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { StatsCards } from '@/components/dashboard/stats-cards'
 import { CertificateInsights } from '@/components/dashboard/certificate-insights'
@@ -14,40 +14,16 @@ interface CertificateAccessToggleProps {
 
 export function CertificateAccessToggle({ certificates }: CertificateAccessToggleProps) {
   const [activeView, setActiveView] = useState<'overview' | 'traffic'>('overview')
-  const [isAnimating, setIsAnimating] = useState(false)
-
-  // Trigger animation on mount and when page changes
-  useEffect(() => {
-    setIsAnimating(true)
-    const timer = setTimeout(() => setIsAnimating(false), 600)
-    return () => clearTimeout(timer)
-  }, [])
 
   return (
     <div className="space-y-6">
-      {/* Stage Progress Bar - Expanding Animation */}
-      <div className="relative h-1 bg-muted rounded-full overflow-hidden">
-        <div
-          className={`h-full bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 rounded-full transition-all duration-700 ease-out ${
-            isAnimating ? 'w-full' : 'w-12'
-          }`}
-          style={{
-            boxShadow: isAnimating ? '0 0 12px rgba(99, 102, 241, 0.6)' : 'none',
-          }}
-        />
-      </div>
-
       {/* Toggle Switch - Modern Segmented Control */}
       <Card className="border-border/50">
         <CardContent className="p-4">
           <div className="inline-flex w-full max-w-md rounded-lg bg-muted/50 p-1 mx-auto gap-1">
             {/* Overview Button */}
             <button
-              onClick={() => {
-                setActiveView('overview')
-                setIsAnimating(true)
-                setTimeout(() => setIsAnimating(false), 600)
-              }}
+              onClick={() => setActiveView('overview')}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium text-sm transition-all duration-300 ${
                 activeView === 'overview'
                   ? 'bg-background text-foreground shadow-md'
@@ -60,11 +36,7 @@ export function CertificateAccessToggle({ certificates }: CertificateAccessToggl
 
             {/* Traffic Analysis Button */}
             <button
-              onClick={() => {
-                setActiveView('traffic')
-                setIsAnimating(true)
-                setTimeout(() => setIsAnimating(false), 600)
-              }}
+              onClick={() => setActiveView('traffic')}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium text-sm transition-all duration-300 ${
                 activeView === 'traffic'
                   ? 'bg-background text-foreground shadow-md'
