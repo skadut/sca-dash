@@ -13,6 +13,20 @@ interface AccessControlListProps {
   data: CertificateUsageData
 }
 
+// Custom tooltip component for pie chart
+const CustomPieTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0]
+    return (
+      <div className="bg-black/90 border border-white/10 rounded-lg px-4 py-3 shadow-lg backdrop-blur-sm">
+        <p className="text-white font-semibold text-sm">{data.payload.name}</p>
+        <p className="text-emerald-400 font-medium text-sm mt-1">Count: {data.value}</p>
+      </div>
+    )
+  }
+  return null
+}
+
 export function AccessControlList({ data }: AccessControlListProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -179,13 +193,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'var(--background)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '8px',
-                  }}
-                />
+                <Tooltip content={<CustomPieTooltip />} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
