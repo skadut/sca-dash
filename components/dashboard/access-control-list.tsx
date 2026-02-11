@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Treemap } from 'recharts'
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Search, Building2, Zap, Users, Database } from 'lucide-react'
 import type { CertificateUsageData } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -39,72 +39,25 @@ const CustomBarTooltip = ({ active, payload }: any) => {
   return null
 }
 
-// Custom tooltip for treemap
-const CustomTreemapTooltip = ({ active, payload }: any) => {
+// Custom tooltip for stacked bar chart
+const CustomStackedBarTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
-    const data = payload[0].payload
     return (
       <div className="bg-black/90 border border-white/10 rounded-lg px-4 py-3 shadow-lg backdrop-blur-sm">
-        <p className="text-white font-semibold text-sm">{data.name}</p>
-        <p className="font-medium text-sm mt-1" style={{ color: data.color }}>Certificates: {data.value}</p>
+        <p className="text-white font-semibold text-sm">{payload[0].payload.nama_instansi}</p>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} className="font-medium text-sm mt-1" style={{ color: entry.color }}>
+            {entry.name}: {entry.value}
+          </p>
+        ))}
       </div>
     )
   }
   return null
 }
 
-// Custom treemap content renderer
-const CustomTreemapContent = (props: any) => {
-  const { x, y, width, height, payload } = props
-  
-  if (width < 50 || height < 35 || !payload) {
-    return null
-  }
-
-  const { name, value, color } = payload
-
-  return (
-    <g>
-      <rect
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        style={{
-          fill: color,
-          stroke: '#fff',
-          strokeWidth: 2,
-          opacity: 0.8,
-        }}
-      />
-      <text
-        x={x + width / 2}
-        y={y + height / 2 - 8}
-        textAnchor="middle"
-        fill="#fff"
-        fontSize={12}
-        fontWeight="bold"
-        className="pointer-events-none"
-      >
-        {String(name).substring(0, 15)}
-      </text>
-      <text
-        x={x + width / 2}
-        y={y + height / 2 + 10}
-        textAnchor="middle"
-        fill="#fff"
-        fontSize={11}
-        className="pointer-events-none"
-      >
-        {value} cert{value !== 1 ? 's' : ''}
-      </text>
-    </g>
-  )
-}
-
 export function AccessControlList({ data }: AccessControlListProps) {
   const [searchQuery, setSearchQuery] = useState('')
-  const [treemapData, setTreemapData] = useState<any>({ children: [] })
 
   // HSM color configuration
   const getHSMColor = (hsm: string): string => {
@@ -117,14 +70,6 @@ export function AccessControlList({ data }: AccessControlListProps) {
 
   // Calculate statistics
   const certArray = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
-  
-  console.log('[v0] ACL Component - data:', { 
-    hasData: !!data, 
-    hasdataData: !!data?.data,
-    isArray: Array.isArray(data?.data),
-    certArrayLength: certArray.length,
-    firstCert: certArray[0]
-  })
   
   const totalCertificates = certArray.length
   const totalApplications = certArray.reduce((acc, cert) => {
@@ -149,54 +94,44 @@ export function AccessControlList({ data }: AccessControlListProps) {
     }))
     .sort((a, b) => b.applications - a.applications)
 
-  // Fetch treemap data from /cert-usage-all endpoint
-  useEffect(() => {
-    const fetchTreemapData = async () => {
-      try {
-        console.log('[v0] Fetching treemap data from /api/cert-usage-all')
-        const response = await fetch('/api/cert-usage-all')
-        if (!response.ok) {
-          console.error('[v0] Failed to fetch cert-usage-all data:', response.statusText)
-          return
-        }
-        const result = await response.json()
-        console.log('[v0] Received cert-usage-all response:', result)
-        
-        // Count unique certificates per institution
-        const institutionCertMap = new Map<string, Set<string>>()
-        const certUsageData = result.data || result
-        
-        const certArray = Array.isArray(certUsageData.data) ? certUsageData.data : Array.isArray(certUsageData) ? certUsageData : []
-        console.log('[v0] Treemap certArray:', { length: certArray.length, first: certArray[0] })
-        
-        certArray.forEach((cert: any) => {
-          if (!cert || !cert.used_by) return
-          cert.used_by.forEach((app: any) => {
-            if (!institutionCertMap.has(app.nama_instansi)) {
-              institutionCertMap.set(app.nama_instansi, new Set())
-            }
-            institutionCertMap.get(app.nama_instansi)?.add(cert.app_id_label)
+  // Prepare stacked bar chart data: applications per certificate, grouped by institution
+  const stackedBarData = Array.from(
+    certArray.reduce((institutionMap, cert) => {
+      if (!cert || !cert.used_by) return institutionMap
+      
+      cert.used_by.forEach((app) => {
+        const instName = app.nama_instansi
+        if (!institutionMap.has(instName)) {
+          institutionMap.set(instName, {
+            nama_instansi: instName,
           })
-        })
-
-        const treemapChildren = Array.from(institutionCertMap.entries()).map(([name, certSet], index) => ({
-          name: name,
-          value: certSet.size,
-          color: chartColors[index % chartColors.length],
-        }))
+        }
         
-        console.log('[v0] Treemap children generated:', { count: treemapChildren.length, sample: treemapChildren[0] })
+        const instData = institutionMap.get(instName)!
+        const certLabel = cert.app_id_label
+        instData[certLabel] = (instData[certLabel] || 0) + 1
+      })
+      
+      return institutionMap
+    }, new Map<string, any>()).values()
+  ).sort((a, b) => {
+    const aTotal = Object.values(a).reduce((sum: any, val: any) => 
+      typeof val === 'number' ? sum + val : sum, 0
+    ) as number
+    const bTotal = Object.values(b).reduce((sum: any, val: any) => 
+      typeof val === 'number' ? sum + val : sum, 0
+    ) as number
+    return bTotal - aTotal
+  }).slice(0, 10)
 
-        setTreemapData({
-          children: treemapChildren,
-        })
-      } catch (error) {
-        console.error('[v0] Error fetching treemap data:', error)
-      }
-    }
-
-    fetchTreemapData()
-  }, [])
+  // Get all unique certificate IDs for the stacked bar
+  const allCertIds = Array.from(
+    new Set(
+      certArray
+        .filter(c => c && c.used_by)
+        .flatMap(c => c.used_by.map(() => c.app_id_label))
+    )
+  ).sort()
 
   // Filter certificates
   const filteredData = certArray.filter((cert) => {
@@ -298,30 +233,25 @@ export function AccessControlList({ data }: AccessControlListProps) {
           </CardContent>
         </Card>
 
-        {/* Treemap Chart */}
+        {/* Stacked Bar Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Institution Distribution</CardTitle>
-            <CardDescription>Hierarchical view of certificates by institution</CardDescription>
+            <CardTitle>Applications per Certificate by Institution</CardTitle>
+            <CardDescription>Stacked distribution across institutions</CardDescription>
           </CardHeader>
           <CardContent>
-            {treemapData.children.length === 0 ? (
-              <div className="h-80 flex items-center justify-center text-muted-foreground">
-                <p>Loading institution data...</p>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <Treemap
-                  data={treemapData.children}
-                  dataKey="value"
-                  stroke="#fff"
-                  fill="#8884d8"
-                  content={<CustomTreemapContent />}
-                >
-                  <Tooltip content={<CustomTreemapTooltip />} />
-                </Treemap>
-              </ResponsiveContainer>
-            )}
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={stackedBarData} layout="vertical" margin={{ top: 5, right: 30, left: 200, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--muted-foreground)" opacity={0.2} />
+                <XAxis type="number" />
+                <YAxis dataKey="nama_instansi" type="category" width={190} tick={{ fontSize: 11 }} />
+                <Tooltip content={<CustomStackedBarTooltip />} />
+                <Legend />
+                {allCertIds.map((certId, index) => (
+                  <Bar key={certId} dataKey={certId} stackId="a" fill={getChartColor(index)} name={certId.replace('CS', '').substring(0, 10)} />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
