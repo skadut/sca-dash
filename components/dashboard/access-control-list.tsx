@@ -44,36 +44,33 @@ export function AccessControlList({ data }: AccessControlListProps) {
   }
 
   // Calculate statistics
-  console.log('[v0] ACL data received:', data)
+  const certArray = data?.data || []
   
-  const totalCertificates = Object.keys(data).length
-  const totalApplications = Object.values(data).reduce((acc, cert) => {
-    if (!cert || !cert.used_by) {
-      console.log('[v0] Invalid cert structure:', cert)
-      return acc
-    }
+  const totalCertificates = certArray.length
+  const totalApplications = certArray.reduce((acc, cert) => {
+    if (!cert || !cert.used_by) return acc
     return acc + cert.used_by.length
   }, 0)
   const totalInstitutions = new Set(
-    Object.values(data).flatMap((cert) => {
+    certArray.flatMap((cert) => {
       if (!cert || !cert.used_by) return []
       return cert.used_by.map((app) => app.nama_instansi)
     })
   ).size
 
   // Prepare data for chart
-  const chartData = Object.entries(data)
-    .filter(([_, cert]) => cert && cert.used_by)
-    .map(([certId, cert]) => ({
-      name: certId.replace('CS', '').substring(0, 12),
+  const chartData = certArray
+    .filter((cert) => cert && cert.used_by)
+    .map((cert) => ({
+      name: cert.app_id_label.replace('CS', '').substring(0, 12),
       applications: cert.used_by.length,
-      certId: certId,
+      certId: cert.app_id_label,
     }))
     .sort((a, b) => b.applications - a.applications)
 
   // Prepare pie chart data for institution distribution
   const institutionMap = new Map<string, number>()
-  Object.values(data).forEach((cert) => {
+  certArray.forEach((cert) => {
     if (!cert || !cert.used_by) return
     cert.used_by.forEach((app) => {
       institutionMap.set(app.nama_instansi, (institutionMap.get(app.nama_instansi) || 0) + 1)
@@ -87,19 +84,17 @@ export function AccessControlList({ data }: AccessControlListProps) {
   }))
 
   // Filter certificates
-  const filteredData = Object.entries(data).filter(
-    ([certId, cert]) => {
-      if (!cert || !cert.used_by) return false
-      return (
-        certId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        cert.used_by.some(
-          (app) =>
-            app.nama_instansi.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            app.nama_aplikasi.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+  const filteredData = certArray.filter((cert) => {
+    if (!cert || !cert.used_by) return false
+    return (
+      cert.app_id_label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      cert.used_by.some(
+        (app) =>
+          app.nama_instansi.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          app.nama_aplikasi.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    }
-  )
+    )
+  })
 
   // Get color for certificate
   const getCertificateColor = (index: number): string => {
@@ -255,12 +250,12 @@ export function AccessControlList({ data }: AccessControlListProps) {
                 <p>No results found</p>
               </div>
             ) : (
-              filteredData.map(([certId, cert], index) => (
-                <Card key={certId} className="hover:shadow-lg transition-all hover:border-primary/50 overflow-hidden">
+              filteredData.map((cert, index) => (
+                <Card key={cert.app_id_label} className="hover:shadow-lg transition-all hover:border-primary/50 overflow-hidden">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h4 className="font-semibold text-sm truncate text-primary">{certId}</h4>
+                        <h4 className="font-semibold text-sm truncate text-primary">{cert.app_id_label}</h4>
                         <p className="text-xs text-muted-foreground mt-1">{cert.used_by.length} application(s)</p>
                       </div>
                       <Badge variant="outline" className={cn('shrink-0 font-mono text-xs', getHSMColor(cert.hsm))}>{cert.hsm}</Badge>

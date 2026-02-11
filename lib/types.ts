@@ -59,5 +59,5 @@ export interface CertificateUsageWithHSM {
 }
 
 export interface CertificateUsageData {
-  [certificateId: string]: CertificateUsageWithHSM
+  data: CertificateUsageWithHSM[]
 }
