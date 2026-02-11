@@ -78,6 +78,15 @@ export function AccessControlList({ data }: AccessControlListProps) {
   // Calculate statistics
   const certArray = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
   
+  // Get all unique certificate IDs for the stacked bar (sorted) - MUST be before stackedBarDataWithColors
+  const allCertIds = Array.from(
+    new Set(
+      certArray
+        .filter(c => c && c.used_by && c.used_by.length > 0)
+        .map(c => c.app_id_label)
+    )
+  ).sort()
+  
   const totalCertificates = certArray.length
   const totalApplications = certArray.reduce((acc, cert) => {
     if (!cert || !cert.used_by) return acc
@@ -154,15 +163,6 @@ export function AccessControlList({ data }: AccessControlListProps) {
       )
     })
   }
-
-  // Get all unique certificate IDs for the stacked bar (sorted)
-  const allCertIds = Array.from(
-    new Set(
-      certArray
-        .filter(c => c && c.used_by && c.used_by.length > 0)
-        .map(c => c.app_id_label)
-    )
-  ).sort()
 
   // Filter certificates
   const filteredData = certArray.filter((cert) => {
