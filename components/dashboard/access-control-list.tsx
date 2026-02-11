@@ -77,8 +77,6 @@ const CustomTreemapContent = (props: any) => {
     </g>
   )
 }
-  return null
-}
 
 export function AccessControlList({ data }: AccessControlListProps) {
   const [searchQuery, setSearchQuery] = useState('')
