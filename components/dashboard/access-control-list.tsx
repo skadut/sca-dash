@@ -169,6 +169,11 @@ export function AccessControlList({ data }: AccessControlListProps) {
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
+                  labelProps={{
+                    fill: '#ffffff',
+                    fontSize: 13,
+                    fontWeight: 500,
+                  }}
                 >
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
