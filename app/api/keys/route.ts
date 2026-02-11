@@ -31,9 +31,10 @@ async function fetchFromDatabase(): Promise<Key[] | null> {
         TO_CHAR(key_created, 'YYYY/MM/DD') as key_created,
         TO_CHAR(key_expired, 'YYYY/MM/DD') as key_expired,
         secret_id, secret_label, secret_data,
-        created_at, updated_at, revoked_key_status, hsm
+        TO_CHAR(key_created, 'YYYYMMDD') as created_date,
+        created_at::text, updated_at::text, revoked_key_status, hsm
       FROM key_test 
-      ORDER BY created_at DESC
+      ORDER BY key_created DESC
     `
 
     await sql.end()

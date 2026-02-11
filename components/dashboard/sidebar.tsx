@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 
-import { Shield, Grid3x3, Key, FileText } from 'lucide-react'
+import { Shield, Grid3x3, Key, FileText, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface SidebarProps {
@@ -18,6 +18,7 @@ export function Sidebar({ activeMenu = 'dashboard', onMenuChange }: SidebarProps
         { id: 'dashboard', label: 'Dashboard', icon: Grid3x3 },
         { id: 'inventory', label: 'Key Inventory', icon: Key },
         { id: 'certificates', label: 'Certificate Access', icon: FileText },
+        { id: 'acl', label: 'Access Control List', icon: Lock },
       ],
     },
   ]

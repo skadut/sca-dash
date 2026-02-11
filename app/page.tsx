@@ -1,34 +1,42 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import useSWR from "swr"
-import { StatsCards } from "@/components/dashboard/stats-cards"
-import { CertificateTable } from "@/components/dashboard/certificate-table"
-import { NavigationTabs } from "@/components/dashboard/navigation-tabs"
-import { UtilityTrends } from "@/components/dashboard/utility-trends"
-import { DataModeToggle } from "@/components/dashboard/data-mode-toggle"
-import { ThemeToggle } from "@/components/dashboard/theme-toggle"
-import { FileDistribution } from "@/components/dashboard/file-distribution"
-import { KeySecretRelationship } from "@/components/dashboard/key-secret-relationship"
-import { Sidebar } from "@/components/dashboard/sidebar"
-import { CombinedHSMVisualization } from "@/components/dashboard/combined-hsm-visualization"
-import { KeyInventoryToggle } from "@/components/dashboard/key-inventory-toggle"
-import { CertificateAccessToggle } from "@/components/dashboard/certificate-access-toggle"
-import { KeyTable } from "@/components/dashboard/key-table"
-import { StatsCardsSkeleton, TableSkeleton, GraphSkeleton } from "@/components/dashboard/loading-skeleton"
-import { Shield, AlertCircle, RefreshCw, Info } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import type { Certificate, Key } from "@/lib/types"
+import { useState } from 'react'
+import useSWR from 'swr'
+import { StatsCards } from '@/components/dashboard/stats-cards'
+import { CertificateTable } from '@/components/dashboard/certificate-table'
+import { NavigationTabs } from '@/components/dashboard/navigation-tabs'
+import { UtilityTrends } from '@/components/dashboard/utility-trends'
+import { DataModeToggle } from '@/components/dashboard/data-mode-toggle'
+import { ThemeToggle } from '@/components/dashboard/theme-toggle'
+import { FileDistribution } from '@/components/dashboard/file-distribution'
+import { KeySecretRelationship } from '@/components/dashboard/key-secret-relationship'
+import { Sidebar } from '@/components/dashboard/sidebar'
+import { CombinedHSMVisualization } from '@/components/dashboard/combined-hsm-visualization'
+import { KeyInventoryToggle } from '@/components/dashboard/key-inventory-toggle'
+import { CertificateAccessToggle } from '@/components/dashboard/certificate-access-toggle'
+import { KeyTable } from '@/components/dashboard/key-table'
+import { StatsCardsSkeleton, TableSkeleton, GraphSkeleton } from '@/components/dashboard/loading-skeleton'
+import { Shield, AlertCircle, RefreshCw, Info } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import type { Certificate, Key, CertificateUsageData } from '@/lib/types'
+import { AccessControlList } from '@/components/dashboard/access-control-list'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-type DataMode = "mock" | "database"
+type DataMode = 'mock' | 'database'
 
 export default function DashboardPage() {
-  const [activeMenu, setActiveMenu] = useState<"dashboard" | "inventory" | "certificates">("dashboard")
-  const [dataMode, setDataMode] = useState<DataMode>("mock")
-  const [activeTab, setActiveTab] = useState<"status" | "traffic">("status") // Declare activeTab and setActiveTab
+  const [activeMenu, setActiveMenu] = useState<'dashboard' | 'inventory' | 'certificates' | 'acl'>('dashboard')
+  const [dataMode, setDataMode] = useState<DataMode>('mock')
+  const [activeTab, setActiveTab] = useState<'status' | 'traffic'>('status')
+  const [pageKey, setPageKey] = useState(0)
+
+  // Trigger re-render and animation when changing pages
+  const handleMenuChange = (menu: 'dashboard' | 'inventory' | 'certificates' | 'acl') => {
+    setActiveMenu(menu)
+    setPageKey((prev) => prev + 1)
+  }
 
   const { data, error, isLoading, mutate } = useSWR<{
     certificates: Certificate[]
@@ -50,8 +58,19 @@ export default function DashboardPage() {
     revalidateOnFocus: true,
   })
 
+  const { data: aclData, error: aclError, isLoading: aclLoading } = useSWR<{
+    data: CertificateUsageData
+    isUsingMockData: boolean
+    connectionFailed?: boolean
+    message?: string
+  }>(`/api/acl?mode=${dataMode}`, fetcher, {
+    refreshInterval: 30000,
+    revalidateOnFocus: true,
+  })
+
   const certificates = data?.certificates || []
   const keys = keysData?.keys || []
+  const aclData2 = aclData?.data || {}
   const isConnected = data?.isUsingMockData === false
 
   return (
@@ -131,35 +150,71 @@ export default function DashboardPage() {
                 <TableSkeleton />
               </>
             ) : (
-              <>
-                {activeMenu === "dashboard" && (
+              <div className="page-content" key={pageKey}>
+                {activeMenu === 'dashboard' && (
                   <>
-                    {/* Top Row: Combined HSM Type Visualization */}
-                    <CombinedHSMVisualization certificates={certificates} keys={keys} />
-                    
-                    {/* Second Row: File Availability and Key-Secret Relationship */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="page-enter">
+                      <CombinedHSMVisualization certificates={certificates} keys={keys} />
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 page-enter" style={{ animationDelay: '50ms' }}>
                       <FileDistribution certificates={certificates} />
                       <KeySecretRelationship keys={keys} />
                     </div>
-                    
-                    {/* Traffic Graph */}
-                    <UtilityTrends certificates={certificates} keys={keys} />
+                    <div className="page-enter" style={{ animationDelay: '100ms' }}>
+                      <UtilityTrends certificates={certificates} keys={keys} />
+                    </div>
                   </>
                 )}
-                {activeMenu === "inventory" && (
+                {activeMenu === 'inventory' && (
                   <>
-                    <KeyInventoryToggle keys={keys} />
-                    <KeyTable keys={keys} />
+                    <div className="page-enter">
+                      <KeyInventoryToggle keys={keys} />
+                    </div>
+                    <div className="page-enter" style={{ animationDelay: '50ms' }}>
+                      <KeyTable keys={keys} />
+                    </div>
                   </>
                 )}
-                {activeMenu === "certificates" && (
+                {activeMenu === 'certificates' && (
                   <>
-                    <CertificateAccessToggle certificates={certificates} />
-                    <CertificateTable certificates={certificates} />
+                    <div className="page-enter">
+                      <CertificateAccessToggle certificates={certificates} />
+                    </div>
+                    <div className="page-enter" style={{ animationDelay: '50ms' }}>
+                      <CertificateTable certificates={certificates} />
+                    </div>
                   </>
                 )}
-              </>
+                {activeMenu === 'acl' && (
+                  <>
+                    {aclLoading ? (
+                      <div className="page-enter">
+                        <StatsCardsSkeleton />
+                      </div>
+                    ) : aclError ? (
+                      <div className="page-enter">
+                        <Card className="border-destructive/50 bg-destructive/5">
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-3">
+                              <AlertCircle className="h-5 w-5 text-destructive" />
+                              <div>
+                                <p className="font-medium text-destructive">Failed to load ACL data</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {aclError.message || 'Please check your connection and try again.'}
+                                </p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    ) : (
+                      <div className="page-enter">
+                        <AccessControlList data={aclData2} />
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             )}
           </div>
         </main>

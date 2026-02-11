@@ -28,6 +28,7 @@ export interface Key {
   secret_id: string
   secret_label: string
   secret_data: string
+  created_date: string // YYYYMMDD format
   created_at: string
   updated_at: string
   revoked_key_status: boolean
@@ -45,3 +46,18 @@ export interface Notification {
 export type CertificateStatus = "active" | "inactive" | "revoked"
 export type ValidityStatus = "valid" | "expiring" | "expired"
 export type KeyStatus = "active" | "expired" | "revoked"
+
+export interface CertificateUsage {
+  nama_instansi: string
+  nama_aplikasi: string
+}
+
+export interface CertificateUsageWithHSM {
+  app_id_label: string
+  hsm: string
+  used_by: CertificateUsage[]
+}
+
+export interface CertificateUsageData {
+  data: CertificateUsageWithHSM[]
+}

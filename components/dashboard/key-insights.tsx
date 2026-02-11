@@ -10,9 +10,9 @@ interface KeyInsightsProps {
 }
 
 export function KeyInsights({ keys }: KeyInsightsProps) {
-  // Get top 4 most recent keys
+  // Get top 4 most recent keys - sorted by created_date column
   const recentKeys = [...keys]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .sort((a, b) => parseInt(b.created_date) - parseInt(a.created_date))
     .slice(0, 4)
 
   // Get top 4 institutions by key count
@@ -49,7 +49,12 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
   }
 
   const getTimeAgo = (dateStr: string): string => {
-    const date = new Date(dateStr)
+    // Parse YYYYMMDD format
+    const year = parseInt(dateStr.substring(0, 4))
+    const month = parseInt(dateStr.substring(4, 6)) - 1 // JavaScript months are 0-indexed
+    const day = parseInt(dateStr.substring(6, 8))
+    
+    const date = new Date(year, month, day)
     const now = new Date()
     const diffMs = now.getTime() - date.getTime()
     const diffMins = Math.floor(diffMs / 60000)
@@ -108,7 +113,7 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-foreground truncate">{key.nama_aplikasi}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {key.id_login} • {getTimeAgo(key.created_at)}
+                    {key.id_login} • {getTimeAgo(key.created_date)}
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">
