@@ -67,7 +67,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
     })
   ).size
 
-  // Prepare stacked bar chart data: applications per certificate, grouped by institution
+  // Prepare stacked bar chart data: one bar per institution, segmented by certificates used
   const stackedBarData = Array.from(
     certArray.reduce((institutionMap, cert) => {
       if (!cert || !cert.used_by) return institutionMap
@@ -80,29 +80,29 @@ export function AccessControlList({ data }: AccessControlListProps) {
           })
         }
         
+        // Mark that this institution uses this certificate (just set to 1, not counting applications)
         const instData = institutionMap.get(instName)!
         const certLabel = cert.app_id_label
-        instData[certLabel] = (instData[certLabel] || 0) + 1
+        if (!instData[certLabel]) {
+          instData[certLabel] = 1
+        }
       })
       
       return institutionMap
     }, new Map<string, any>()).values()
   ).sort((a, b) => {
-    const aTotal = Object.values(a).reduce((sum: any, val: any) => 
-      typeof val === 'number' ? sum + val : sum, 0
-    ) as number
-    const bTotal = Object.values(b).reduce((sum: any, val: any) => 
-      typeof val === 'number' ? sum + val : sum, 0
-    ) as number
-    return bTotal - aTotal
+    // Sort by number of unique certificates used (descending)
+    const aCertCount = Object.keys(a).filter(k => k !== 'nama_instansi').length
+    const bCertCount = Object.keys(b).filter(k => k !== 'nama_instansi').length
+    return bCertCount - aCertCount
   })
 
-  // Get all unique certificate IDs for the stacked bar
+  // Get all unique certificate IDs for the stacked bar (sorted)
   const allCertIds = Array.from(
     new Set(
       certArray
-        .filter(c => c && c.used_by)
-        .flatMap(c => c.used_by.map(() => c.app_id_label))
+        .filter(c => c && c.used_by && c.used_by.length > 0)
+        .map(c => c.app_id_label)
     )
   ).sort()
 
