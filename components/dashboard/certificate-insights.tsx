@@ -156,7 +156,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
           {certificateStages.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">No active certificates</p>
           ) : (
-            certificateStages.map((cert) => {
+            certificateStages.map((cert, index) => {
               const healthColor = getHealthBarColor(cert.daysUntilExpiry, cert.validity)
               const healthPercentage = getHealthPercentage(cert.daysUntilExpiry)
               const statusLabel = cert.validity === 'expired' ? 'Expired' : cert.validity === 'expiring' ? 'Critical' : 'Safe'
@@ -164,7 +164,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
               return (
                 <div
                   key={cert.id}
-                  className="p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                  className="health-bar-item p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                 >
                   {/* Certificate Name and Status */}
                   <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -186,8 +186,11 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
                     {/* Health Bar */}
                     <div className="flex-1 h-2 bg-red-900/40 rounded-full overflow-hidden">
                       <div
-                        className={`h-full transition-all duration-500 ease-out ${healthColor}`}
-                        style={{ width: `${healthPercentage}%` }}
+                        className={`health-bar-animated h-full ${healthColor}`}
+                        style={{ 
+                          width: `${healthPercentage}%`,
+                          animationDelay: `${index * 100}ms`
+                        }}
                       />
                     </div>
                     
