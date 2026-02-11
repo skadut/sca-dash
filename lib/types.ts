@@ -50,6 +50,7 @@ export type KeyStatus = "active" | "expired" | "revoked"
 export interface CertificateUsage {
   nama_instansi: string
   nama_aplikasi: string
+  key_id?: string // Key encryption type (e.g., 'aes-256', 'rsa3072')
 }
 
 export interface CertificateUsageWithHSM {
