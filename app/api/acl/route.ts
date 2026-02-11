@@ -5,7 +5,7 @@ import { mockACLData } from '@/lib/mock-acl-data'
 
 // Fetch from external API with mTLS
 async function fetchFromExternalAPI(): Promise<CertificateRelations | null> {
-  const { ACL_API_URL, ACL_API_PORT, TLS_CA_CERT, TLS_CERT, TLS_KEY } = process.env
+  const { ACL_API_URL, ACL_API_PORT, TLS_CA_CERT, TLS_CERT, TLS_KEY, TLS_VERIFY } = process.env
 
   if (!ACL_API_URL || !ACL_API_PORT || !TLS_CA_CERT || !TLS_CERT || !TLS_KEY) {
     console.log('[v0] Missing required environment variables for ACL API')
@@ -22,6 +22,7 @@ async function fetchFromExternalAPI(): Promise<CertificateRelations | null> {
     hostname = hostname.replace(/\/$/, '')
 
     console.log('[v0] Fetching ACL data from:', `${hostname}:${ACL_API_PORT}/cert-related-all`)
+    console.log('[v0] Certificate verification:', TLS_VERIFY !== 'false' ? 'enabled' : 'disabled')
 
     // Helper function to decode certificate - handles both PEM and base64 formats
     const decodeCert = (certData: string): string => {
@@ -38,16 +39,26 @@ async function fetchFromExternalAPI(): Promise<CertificateRelations | null> {
     }
 
     // Use native https module for mTLS support
-    return new Promise((resolve, reject) => {
-      const options = {
+    return new Promise((resolve) => {
+      const caCert = decodeCert(TLS_CA_CERT)
+      const clientCert = decodeCert(TLS_CERT)
+      const clientKey = decodeCert(TLS_KEY)
+
+      // Log certificate presence (not the actual content for security)
+      console.log('[v0] CA cert loaded:', caCert.length > 0 ? 'yes' : 'no')
+      console.log('[v0] Client cert loaded:', clientCert.length > 0 ? 'yes' : 'no')
+      console.log('[v0] Client key loaded:', clientKey.length > 0 ? 'yes' : 'no')
+
+      const options: any = {
         hostname: hostname,
         port: parseInt(ACL_API_PORT),
         path: '/cert-related-all',
         method: 'GET',
-        ca: decodeCert(TLS_CA_CERT),
-        cert: decodeCert(TLS_CERT),
-        key: decodeCert(TLS_KEY),
-        rejectUnauthorized: true,
+        ca: caCert,
+        cert: clientCert,
+        key: clientKey,
+        // Set rejectUnauthorized based on TLS_VERIFY env var (default: true)
+        rejectUnauthorized: TLS_VERIFY !== 'false',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -64,21 +75,27 @@ async function fetchFromExternalAPI(): Promise<CertificateRelations | null> {
           if (res.statusCode === 200) {
             try {
               const jsonData = JSON.parse(data)
-              console.log('[v0] ACL data fetched successfully')
+              console.log('[v0] ACL data fetched successfully from API')
               resolve(jsonData as CertificateRelations)
             } catch (parseError) {
               console.error('[v0] Error parsing ACL response:', parseError)
               resolve(null)
             }
           } else {
-            console.error('[v0] ACL API response not ok:', res.statusCode)
+            console.error('[v0] ACL API response status:', res.statusCode)
             resolve(null)
           }
         })
       })
 
-      req.on('error', (error) => {
-        console.error('[v0] ACL API error:', error)
+      req.on('error', (error: any) => {
+        console.error('[v0] ACL API connection error:', error.code, error.message)
+        resolve(null)
+      })
+
+      req.setTimeout(10000, () => {
+        console.error('[v0] ACL API request timeout')
+        req.destroy()
         resolve(null)
       })
 
