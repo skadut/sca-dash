@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { Search, Building2, Zap, Users, Database } from 'lucide-react'
-import type { CertificateUsageData } from '@/lib/types'
+import { Search, Building2, Zap, Users, Database, ChevronDown, ChevronUp } from 'lucide-react'
+import type { CertificateUsageData, CertificateUsageWithHSM } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 interface AccessControlListProps {
@@ -33,6 +33,9 @@ const CustomPieTooltip = ({ active, payload }: any) => {
 
 export function AccessControlList({ data }: AccessControlListProps) {
   const [searchQuery, setSearchQuery] = useState('')
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
+  const [sortBy, setSortBy] = useState<'name' | 'apps' | 'hsm'>('name')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
   // HSM color configuration
   const getHSMColor = (hsm: string): string => {
@@ -41,6 +44,16 @@ export function AccessControlList({ data }: AccessControlListProps) {
     if (hsmLower.includes('iiv')) return 'bg-purple-500/10 text-purple-400 border-purple-500/20'
     if (hsmLower.includes('thales') || hsmLower.includes('luna')) return 'bg-blue-500/10 text-blue-400 border-blue-500/20'
     return 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+  }
+
+  const toggleRowExpanded = (certId: string) => {
+    const newExpanded = new Set(expandedRows)
+    if (newExpanded.has(certId)) {
+      newExpanded.delete(certId)
+    } else {
+      newExpanded.add(certId)
+    }
+    setExpandedRows(newExpanded)
   }
 
   // Calculate statistics
@@ -83,23 +96,44 @@ export function AccessControlList({ data }: AccessControlListProps) {
     color: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'][index % 6],
   }))
 
-  // Filter certificates
-  const filteredData = certArray.filter((cert) => {
-    if (!cert || !cert.used_by) return false
-    return (
-      cert.app_id_label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cert.used_by.some(
-        (app) =>
-          app.nama_instansi.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          app.nama_aplikasi.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filter and sort certificates
+  const filteredAndSortedData = useMemo(() => {
+    let filtered = certArray.filter((cert) => {
+      if (!cert || !cert.used_by) return false
+      return (
+        cert.app_id_label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        cert.hsm.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        cert.used_by.some(
+          (app) =>
+            app.nama_instansi.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            app.nama_aplikasi.toLowerCase().includes(searchQuery.toLowerCase())
+        )
       )
-    )
-  })
+    })
 
-  // Get color for certificate
-  const getCertificateColor = (index: number): string => {
-    const colors = ['bg-blue-500/10 text-blue-700', 'bg-green-500/10 text-green-700', 'bg-amber-500/10 text-amber-700', 'bg-purple-500/10 text-purple-700', 'bg-pink-500/10 text-pink-700']
-    return colors[index % colors.length]
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let compareValue = 0
+      if (sortBy === 'name') {
+        compareValue = a.app_id_label.localeCompare(b.app_id_label)
+      } else if (sortBy === 'apps') {
+        compareValue = a.used_by.length - b.used_by.length
+      } else if (sortBy === 'hsm') {
+        compareValue = a.hsm.localeCompare(b.hsm)
+      }
+      return sortOrder === 'asc' ? compareValue : -compareValue
+    })
+
+    return filtered
+  }, [certArray, searchQuery, sortBy, sortOrder])
+
+  const handleSort = (newSortBy: 'name' | 'apps' | 'hsm') => {
+    if (sortBy === newSortBy) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(newSortBy)
+      setSortOrder('asc')
+    }
   }
 
   return (
@@ -225,62 +259,131 @@ export function AccessControlList({ data }: AccessControlListProps) {
         </Card>
       </div>
 
-      {/* Search and Grid */}
+      {/* Data Table Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Certificate Usage</CardTitle>
-          <CardDescription>View all certificates and their applications</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="relative mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search certificates or applications..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Certificate Access Overview</CardTitle>
+              <CardDescription>
+                Showing {filteredAndSortedData.length} of {certArray.length} certificates
+              </CardDescription>
+            </div>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search certificates..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
+        </CardHeader>
 
-          {/* Square Grid Layout */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredData.length === 0 ? (
-              <div className="col-span-full text-center py-12 text-muted-foreground">
-                <Zap className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                <p>No results found</p>
-              </div>
-            ) : (
-              filteredData.map((cert, index) => (
-                <Card key={cert.app_id_label} className="hover:shadow-lg transition-all hover:border-primary/50 overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h4 className="font-semibold text-sm truncate text-primary">{cert.app_id_label}</h4>
-                        <p className="text-xs text-muted-foreground mt-1">{cert.used_by.length} application(s)</p>
-                      </div>
-                      <Badge variant="outline" className={cn('shrink-0 font-mono text-xs', getHSMColor(cert.hsm))}>{cert.hsm}</Badge>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="space-y-3">
-                    {/* Applications List */}
-                    <div className="space-y-2">
-                      {cert.used_by.map((app, appIndex) => (
-                        <div key={appIndex} className="p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                          <p className="text-xs font-medium text-foreground truncate">{app.nama_aplikasi}</p>
-                          <p className="text-xs text-muted-foreground truncate">{app.nama_instansi}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
+        <CardContent>
+          {/* Table */}
+          <div className="w-full overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 font-semibold text-muted-foreground">
+                    <button
+                      onClick={() => handleSort('name')}
+                      className="flex items-center gap-2 hover:text-foreground transition-colors"
+                    >
+                      Certificate ID
+                      {sortBy === 'name' && (
+                        sortOrder === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                      )}
+                    </button>
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-muted-foreground">
+                    <button
+                      onClick={() => handleSort('hsm')}
+                      className="flex items-center gap-2 hover:text-foreground transition-colors"
+                    >
+                      HSM
+                      {sortBy === 'hsm' && (
+                        sortOrder === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                      )}
+                    </button>
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-muted-foreground">
+                    <button
+                      onClick={() => handleSort('apps')}
+                      className="flex items-center gap-2 hover:text-foreground transition-colors"
+                    >
+                      Applications
+                      {sortBy === 'apps' && (
+                        sortOrder === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                      )}
+                    </button>
+                  </th>
+                  <th className="w-10"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAndSortedData.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-12 text-muted-foreground">
+                      <Search className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                      <p>No certificates found</p>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredAndSortedData.map((cert) => (
+                    <tbody key={cert.app_id_label}>
+                      <tr
+                        className="border-b border-border/50 hover:bg-muted/50 transition-colors cursor-pointer"
+                        onClick={() => toggleRowExpanded(cert.app_id_label)}
+                      >
+                        <td className="py-3 px-4">
+                          <div className="font-medium text-foreground">{cert.app_id_label}</div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <Badge variant="outline" className={cn('font-mono text-xs', getHSMColor(cert.hsm))}>
+                            {cert.hsm}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-muted-foreground">{cert.used_by.length}</span>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          {expandedRows.has(cert.app_id_label) ? (
+                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </td>
+                      </tr>
+                      {expandedRows.has(cert.app_id_label) && (
+                        <tr className="border-b border-border/50 bg-muted/30">
+                          <td colSpan={4} className="py-4 px-4">
+                            <div className="space-y-3">
+                              <p className="text-sm font-semibold text-foreground">Applications</p>
+                              <div className="space-y-2">
+                                {cert.used_by.map((app, idx) => (
+                                  <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-background border border-border/50">
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium text-foreground">{app.nama_aplikasi}</p>
+                                      <p className="text-xs text-muted-foreground">{app.nama_instansi}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
     </div>
   )
 }
-
-
