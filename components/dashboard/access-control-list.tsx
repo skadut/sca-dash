@@ -345,7 +345,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
                       {cert.used_by.map((app, appIndex) => (
                         <div key={appIndex} className="p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                           <p className="text-xs font-medium text-foreground truncate">{app.nama_aplikasi}</p>
-                          <p className="text-xs text-muted-foreground truncate">{app.nama_instansi}</p>
+                          <p className="text-xs text-muted-foreground truncate">{app.key_id || app.nama_instansi}</p>
                         </div>
                       ))}
                     </div>

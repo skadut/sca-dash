@@ -9,6 +9,7 @@ export const mockACLData: CertificateUsageData = {
         {
           nama_instansi: 'BSSN',
           nama_aplikasi: 'Aplikasi Sanapati',
+          key_id: 'aes-256',
         },
       ],
     },
@@ -19,10 +20,12 @@ export const mockACLData: CertificateUsageData = {
         {
           nama_instansi: 'Kementerian Kesehatan',
           nama_aplikasi: 'sisrsOnline',
+          key_id: 'aes-256',
         },
         {
           nama_instansi: 'Kementerian Kesehatan',
           nama_aplikasi: 'SisRS Online',
+          key_id: 'rsa3072',
         },
       ],
     },
@@ -33,6 +36,7 @@ export const mockACLData: CertificateUsageData = {
         {
           nama_instansi: 'Kementerian Pemuda dan Olahraga RI',
           nama_aplikasi: 'PON XXI Sumut 2024',
+          key_id: 'rsa3072',
         },
       ],
     },
@@ -43,10 +47,12 @@ export const mockACLData: CertificateUsageData = {
         {
           nama_instansi: 'Kementerian Komunikasi dan Informatika',
           nama_aplikasi: 'E-Government Portal',
+          key_id: 'aes-256',
         },
         {
           nama_instansi: 'Kementerian Komunikasi dan Informatika',
           nama_aplikasi: 'PANDI System',
+          key_id: 'rsa3072',
         },
       ],
     },
@@ -57,6 +63,7 @@ export const mockACLData: CertificateUsageData = {
         {
           nama_instansi: 'Bank Indonesia',
           nama_aplikasi: 'Core Banking System',
+          key_id: 'aes-256',
         },
       ],
     },
@@ -67,10 +74,12 @@ export const mockACLData: CertificateUsageData = {
         {
           nama_instansi: 'Direktorat Jenderal Pajak',
           nama_aplikasi: 'E-Filing System',
+          key_id: 'rsa3072',
         },
         {
           nama_instansi: 'Direktorat Jenderal Pajak',
           nama_aplikasi: 'Tax Reporting Portal',
+          key_id: 'aes-256',
         },
       ],
     },
@@ -81,10 +90,12 @@ export const mockACLData: CertificateUsageData = {
         {
           nama_instansi: 'PT Telkom Indonesia',
           nama_aplikasi: 'MyTelkomsel App',
+          key_id: 'aes-256',
         },
         {
           nama_instansi: 'PT Telkom Indonesia',
           nama_aplikasi: 'USSD Gateway',
+          key_id: 'rsa3072',
         },
       ],
     },
@@ -95,10 +106,12 @@ export const mockACLData: CertificateUsageData = {
         {
           nama_instansi: 'PT Bank Mandiri',
           nama_aplikasi: 'Livin by Mandiri',
+          key_id: 'aes-256',
         },
         {
           nama_instansi: 'PT Bank Mandiri',
           nama_aplikasi: 'M-Wallet',
+          key_id: 'aes-256',
         },
       ],
     },
@@ -109,6 +122,7 @@ export const mockACLData: CertificateUsageData = {
         {
           nama_instansi: 'Badan Siber dan Sandi Negara',
           nama_aplikasi: 'National Crypto System',
+          key_id: 'rsa3072',
         },
       ],
     },
