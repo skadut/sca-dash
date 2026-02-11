@@ -19,14 +19,15 @@ import { StatsCardsSkeleton, TableSkeleton, GraphSkeleton } from "@/components/d
 import { Shield, AlertCircle, RefreshCw, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import type { Certificate, Key } from "@/lib/types"
+import type { Certificate, Key, CertificateRelations } from "@/lib/types"
+import { AccessControlList } from "@/components/dashboard/access-control-list"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 type DataMode = "mock" | "database"
 
 export default function DashboardPage() {
-  const [activeMenu, setActiveMenu] = useState<"dashboard" | "inventory" | "certificates">("dashboard")
+  const [activeMenu, setActiveMenu] = useState<"dashboard" | "inventory" | "certificates" | "acl">("dashboard")
   const [dataMode, setDataMode] = useState<DataMode>("mock")
   const [activeTab, setActiveTab] = useState<"status" | "traffic">("status") // Declare activeTab and setActiveTab
 
@@ -50,8 +51,19 @@ export default function DashboardPage() {
     revalidateOnFocus: true,
   })
 
+  const { data: aclData, error: aclError, isLoading: aclLoading } = useSWR<{
+    data: CertificateRelations
+    isUsingMockData: boolean
+    connectionFailed?: boolean
+    message?: string
+  }>(`/api/acl?mode=${dataMode}`, fetcher, {
+    refreshInterval: 30000,
+    revalidateOnFocus: true,
+  })
+
   const certificates = data?.certificates || []
   const keys = keysData?.keys || []
+  const aclRelations = aclData?.data || { relations: {}, status: 'unknown', total_cert_apps: 0 }
   const isConnected = data?.isUsingMockData === false
 
   return (
@@ -157,6 +169,29 @@ export default function DashboardPage() {
                   <>
                     <CertificateAccessToggle certificates={certificates} />
                     <CertificateTable certificates={certificates} />
+                  </>
+                )}
+                {activeMenu === "acl" && (
+                  <>
+                    {aclLoading ? (
+                      <StatsCardsSkeleton />
+                    ) : aclError ? (
+                      <Card className="border-destructive/50 bg-destructive/5">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <AlertCircle className="h-5 w-5 text-destructive" />
+                            <div>
+                              <p className="font-medium text-destructive">Failed to load ACL data</p>
+                              <p className="text-sm text-muted-foreground">
+                                {aclError.message || "Please check your connection and try again."}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <AccessControlList data={aclRelations} />
+                    )}
                   </>
                 )}
               </>
