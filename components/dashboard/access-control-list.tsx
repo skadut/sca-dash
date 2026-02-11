@@ -13,14 +13,37 @@ interface AccessControlListProps {
   data: CertificateUsageData
 }
 
-// Distinct colors for chart segments
-const chartColors = [
+// Base colors for each institution
+const institutionBaseColors = [
   '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899',
-  '#06b6d4', '#14b8a6', '#f97316', '#6366f1', '#d946ef', '#0891b2'
+  '#06b6d4', '#14b8a6', '#f97316', '#6366f1', '#d946ef', '#0891b2',
+  '#84cc16', '#65a30d', '#ea580c', '#dc2626', '#7c3aed', '#9333ea'
 ]
 
-const getChartColor = (index: number): string => {
-  return chartColors[index % chartColors.length]
+// Generate gradient shades for a base color (hex)
+const generateGradientShades = (baseColor: string, count: number): string[] => {
+  if (count <= 1) return [baseColor]
+  
+  // Convert hex to RGB
+  const hex = baseColor.replace('#', '')
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  
+  const shades: string[] = []
+  for (let i = 0; i < count; i++) {
+    const ratio = i / (count - 1)
+    // Create gradient from darker to lighter
+    const darkRatio = 0.3 + ratio * 0.7
+    const newR = Math.floor(r * darkRatio)
+    const newG = Math.floor(g * darkRatio)
+    const newB = Math.floor(b * darkRatio)
+    
+    const hex = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`
+    shades.push(hex)
+  }
+  
+  return shades
 }
 
 // Custom tooltip for stacked bar chart
@@ -67,8 +90,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
     })
   ).size
 
-  // Prepare stacked bar chart data: one bar per institution, segmented by certificates used
-  const stackedBarData = Array.from(
+  // Prepare stacked bar chart data with gradient colors per institution
+  const stackedBarDataWithColors = Array.from(
     certArray.reduce((institutionMap, cert) => {
       if (!cert || !cert.used_by) return institutionMap
       
@@ -77,14 +100,16 @@ export function AccessControlList({ data }: AccessControlListProps) {
         if (!institutionMap.has(instName)) {
           institutionMap.set(instName, {
             nama_instansi: instName,
+            certCount: 0,
           })
         }
         
-        // Mark that this institution uses this certificate (just set to 1, not counting applications)
+        // Mark that this institution uses this certificate
         const instData = institutionMap.get(instName)!
         const certLabel = cert.app_id_label
         if (!instData[certLabel]) {
           instData[certLabel] = 1
+          instData.certCount += 1
         }
       })
       
@@ -92,10 +117,43 @@ export function AccessControlList({ data }: AccessControlListProps) {
     }, new Map<string, any>()).values()
   ).sort((a, b) => {
     // Sort by number of unique certificates used (descending)
-    const aCertCount = Object.keys(a).filter(k => k !== 'nama_instansi').length
-    const bCertCount = Object.keys(b).filter(k => k !== 'nama_instansi').length
+    const aCertCount = a.certCount || 0
+    const bCertCount = b.certCount || 0
     return bCertCount - aCertCount
+  }).map((item, instIndex) => {
+    // Generate gradient colors for this institution's certificates
+    const baseColor = institutionBaseColors[instIndex % institutionBaseColors.length]
+    const certCountForInst = item.certCount || 0
+    const gradients = generateGradientShades(baseColor, certCountForInst)
+    
+    // Assign gradient colors to each certificate for this institution
+    const allCertIdsForInst = allCertIds.filter(certId => item[certId])
+    allCertIdsForInst.forEach((certId, idx) => {
+      item[`${certId}_color`] = gradients[idx % gradients.length]
+    })
+    
+    return item
   })
+
+  // Create Bar components with gradient colors from the data
+  const renderBars = () => {
+    return allCertIds.map((certId) => {
+      return (
+        <Bar 
+          key={certId} 
+          dataKey={certId} 
+          stackId="a" 
+          fill="#8884d8"
+          name={certId.replace('CS', '').substring(0, 12)}
+          shape={
+            <CustomBarShape 
+              certId={certId}
+            />
+          }
+        />
+      )
+    })
+  }
 
   // Get all unique certificate IDs for the stacked bar (sorted)
   const allCertIds = Array.from(
@@ -185,19 +243,51 @@ export function AccessControlList({ data }: AccessControlListProps) {
       <Card>
         <CardHeader>
           <CardTitle>Applications per Certificate</CardTitle>
-          <CardDescription>Distribution of applications across certificates by institution</CardDescription>
+          <CardDescription>Distribution across institutions</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={stackedBarData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+            <BarChart data={stackedBarDataWithColors} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--muted-foreground)" opacity={0.2} />
               <XAxis dataKey="nama_instansi" angle={-45} textAnchor="end" height={120} tick={{ fontSize: 12 }} />
               <YAxis />
               <Tooltip content={<CustomStackedBarTooltip />} />
-              <Legend wrapperStyle={{ paddingTop: '20px' }} />
-              {allCertIds.map((certId, index) => (
-                <Bar key={certId} dataKey={certId} stackId="a" fill={getChartColor(index)} name={certId.replace('CS', '').substring(0, 12)} />
-              ))}
+              {allCertIds.map((certId, index) => {
+                return (
+                  <Bar 
+                    key={certId} 
+                    dataKey={certId} 
+                    stackId="a" 
+                    name={certId.replace('CS', '').substring(0, 12)}
+                    shape={(props: any) => {
+                      const { x, y, width, height, payload } = props
+                      if (!payload) return null
+                      
+                      const instIndex = stackedBarDataWithColors.findIndex(
+                        item => item.nama_instansi === payload.nama_instansi
+                      )
+                      const baseColor = institutionBaseColors[instIndex % institutionBaseColors.length]
+                      const gradients = generateGradientShades(
+                        baseColor,
+                        payload.certCount || 0
+                      )
+                      
+                      const certIndex = allCertIds.indexOf(certId)
+                      const color = gradients[certIndex % gradients.length]
+                      
+                      return (
+                        <rect
+                          x={x}
+                          y={y}
+                          width={width}
+                          height={height}
+                          fill={color}
+                        />
+                      )
+                    }}
+                  />
+                )
+              })}
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
