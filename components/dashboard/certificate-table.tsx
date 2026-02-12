@@ -235,19 +235,19 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
           </Select>
         </div>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="p-0 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full" style={{ tableLayout: 'fixed' }}>
+          <table className="w-full border-collapse" style={{ tableLayout: 'fixed', width: '100%' }}>
             <colgroup>
-              <col style={{ width: COLUMN_WIDTHS.certificateId }} />
-              <col style={{ width: COLUMN_WIDTHS.created }} />
-              <col style={{ width: COLUMN_WIDTHS.expired }} />
-              <col style={{ width: COLUMN_WIDTHS.hsm }} />
-              <col style={{ width: COLUMN_WIDTHS.files }} />
-              <col style={{ width: COLUMN_WIDTHS.validity }} />
-              <col style={{ width: COLUMN_WIDTHS.status }} />
+              <col style={{ width: '180px', flexShrink: 0 }} />
+              <col style={{ width: '120px', flexShrink: 0 }} />
+              <col style={{ width: '120px', flexShrink: 0 }} />
+              <col style={{ width: '130px', flexShrink: 0 }} />
+              <col style={{ width: '180px', flexShrink: 0 }} />
+              <col style={{ width: '140px', flexShrink: 0 }} />
+              <col style={{ width: '100px', flexShrink: 0 }} />
             </colgroup>
-            <thead className="bg-muted/30 border-y border-border/30">
+            <thead className="bg-muted/30 border-y border-border/30 sticky top-0 z-10">
               <tr>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   <button onClick={() => handleSort('app_id_label')} className="flex items-center gap-1 hover:text-foreground">
@@ -295,9 +295,9 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
 
                 return (
                   <tr key={cert.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
-                    <td className="p-3 text-sm font-mono overflow-hidden text-ellipsis">{cert.app_id_label}</td>
-                    <td className="p-3 text-sm font-mono overflow-hidden text-ellipsis">{formatDate(cert.created_date)}</td>
-                    <td className="p-3 text-sm font-mono overflow-hidden text-ellipsis">{formatDate(cert.expired_date)}</td>
+                    <td className="p-3 text-sm font-mono overflow-hidden text-ellipsis whitespace-nowrap">{cert.app_id_label}</td>
+                    <td className="p-3 text-sm font-mono overflow-hidden text-ellipsis whitespace-nowrap">{formatDate(cert.created_date)}</td>
+                    <td className="p-3 text-sm font-mono overflow-hidden text-ellipsis whitespace-nowrap">{formatDate(cert.expired_date)}</td>
                     <td className="p-3 overflow-hidden text-ellipsis">{getHSMBadge(cert.hsm)}</td>
                     <td className="p-3 overflow-hidden">
                       <div className="flex gap-1.5 flex-wrap">
@@ -316,7 +316,7 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
                       </div>
                     </td>
                     <td className="p-3 overflow-hidden text-ellipsis">{getValidityBadge(validity, daysUntil, status)}</td>
-                    <td className="p-3 overflow-hidden text-ellipsis">{getStatusBadge(status)}</td>
+                    <td className="p-3 overflow-hidden text-ellipsis whitespace-nowrap">{getStatusBadge(status)}</td>
                   </tr>
                 )
               })}
