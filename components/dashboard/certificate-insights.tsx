@@ -116,7 +116,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Recent Certificates */}
-      <Card className="border-border/50 bg-card flex flex-col min-h-[420px]">
+      <Card className="border-border/50 bg-card flex flex-col min-h-[420px] overflow-hidden">
         <CardHeader className="pb-4">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -155,7 +155,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
       </Card>
 
       {/* Certificate Stages - Health Bar View */}
-      <Card className="border-border/50 bg-card flex flex-col min-h-[420px]">
+      <Card className="border-border/50 bg-card flex flex-col min-h-[420px] overflow-hidden">
         <CardHeader className="pb-4">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -199,7 +199,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
                     {/* Health Bar */}
                     <div className="flex-1 h-2 bg-red-900/40 rounded-full overflow-hidden">
                       <div
-                        className={`health-bar-animated h-full ${healthColor}`}
+                        className={`health-bar-animated h-full ${healthColor} rounded-full`}
                         style={{ 
                           width: `${healthPercentage}%`,
                           animationDelay: `${index * 100}ms`
