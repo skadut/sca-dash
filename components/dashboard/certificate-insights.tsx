@@ -67,6 +67,32 @@ const getHsmColor = (hsm: string): { badge: string; avatarIndex: number } => {
   return { badge: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20', avatarIndex: 3 }
 }
 
+const getHealthBarColor = (daysUntilExpiry: number): string => {
+  if (daysUntilExpiry < 30) {
+    return 'bg-red-600'
+  }
+  if (daysUntilExpiry < 90) {
+    return 'bg-amber-500'
+  }
+  return 'bg-emerald-500'
+}
+
+const getCertificateStageType = (daysUntilExpiry: number): 'critical' | 'warning' | 'safe' => {
+  if (daysUntilExpiry < 30) {
+    return 'critical'
+  }
+  if (daysUntilExpiry < 90) {
+    return 'warning'
+  }
+  return 'safe'
+}
+
+const getHealthPercentage = (daysUntilExpiry: number, maxDays: number = 365): number => {
+  // Calculate remaining health as a percentage of max validity
+  const percentage = Math.max(0, Math.min(100, (daysUntilExpiry / maxDays) * 100))
+  return percentage
+}
+
 export function CertificateInsights({ certificates }: CertificateInsightsProps) {
   // Get top 4 most recent certificates
   const recentCerts = [...certificates]
@@ -86,32 +112,6 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
     })
     .sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry)
     .slice(0, 4)
-
-  const getHealthBarColor = (daysUntilExpiry: number): string => {
-    if (daysUntilExpiry < 30) {
-      return 'bg-red-600'
-    }
-    if (daysUntilExpiry < 90) {
-      return 'bg-amber-500'
-    }
-    return 'bg-emerald-500'
-  }
-
-  const getCertificateStageType = (daysUntilExpiry: number): 'critical' | 'warning' | 'safe' => {
-    if (daysUntilExpiry < 30) {
-      return 'critical'
-    }
-    if (daysUntilExpiry < 90) {
-      return 'warning'
-    }
-    return 'safe'
-  }
-
-  const getHealthPercentage = (daysUntilExpiry: number, maxDays: number = 365): number => {
-    // Calculate remaining health as a percentage of max validity
-    const percentage = Math.max(0, Math.min(100, (daysUntilExpiry / maxDays) * 100))
-    return percentage
-  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
