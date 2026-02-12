@@ -73,6 +73,17 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
   const totalPages = Math.ceil(filteredAndSortedCerts.length / rowsPerPage)
   const emptyRowsArray = Array(Math.max(0, rowsPerPage - paginatedCerts.length))
 
+  // Fixed column widths - never changes based on content
+  const COLUMN_WIDTHS = {
+    certificateId: '180px',  // Fixed width to handle both short and long IDs
+    created: '120px',        // Fixed width for dates
+    expired: '120px',        // Fixed width for dates
+    hsm: '130px',            // Fixed width for HSM badges
+    files: '180px',          // Fixed width for file badges
+    validity: '140px',       // Fixed width for validity
+    status: '100px',         // Fixed width for status
+  }
+
   const getValidityBadge = (validity: ValidityStatus, daysUntil: number, status: CertificateStatus) => {
     if (status === "revoked") {
       return <span className="text-sm text-muted-foreground">not valid</span>
@@ -228,13 +239,13 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
         <div className="overflow-x-auto">
           <table className="w-full" style={{ tableLayout: 'fixed' }}>
             <colgroup>
-              <col style={{ width: hasLongCertificateId ? '200px' : '150px' }} />
-              <col style={{ width: '120px' }} />
-              <col style={{ width: '120px' }} />
-              <col style={{ width: '130px' }} />
-              <col style={{ width: '180px' }} />
-              <col style={{ width: '140px' }} />
-              <col style={{ width: '100px' }} />
+              <col style={{ width: COLUMN_WIDTHS.certificateId }} />
+              <col style={{ width: COLUMN_WIDTHS.created }} />
+              <col style={{ width: COLUMN_WIDTHS.expired }} />
+              <col style={{ width: COLUMN_WIDTHS.hsm }} />
+              <col style={{ width: COLUMN_WIDTHS.files }} />
+              <col style={{ width: COLUMN_WIDTHS.validity }} />
+              <col style={{ width: COLUMN_WIDTHS.status }} />
             </colgroup>
             <thead className="bg-muted/30 border-y border-border/30">
               <tr>
