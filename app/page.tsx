@@ -180,7 +180,7 @@ export default function DashboardPage() {
                     <div className="page-enter">
                       <CertificateAccessToggle certificates={certificates} />
                     </div>
-                    <div className="page-enter" style={{ animationDelay: '50ms' }}>
+                    <div className="page-enter mt-12" style={{ animationDelay: '50ms' }}>
                       <CertificateTable certificates={certificates} />
                     </div>
                   </>
