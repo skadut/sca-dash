@@ -40,6 +40,15 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
       let aValue: any = a[sortField as keyof Certificate]
       let bValue: any = b[sortField as keyof Certificate]
       
+      // Special handling for validity sorting
+      if (sortField === 'validity') {
+        const aValidity = getValidityStatus(a.expired_date)
+        const bValidity = getValidityStatus(b.expired_date)
+        const validityOrder: Record<ValidityStatus, number> = { expired: 0, expiring: 1, valid: 2 }
+        aValue = validityOrder[aValidity]
+        bValue = validityOrder[bValidity]
+      }
+      
       if (sortDirection === 'asc') {
         return aValue < bValue ? -1 : 1
       }
@@ -218,31 +227,33 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
           <table className="w-full">
             <thead className="bg-muted/30 border-y border-border/30">
               <tr>
-                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[150px]">
                   <button onClick={() => handleSort('app_id_label')} className="flex items-center gap-1 hover:text-foreground">
                     Certificate ID <ArrowUpDown className="h-3 w-3" />
                   </button>
                 </th>
-                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[120px]">
                   <button onClick={() => handleSort('created_date')} className="flex items-center gap-1 hover:text-foreground">
                     Created <ArrowUpDown className="h-3 w-3" />
                   </button>
                 </th>
-                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[120px]">
                   <button onClick={() => handleSort('expired_date')} className="flex items-center gap-1 hover:text-foreground">
                     Expired <ArrowUpDown className="h-3 w-3" />
                   </button>
                 </th>
-                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[130px]">
                   HSM
                 </th>
-                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[180px]">
                   Files
                 </th>
-                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Validity
+                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[140px]">
+                  <button onClick={() => handleSort('validity')} className="flex items-center gap-1 hover:text-foreground">
+                    Validity <ArrowUpDown className="h-3 w-3" />
+                  </button>
                 </th>
-                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[100px]">
                   Status
                 </th>
               </tr>
@@ -262,11 +273,11 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
 
                 return (
                   <tr key={cert.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
-                    <td className="p-3 text-sm font-mono">{cert.app_id_label}</td>
-                    <td className="p-3 text-sm font-mono">{formatDate(cert.created_date)}</td>
-                    <td className="p-3 text-sm font-mono">{formatDate(cert.expired_date)}</td>
-                    <td className="p-3">{getHSMBadge(cert.hsm)}</td>
-                    <td className="p-3">
+                    <td className="p-3 text-sm font-mono min-w-[150px]">{cert.app_id_label}</td>
+                    <td className="p-3 text-sm font-mono min-w-[120px]">{formatDate(cert.created_date)}</td>
+                    <td className="p-3 text-sm font-mono min-w-[120px]">{formatDate(cert.expired_date)}</td>
+                    <td className="p-3 min-w-[130px]">{getHSMBadge(cert.hsm)}</td>
+                    <td className="p-3 min-w-[180px]">
                       <div className="flex gap-1.5 flex-wrap">
                         {existingFiles.map((file) => (
                           <Badge key={file.name} variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-xs">
@@ -282,8 +293,8 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
                         ))}
                       </div>
                     </td>
-                    <td className="p-3">{getValidityBadge(validity, daysUntil, status)}</td>
-                    <td className="p-3">{getStatusBadge(status)}</td>
+                    <td className="p-3 min-w-[140px]">{getValidityBadge(validity, daysUntil, status)}</td>
+                    <td className="p-3 min-w-[100px]">{getStatusBadge(status)}</td>
                   </tr>
                 )
               })}
