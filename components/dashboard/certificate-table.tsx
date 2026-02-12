@@ -153,6 +153,8 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
     )
   }
 
+  const hasLongCertificateId = paginatedCerts.some(cert => cert.app_id_label === 'TANGERANGKOTACS01')
+  
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-4">
@@ -227,12 +229,12 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
           <table className="w-full">
             <thead className="bg-muted/30 border-y border-border/30">
               <tr>
-                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[150px]">
+                <th className={`text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide ${hasLongCertificateId ? 'min-w-[200px]' : 'min-w-[150px]'}`}>
                   <button onClick={() => handleSort('app_id_label')} className="flex items-center gap-1 hover:text-foreground">
                     Certificate ID <ArrowUpDown className="h-3 w-3" />
                   </button>
                 </th>
-                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[120px]">
+                <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[120px] max-w-[120px]">
                   <button onClick={() => handleSort('created_date')} className="flex items-center gap-1 hover:text-foreground">
                     Created <ArrowUpDown className="h-3 w-3" />
                   </button>
@@ -273,8 +275,8 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
 
                 return (
                   <tr key={cert.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
-                    <td className="p-3 text-sm font-mono min-w-[150px]">{cert.app_id_label}</td>
-                    <td className="p-3 text-sm font-mono min-w-[120px]">{formatDate(cert.created_date)}</td>
+                    <td className={`p-3 text-sm font-mono ${hasLongCertificateId ? 'min-w-[200px]' : 'min-w-[150px]'}`}>{cert.app_id_label}</td>
+                    <td className="p-3 text-sm font-mono min-w-[120px] max-w-[120px] break-words whitespace-normal">{formatDate(cert.created_date)}</td>
                     <td className="p-3 text-sm font-mono min-w-[120px]">{formatDate(cert.expired_date)}</td>
                     <td className="p-3 min-w-[130px]">{getHSMBadge(cert.hsm)}</td>
                     <td className="p-3 min-w-[180px]">
