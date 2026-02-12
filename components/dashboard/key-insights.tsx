@@ -113,7 +113,7 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-foreground truncate">{key.nama_aplikasi}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {key.id_login} • {getTimeAgo(key.created_date)}
+                    {key.nama_instansi} • {getTimeAgo(key.created_date)}
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">
