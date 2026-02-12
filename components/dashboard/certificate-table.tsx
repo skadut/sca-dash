@@ -49,6 +49,15 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
         bValue = validityOrder[bValidity]
       }
       
+      // Special handling for status sorting
+      if (sortField === 'status') {
+        const aStatus = getCertificateStatus(a.expired_date, a.revoked_app_status)
+        const bStatus = getCertificateStatus(b.expired_date, b.revoked_app_status)
+        const statusOrder: Record<CertificateStatus, number> = { revoked: 0, inactive: 1, active: 2 }
+        aValue = statusOrder[aStatus]
+        bValue = statusOrder[bStatus]
+      }
+      
       if (sortDirection === 'asc') {
         return aValue < bValue ? -1 : 1
       }
@@ -276,7 +285,9 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
                   </button>
                 </th>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Status
+                  <button onClick={() => handleSort('status')} className="flex items-center gap-1 hover:text-foreground">
+                    Status <ArrowUpDown className="h-3 w-3" />
+                  </button>
                 </th>
               </tr>
             </thead>
