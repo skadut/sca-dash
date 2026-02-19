@@ -72,7 +72,8 @@ export function KeyTable({ keys }: KeyTableProps) {
         key.id_login.toLowerCase().includes(searchTerm.toLowerCase()) ||
         key.key_id.toLowerCase().includes(searchTerm.toLowerCase())
 
-      const matchesHsm = hsmFilter === 'all' || key.hsm === hsmFilter
+      const matchesHsm = hsmFilter === 'all' || 
+        (hsmFilter === 'untagged' ? (!key.hsm || key.hsm.trim() === '') : key.hsm === hsmFilter)
       const matchesStatus = statusFilter === 'all' || getKeyStatus(key) === statusFilter
       const matchesSecretStatus = secretStatusFilter === 'all' || secretStatus === secretStatusFilter
       const matchesInstansi = instansiFilter === 'all' || key.nama_instansi === instansiFilter
@@ -131,6 +132,14 @@ export function KeyTable({ keys }: KeyTableProps) {
     }
     
     const normalizedHsm = hsm?.toLowerCase() || ''
+    if (!normalizedHsm || normalizedHsm.trim() === '') {
+      return (
+        <Badge variant="outline" className="bg-zinc-500/10 text-zinc-400 border-zinc-500/20 font-mono text-xs">
+          Untagged
+        </Badge>
+      )
+    }
+    
     const matchedKey = Object.keys(config).find(key => normalizedHsm.includes(key))
     const hsmConfig = matchedKey ? config[matchedKey] : { label: hsm || 'N/A', className: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' }
     
@@ -188,6 +197,7 @@ export function KeyTable({ keys }: KeyTableProps) {
               <SelectItem value="Klavis-SPBE">Klavis-SPBE</SelectItem>
               <SelectItem value="Klavis-IIV">Klavis-IIV</SelectItem>
               <SelectItem value="Thales-Luna">Thales-Luna</SelectItem>
+              <SelectItem value="untagged">Untagged</SelectItem>
             </SelectContent>
           </Select>
           <Select
@@ -228,10 +238,21 @@ export function KeyTable({ keys }: KeyTableProps) {
           </Select>
         </div>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="p-0 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-muted/30 border-y border-border/30">
+          <table className="w-full border-collapse" style={{ tableLayout: 'fixed', width: '100%' }}>
+            <colgroup>
+              <col style={{ width: '160px', flexShrink: 0 }} />
+              <col style={{ width: '140px', flexShrink: 0 }} />
+              <col style={{ width: '130px', flexShrink: 0 }} />
+              <col style={{ width: '110px', flexShrink: 0 }} />
+              <col style={{ width: '120px', flexShrink: 0 }} />
+              <col style={{ width: '120px', flexShrink: 0 }} />
+              <col style={{ width: '120px', flexShrink: 0 }} />
+              <col style={{ width: '100px', flexShrink: 0 }} />
+              <col style={{ width: '90px', flexShrink: 0 }} />
+            </colgroup>
+            <thead className="bg-muted/30 border-y border-border/30 sticky top-0 z-10">
               <tr>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   <button onClick={() => handleSort('nama_aplikasi')} className="flex items-center gap-1 hover:text-foreground">
@@ -279,20 +300,20 @@ export function KeyTable({ keys }: KeyTableProps) {
                 const hasSecret = key.secret_data && key.secret_data.trim() !== ''
                 return (
                   <tr key={key.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
-                    <td className="p-3">
+                    <td className="p-3 overflow-hidden">
                       <div>
-                        <p className="font-medium text-sm">{key.nama_aplikasi}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{key.id_aplikasi}</p>
+                        <p className="font-medium text-sm truncate">{key.nama_aplikasi}</p>
+                        <p className="text-xs text-muted-foreground font-mono truncate">{key.id_aplikasi}</p>
                       </div>
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 overflow-hidden">
                       <div>
-                        <p className="font-medium text-sm">{key.nama_instansi}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{key.id_login}</p>
+                        <p className="font-medium text-sm truncate">{key.nama_instansi}</p>
+                        <p className="text-xs text-muted-foreground font-mono truncate">{key.id_login}</p>
                       </div>
                     </td>
-                    <td className="p-3 text-sm font-mono">{key.key_id}</td>
-                    <td className="p-3">
+                    <td className="p-3 text-sm font-mono overflow-hidden text-ellipsis whitespace-nowrap">{key.key_id}</td>
+                    <td className="p-3 overflow-hidden">
                       <Badge
                         variant="outline"
                         className={`font-mono text-xs ${
@@ -304,10 +325,10 @@ export function KeyTable({ keys }: KeyTableProps) {
                         {hasSecret ? 'Available' : 'No Secret'}
                       </Badge>
                     </td>
-                    <td className="p-3">{getHsmBadge(key.hsm)}</td>
-                    <td className="p-3 text-sm font-mono">{formatDate(key.key_created)}</td>
-                    <td className="p-3 text-sm font-mono">{formatDate(key.key_expired)}</td>
-                    <td className="p-3">
+                    <td className="p-3 overflow-hidden">{getHsmBadge(key.hsm)}</td>
+                    <td className="p-3 text-sm font-mono overflow-hidden text-ellipsis whitespace-nowrap">{formatDate(key.key_created)}</td>
+                    <td className="p-3 text-sm font-mono overflow-hidden text-ellipsis whitespace-nowrap">{formatDate(key.key_expired)}</td>
+                    <td className="p-3 overflow-hidden text-ellipsis">
                       {status === 'revoked' ? (
                         <span className="text-sm text-muted-foreground">not valid</span>
                       ) : status === 'expired' ? (
@@ -318,7 +339,7 @@ export function KeyTable({ keys }: KeyTableProps) {
                         <span className="text-sm text-emerald-400 font-mono">{daysLeft} days left</span>
                       )}
                     </td>
-                    <td className="p-3">{getStatusBadge(status)}</td>
+                    <td className="p-3 overflow-hidden text-ellipsis">{getStatusBadge(status)}</td>
                   </tr>
                 )
               })}
