@@ -50,7 +50,7 @@ export function StatsCards({ certificates }: StatsCardsProps) {
     {
       label: "Expiring Soon",
       value: expiringSoon,
-      subtitle: "Within 30 days",
+      subtitle: "Within 90 days",
       icon: ShieldAlert,
       iconColor: "text-amber-400",
       iconBg: "bg-amber-500/10",

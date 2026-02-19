@@ -1,63 +1,55 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
-import { parseDate } from "@/lib/certificate-utils"
-import type { Certificate, Key } from "@/lib/types"
-import { TrendingUp, Activity, Clock } from "lucide-react"
+import { TrendingUp, Activity, Clock, Key } from "lucide-react"
 
-interface UtilityTrendsProps {
-  certificates: Certificate[]
-  keys: Key[]
+interface MonthlyData {
+  month: string
+  keys: number
+  certificates: number
 }
 
-export function UtilityTrends({ certificates, keys }: UtilityTrendsProps) {
-  const chartData = useMemo(() => {
-    // Get the last 6 months from today
-    const now = new Date()
-    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
-    
-    // Initialize months
-    const months: Array<{ month: string; keys: number; certificates: number }> = []
-    for (let i = 0; i < 6; i++) {
-      const date = new Date(sixMonthsAgo.getFullYear(), sixMonthsAgo.getMonth() + i, 1)
-      const monthName = date.toLocaleString("en-US", { month: "short" })
-      months.push({ month: monthName, keys: 0, certificates: 0 })
+interface UtilityTrendsData {
+  total_keys: number
+  total_msk: number
+  total_secret: number
+  total_certificates: number
+  avg_keys_month: number
+  avg_certs_month: number
+  monthly: MonthlyData[]
+}
+
+export function UtilityTrends() {
+  const [data, setData] = useState<UtilityTrendsData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchUtilityTrends = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/utility-trends-dashboard')
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${response.statusText}`)
+        }
+        
+        const trendsData = await response.json()
+        setData(trendsData)
+        setError(null)
+      } catch (err) {
+        console.error('Failed to fetch utility trends:', err)
+        setError(err instanceof Error ? err.message : 'Failed to fetch data')
+      } finally {
+        setLoading(false)
+      }
     }
 
-    // Count keys created in each month
-    keys.forEach((key) => {
-      if (!key.created_at) return
-      const date = new Date(key.created_at)
-      if (date >= sixMonthsAgo && date <= now) {
-        const monthIndex = date.getMonth() - sixMonthsAgo.getMonth()
-        if (monthIndex >= 0 && monthIndex < 6) {
-          months[monthIndex].keys++
-        }
-      }
-    })
-
-    // Count certificates created in each month
-    certificates.forEach((cert) => {
-      if (!cert.created_date) return
-      const date = parseDate(cert.created_date)
-      if (date >= sixMonthsAgo && date <= now) {
-        const monthIndex = date.getMonth() - sixMonthsAgo.getMonth()
-        if (monthIndex >= 0 && monthIndex < 6) {
-          months[monthIndex].certificates++
-        }
-      }
-    })
-
-    return months
-  }, [certificates, keys])
-
-  const totalKeys = useMemo(() => chartData.reduce((sum, d) => sum + d.keys, 0), [chartData])
-  const totalCerts = useMemo(() => chartData.reduce((sum, d) => sum + d.certificates, 0), [chartData])
-  const avgKeys = chartData.length > 0 ? (totalKeys / chartData.length).toFixed(1) : 0
-  const avgCerts = chartData.length > 0 ? (totalCerts / chartData.length).toFixed(1) : 0
+    fetchUtilityTrends()
+  }, [])
 
   const now = new Date()
   const currentDate = now.toLocaleDateString("en-US", {
@@ -67,6 +59,41 @@ export function UtilityTrends({ certificates, keys }: UtilityTrendsProps) {
     day: "numeric",
   })
   const currentTime = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">{currentDate}</p>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-card border rounded-lg">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <span className="text-lg font-medium">{currentTime}</span>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="pt-6 h-16 bg-muted rounded" />
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <div className="space-y-6">
+        <Card className="border-red-500/20 bg-red-500/5">
+          <CardContent className="pt-6">
+            <p className="text-red-400">Error loading utility trends: {error}</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -80,57 +107,84 @@ export function UtilityTrends({ certificates, keys }: UtilityTrendsProps) {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+      {/* Summary Cards - 6 Box Clean Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+        {/* Highlighted - Total Keys */}
+        <Card className="border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 to-card hover:border-cyan-500/30 transition-colors">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-cyan-500/10">
-                <Activity className="h-5 w-5 text-cyan-500" />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Total Keys</span>
+                <div className="p-1.5 rounded bg-cyan-500/10">
+                  <Activity className="h-3.5 w-3.5 text-cyan-500" />
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Keys</p>
-                <p className="text-2xl font-semibold">{totalKeys}</p>
-              </div>
+              <span className="text-3xl font-bold text-foreground block">{data.total_keys}</span>
             </div>
           </CardContent>
         </Card>
-        <Card>
+
+        {/* Secondary - Master Key */}
+        <Card className="border-border/40">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/10">
-                <Activity className="h-5 w-5 text-emerald-500" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Certificates</p>
-                <p className="text-2xl font-semibold">{totalCerts}</p>
-              </div>
+            <div className="space-y-2">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide block">Master Key</span>
+              <span className="text-2xl font-semibold text-foreground">{data.total_msk}</span>
             </div>
           </CardContent>
         </Card>
-        <Card>
+
+        {/* Secondary - Secret Key */}
+        <Card className="border-border/40">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <TrendingUp className="h-5 w-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Avg Keys/Month</p>
-                <p className="text-2xl font-semibold">{avgKeys}</p>
-              </div>
+            <div className="space-y-2">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide block">Secret Key</span>
+              <span className="text-2xl font-semibold text-foreground">{data.total_secret}</span>
             </div>
           </CardContent>
         </Card>
-        <Card>
+
+        {/* Highlighted - Total Certificates */}
+        <Card className="border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-card hover:border-emerald-500/30 transition-colors">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10">
-                <TrendingUp className="h-5 w-5 text-amber-500" />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Certificates</span>
+                <div className="p-1.5 rounded bg-emerald-500/10">
+                  <Activity className="h-3.5 w-3.5 text-emerald-500" />
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Avg Certs/Month</p>
-                <p className="text-2xl font-semibold">{avgCerts}</p>
+              <span className="text-3xl font-bold text-foreground block">{data.total_certificates}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Highlighted - Avg Keys/Month */}
+        <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-card hover:border-blue-500/30 transition-colors">
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Keys/Month</span>
+                <div className="p-1.5 rounded bg-blue-500/10">
+                  <TrendingUp className="h-3.5 w-3.5 text-blue-500" />
+                </div>
               </div>
+              <span className="text-3xl font-bold text-foreground block">{data.avg_keys_month}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Highlighted - Avg Certs/Month */}
+        <Card className="border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-card hover:border-amber-500/30 transition-colors">
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Certs/Month</span>
+                <div className="p-1.5 rounded bg-amber-500/10">
+                  <TrendingUp className="h-3.5 w-3.5 text-amber-500" />
+                </div>
+              </div>
+              <span className="text-3xl font-bold text-foreground block">{data.avg_certs_month}</span>
             </div>
           </CardContent>
         </Card>
@@ -157,7 +211,7 @@ export function UtilityTrends({ certificates, keys }: UtilityTrendsProps) {
             }}
             className="h-[400px] w-full"
           >
-            <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
+            <AreaChart data={data.monthly} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
               <XAxis
                 dataKey="month"

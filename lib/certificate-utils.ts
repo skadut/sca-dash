@@ -22,7 +22,7 @@ export function getValidityStatus(expiredDate: string): ValidityStatus {
   const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 
   if (daysUntilExpiry < 0) return "expired"
-  if (daysUntilExpiry <= 30) return "expiring"
+  if (daysUntilExpiry <= 90) return "expiring"
   return "valid"
 }
 

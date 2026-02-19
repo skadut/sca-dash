@@ -40,6 +40,24 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
       let aValue: any = a[sortField as keyof Certificate]
       let bValue: any = b[sortField as keyof Certificate]
       
+      // Special handling for validity sorting
+      if (sortField === 'validity') {
+        const aValidity = getValidityStatus(a.expired_date)
+        const bValidity = getValidityStatus(b.expired_date)
+        const validityOrder: Record<ValidityStatus, number> = { expired: 0, expiring: 1, valid: 2 }
+        aValue = validityOrder[aValidity]
+        bValue = validityOrder[bValidity]
+      }
+      
+      // Special handling for status sorting
+      if (sortField === 'status') {
+        const aStatus = getCertificateStatus(a.expired_date, a.revoked_app_status)
+        const bStatus = getCertificateStatus(b.expired_date, b.revoked_app_status)
+        const statusOrder: Record<CertificateStatus, number> = { revoked: 0, inactive: 1, active: 2 }
+        aValue = statusOrder[aStatus]
+        bValue = statusOrder[bStatus]
+      }
+      
       if (sortDirection === 'asc') {
         return aValue < bValue ? -1 : 1
       }
@@ -63,6 +81,17 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
   const paginatedCerts = filteredAndSortedCerts.slice(startIndex, endIndex)
   const totalPages = Math.ceil(filteredAndSortedCerts.length / rowsPerPage)
   const emptyRowsArray = Array(Math.max(0, rowsPerPage - paginatedCerts.length))
+
+  // Fixed column widths - never changes based on content
+  const COLUMN_WIDTHS = {
+    certificateId: '180px',  // Fixed width to handle both short and long IDs
+    created: '120px',        // Fixed width for dates
+    expired: '120px',        // Fixed width for dates
+    hsm: '130px',            // Fixed width for HSM badges
+    files: '180px',          // Fixed width for file badges
+    validity: '140px',       // Fixed width for validity
+    status: '100px',         // Fixed width for status
+  }
 
   const getValidityBadge = (validity: ValidityStatus, daysUntil: number, status: CertificateStatus) => {
     if (status === "revoked") {
@@ -144,6 +173,8 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
     )
   }
 
+  const hasLongCertificateId = paginatedCerts.some(cert => cert.app_id_label === 'TANGERANGKOTACS01')
+  
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-4">
@@ -213,10 +244,19 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
           </Select>
         </div>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="p-0 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-muted/30 border-y border-border/30">
+          <table className="w-full border-collapse" style={{ tableLayout: 'fixed', width: '100%' }}>
+            <colgroup>
+              <col style={{ width: '180px', flexShrink: 0 }} />
+              <col style={{ width: '120px', flexShrink: 0 }} />
+              <col style={{ width: '120px', flexShrink: 0 }} />
+              <col style={{ width: '130px', flexShrink: 0 }} />
+              <col style={{ width: '180px', flexShrink: 0 }} />
+              <col style={{ width: '140px', flexShrink: 0 }} />
+              <col style={{ width: '100px', flexShrink: 0 }} />
+            </colgroup>
+            <thead className="bg-muted/30 border-y border-border/30 sticky top-0 z-10">
               <tr>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   <button onClick={() => handleSort('app_id_label')} className="flex items-center gap-1 hover:text-foreground">
@@ -240,10 +280,14 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
                   Files
                 </th>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Validity
+                  <button onClick={() => handleSort('validity')} className="flex items-center gap-1 hover:text-foreground">
+                    Validity <ArrowUpDown className="h-3 w-3" />
+                  </button>
                 </th>
                 <th className="text-left p-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Status
+                  <button onClick={() => handleSort('status')} className="flex items-center gap-1 hover:text-foreground">
+                    Status <ArrowUpDown className="h-3 w-3" />
+                  </button>
                 </th>
               </tr>
             </thead>
@@ -262,11 +306,11 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
 
                 return (
                   <tr key={cert.id} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
-                    <td className="p-3 text-sm font-mono">{cert.app_id_label}</td>
-                    <td className="p-3 text-sm font-mono">{formatDate(cert.created_date)}</td>
-                    <td className="p-3 text-sm font-mono">{formatDate(cert.expired_date)}</td>
-                    <td className="p-3">{getHSMBadge(cert.hsm)}</td>
-                    <td className="p-3">
+                    <td className="p-3 text-sm font-mono overflow-hidden text-ellipsis whitespace-nowrap">{cert.app_id_label}</td>
+                    <td className="p-3 text-sm font-mono overflow-hidden text-ellipsis whitespace-nowrap">{formatDate(cert.created_date)}</td>
+                    <td className="p-3 text-sm font-mono overflow-hidden text-ellipsis whitespace-nowrap">{formatDate(cert.expired_date)}</td>
+                    <td className="p-3 overflow-hidden text-ellipsis">{getHSMBadge(cert.hsm)}</td>
+                    <td className="p-3 overflow-hidden">
                       <div className="flex gap-1.5 flex-wrap">
                         {existingFiles.map((file) => (
                           <Badge key={file.name} variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-xs">
@@ -282,8 +326,8 @@ export function CertificateTable({ certificates }: CertificateTableProps) {
                         ))}
                       </div>
                     </td>
-                    <td className="p-3">{getValidityBadge(validity, daysUntil, status)}</td>
-                    <td className="p-3">{getStatusBadge(status)}</td>
+                    <td className="p-3 overflow-hidden text-ellipsis">{getValidityBadge(validity, daysUntil, status)}</td>
+                    <td className="p-3 overflow-hidden text-ellipsis whitespace-nowrap">{getStatusBadge(status)}</td>
                   </tr>
                 )
               })}

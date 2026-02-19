@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import useSWR from 'swr'
 import { StatsCards } from '@/components/dashboard/stats-cards'
 import { CertificateTable } from '@/components/dashboard/certificate-table'
@@ -26,7 +26,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 type DataMode = 'mock' | 'database'
 
-export default function DashboardPage() {
+export default function DashboardPage(): React.ReactElement {
   const [activeMenu, setActiveMenu] = useState<'dashboard' | 'inventory' | 'certificates' | 'acl'>('dashboard')
   const [dataMode, setDataMode] = useState<DataMode>('mock')
   const [activeTab, setActiveTab] = useState<'status' | 'traffic'>('status')
@@ -161,7 +161,7 @@ export default function DashboardPage() {
                       <KeySecretRelationship keys={keys} />
                     </div>
                     <div className="page-enter" style={{ animationDelay: '100ms' }}>
-                      <UtilityTrends certificates={certificates} keys={keys} />
+                      <UtilityTrends />
                     </div>
                   </>
                 )}
@@ -180,7 +180,7 @@ export default function DashboardPage() {
                     <div className="page-enter">
                       <CertificateAccessToggle certificates={certificates} />
                     </div>
-                    <div className="page-enter" style={{ animationDelay: '50ms' }}>
+                    <div className="page-enter mt-12" style={{ animationDelay: '50ms' }}>
                       <CertificateTable certificates={certificates} />
                     </div>
                   </>

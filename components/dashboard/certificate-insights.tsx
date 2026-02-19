@@ -67,6 +67,32 @@ const getHsmColor = (hsm: string): { badge: string; avatarIndex: number } => {
   return { badge: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20', avatarIndex: 3 }
 }
 
+const getHealthBarColor = (daysUntilExpiry: number): string => {
+  if (daysUntilExpiry < 30) {
+    return 'bg-red-600'
+  }
+  if (daysUntilExpiry < 90) {
+    return 'bg-amber-500'
+  }
+  return 'bg-emerald-500'
+}
+
+const getCertificateStageType = (daysUntilExpiry: number): 'critical' | 'warning' | 'safe' => {
+  if (daysUntilExpiry < 30) {
+    return 'critical'
+  }
+  if (daysUntilExpiry < 90) {
+    return 'warning'
+  }
+  return 'safe'
+}
+
+const getHealthPercentage = (daysUntilExpiry: number, maxDays: number = 365): number => {
+  // Calculate remaining health as a percentage of max validity
+  const percentage = Math.max(0, Math.min(100, (daysUntilExpiry / maxDays) * 100))
+  return percentage
+}
+
 export function CertificateInsights({ certificates }: CertificateInsightsProps) {
   // Get top 4 most recent certificates
   const recentCerts = [...certificates]
@@ -76,34 +102,21 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
   // Get active certificates nearing expiration, sorted by most imminent
   const certificateStages = certificates
     .filter(cert => getCertificateStatus(cert.expired_date, cert.revoked_app_status) === 'active')
-    .map(cert => ({
-      ...cert,
-      daysUntilExpiry: getDaysUntilExpiry(cert.expired_date),
-      validity: getValidityStatus(cert.expired_date),
-    }))
+    .map(cert => {
+      const daysUntilExpiry = getDaysUntilExpiry(cert.expired_date)
+      return {
+        ...cert,
+        daysUntilExpiry,
+        stageType: getCertificateStageType(daysUntilExpiry),
+      }
+    })
     .sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry)
     .slice(0, 4)
-
-  const getHealthBarColor = (daysUntilExpiry: number, validity: 'valid' | 'expiring' | 'expired'): string => {
-    if (validity === 'expired' || daysUntilExpiry <= 0) {
-      return 'bg-red-600'
-    }
-    if (validity === 'expiring' || daysUntilExpiry <= 30) {
-      return 'bg-amber-500'
-    }
-    return 'bg-emerald-500'
-  }
-
-  const getHealthPercentage = (daysUntilExpiry: number, maxDays: number = 365): number => {
-    // Calculate remaining health as a percentage of max validity
-    const percentage = Math.max(0, Math.min(100, (daysUntilExpiry / maxDays) * 100))
-    return percentage
-  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Recent Certificates */}
-      <Card className="border-border/50 bg-card flex flex-col min-h-[420px]">
+      <Card className="border-border/50 bg-card flex flex-col min-h-[420px] overflow-hidden">
         <CardHeader className="pb-4">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -142,7 +155,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
       </Card>
 
       {/* Certificate Stages - Health Bar View */}
-      <Card className="border-border/50 bg-card flex flex-col min-h-[420px]">
+      <Card className="border-border/50 bg-card flex flex-col min-h-[420px] overflow-hidden">
         <CardHeader className="pb-4">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -157,9 +170,9 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
             <p className="text-sm text-muted-foreground text-center py-4">No active certificates</p>
           ) : (
             certificateStages.map((cert, index) => {
-              const healthColor = getHealthBarColor(cert.daysUntilExpiry, cert.validity)
+              const healthColor = getHealthBarColor(cert.daysUntilExpiry)
               const healthPercentage = getHealthPercentage(cert.daysUntilExpiry)
-              const statusLabel = cert.validity === 'expired' ? 'Expired' : cert.validity === 'expiring' ? 'Critical' : 'Safe'
+              const statusLabel = cert.stageType === 'critical' ? 'Critical' : cert.stageType === 'warning' ? 'Warning' : 'Safe'
               
               return (
                 <div
@@ -172,8 +185,8 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
                     <Badge 
                       variant="outline" 
                       className={`text-xs font-medium flex-shrink-0 ${
-                        healthColor === 'bg-red-600' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                        healthColor === 'bg-amber-500' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                        cert.stageType === 'critical' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                        cert.stageType === 'warning' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
                         'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                       }`}
                     >
@@ -186,7 +199,7 @@ export function CertificateInsights({ certificates }: CertificateInsightsProps) 
                     {/* Health Bar */}
                     <div className="flex-1 h-2 bg-red-900/40 rounded-full overflow-hidden">
                       <div
-                        className={`health-bar-animated h-full ${healthColor}`}
+                        className={`health-bar-animated h-full ${healthColor} rounded-full`}
                         style={{ 
                           width: `${healthPercentage}%`,
                           animationDelay: `${index * 100}ms`
