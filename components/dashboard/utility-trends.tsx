@@ -108,46 +108,50 @@ export function UtilityTrends() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-cyan-500/10">
-                <Activity className="h-5 w-5 text-cyan-500" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Unified Keys Card - Main Focus */}
+        <Card className="md:col-span-1 lg:col-span-2 border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 to-cyan-500/2">
+          <CardContent className="pt-8">
+            <div className="space-y-6">
+              {/* Main Metric */}
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-cyan-500/10 flex-shrink-0">
+                  <Activity className="h-6 w-6 text-cyan-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Total Keys</p>
+                  <p className="text-5xl font-bold text-foreground">{data.total_keys}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground whitespace-nowrap">Total Keys</p>
-                <p className="text-2xl font-semibold">{data.total_keys}</p>
+              
+              {/* Divider */}
+              <div className="h-px bg-border/30" />
+              
+              {/* Supplementary Metrics */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1.5 rounded-md bg-purple-500/10">
+                      <Key className="h-4 w-4 text-purple-500" />
+                    </div>
+                    <p className="text-xs font-medium text-muted-foreground">Master Key</p>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground ml-7">{data.total_msk}</p>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1.5 rounded-md bg-blue-500/10">
+                      <Key className="h-4 w-4 text-blue-500" />
+                    </div>
+                    <p className="text-xs font-medium text-muted-foreground">Secret Key</p>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground ml-7">{data.total_secret}</p>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-purple-500/10">
-                <Key className="h-5 w-5 text-purple-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground whitespace-nowrap">Master Key</p>
-                <p className="text-2xl font-semibold">{data.total_msk}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <Key className="h-5 w-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground whitespace-nowrap">Secret Key</p>
-                <p className="text-2xl font-semibold">{data.total_secret}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
