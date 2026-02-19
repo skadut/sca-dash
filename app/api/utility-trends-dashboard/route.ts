@@ -19,7 +19,7 @@ interface UtilityTrendsResponse {
 }
 
 function getMonthName(date: Date): string {
-  return date.toLocaleString('en-US', { month: 'long', year: 'numeric' })
+  return date.toLocaleString('en-US', { month: 'short', year: 'numeric' })
 }
 
 function calculateTrends(): UtilityTrendsResponse {
