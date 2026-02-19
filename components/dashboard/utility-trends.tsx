@@ -31,17 +31,25 @@ export function UtilityTrends() {
     const fetchUtilityTrends = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/utility-trends-dashboard')
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7077'
+        console.log('[v0] Fetching utility trends from:', `${baseUrl}/utility-trends-dashboard`)
+        
+        const response = await fetch(`${baseUrl}/utility-trends-dashboard`, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
         
         if (!response.ok) {
           throw new Error(`API error: ${response.statusText}`)
         }
         
         const trendsData = await response.json()
+        console.log('[v0] Utility trends data fetched successfully:', trendsData)
         setData(trendsData)
         setError(null)
       } catch (err) {
-        console.error('Failed to fetch utility trends:', err)
+        console.error('[v0] Failed to fetch utility trends:', err)
         setError(err instanceof Error ? err.message : 'Failed to fetch data')
       } finally {
         setLoading(false)
