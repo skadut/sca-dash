@@ -107,88 +107,73 @@ export function UtilityTrends() {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Unified Keys Card - Main Focus */}
-        <Card className="md:col-span-1 lg:col-span-2 border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 to-cyan-500/2">
-          <CardContent className="pt-8">
-            <div className="space-y-6">
-              {/* Main Metric */}
-              <div className="flex items-start gap-4">
+      {/* Summary Cards - Redesigned for Better UX */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+        {/* Unified Keys Card - Elegant Main Focus */}
+        <Card className="lg:col-span-2 border-cyan-500/20 bg-gradient-to-br from-card to-card/50 hover:border-cyan-500/30 transition-colors">
+          <CardContent className="pt-8 pb-8">
+            <div className="space-y-8">
+              {/* Header with Icon */}
+              <div className="flex items-baseline gap-4">
                 <div className="p-3 rounded-lg bg-cyan-500/10 flex-shrink-0">
                   <Activity className="h-6 w-6 text-cyan-500" />
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Total Keys</p>
-                  <p className="text-5xl font-bold text-foreground">{data.total_keys}</p>
+                <div className="flex flex-col">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Keys</span>
+                  <span className="text-5xl font-bold text-foreground leading-none mt-2">{data.total_keys}</span>
                 </div>
               </div>
               
               {/* Divider */}
-              <div className="h-px bg-border/30" />
+              <div className="h-px bg-border/20" />
               
-              {/* Supplementary Metrics */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="p-1.5 rounded-md bg-purple-500/10">
-                      <Key className="h-4 w-4 text-purple-500" />
-                    </div>
-                    <p className="text-xs font-medium text-muted-foreground">Master Key</p>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground ml-7">{data.total_msk}</p>
+              {/* Key Type Breakdown - Minimalist Numeric Focus */}
+              <div className="grid grid-cols-2 gap-8">
+                <div className="flex flex-col items-center space-y-3">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Master</span>
+                  <span className="text-3xl font-bold text-foreground">{data.total_msk}</span>
+                  <div className="w-1 h-1 rounded-full bg-purple-500/40" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="p-1.5 rounded-md bg-blue-500/10">
-                      <Key className="h-4 w-4 text-blue-500" />
-                    </div>
-                    <p className="text-xs font-medium text-muted-foreground">Secret Key</p>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground ml-7">{data.total_secret}</p>
+                <div className="flex flex-col items-center space-y-3">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Secret</span>
+                  <span className="text-3xl font-bold text-foreground">{data.total_secret}</span>
+                  <div className="w-1 h-1 rounded-full bg-blue-500/40" />
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/10">
-                <Activity className="h-5 w-5 text-emerald-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground whitespace-nowrap">Total Certificates</p>
-                <p className="text-2xl font-semibold">{data.total_certificates}</p>
-              </div>
+        {/* Total Certificates Card */}
+        <Card className="border-emerald-500/10 hover:border-emerald-500/20 transition-colors">
+          <CardContent className="pt-8 pb-8 flex flex-col items-center justify-center h-full">
+            <div className="p-3 rounded-lg bg-emerald-500/10 mb-4">
+              <Activity className="h-5 w-5 text-emerald-500" />
             </div>
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide text-center mb-2">Certificates</span>
+            <span className="text-4xl font-bold text-foreground">{data.total_certificates}</span>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <TrendingUp className="h-5 w-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground whitespace-nowrap">Avg Keys/Month</p>
-                <p className="text-2xl font-semibold">{data.avg_keys_month}</p>
-              </div>
+
+        {/* Avg Keys/Month Card */}
+        <Card className="border-blue-500/10 hover:border-blue-500/20 transition-colors">
+          <CardContent className="pt-8 pb-8 flex flex-col items-center justify-center h-full">
+            <div className="p-3 rounded-lg bg-blue-500/10 mb-4">
+              <TrendingUp className="h-5 w-5 text-blue-500" />
             </div>
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide text-center mb-2">Keys/Month</span>
+            <span className="text-4xl font-bold text-foreground">{data.avg_keys_month}</span>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10">
-                <TrendingUp className="h-5 w-5 text-amber-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground whitespace-nowrap">Avg Certs/Month</p>
-                <p className="text-2xl font-semibold">{data.avg_certs_month}</p>
-              </div>
+
+        {/* Avg Certs/Month Card */}
+        <Card className="border-amber-500/10 hover:border-amber-500/20 transition-colors">
+          <CardContent className="pt-8 pb-8 flex flex-col items-center justify-center h-full">
+            <div className="p-3 rounded-lg bg-amber-500/10 mb-4">
+              <TrendingUp className="h-5 w-5 text-amber-500" />
             </div>
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide text-center mb-2">Certs/Month</span>
+            <span className="text-4xl font-bold text-foreground">{data.avg_certs_month}</span>
           </CardContent>
         </Card>
       </div>
