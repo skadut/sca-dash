@@ -249,8 +249,8 @@ export function KeyTable({ keys }: KeyTableProps) {
               <col style={{ width: '120px', flexShrink: 0 }} />
               <col style={{ width: '120px', flexShrink: 0 }} />
               <col style={{ width: '120px', flexShrink: 0 }} />
+              <col style={{ width: '140px', flexShrink: 0 }} />
               <col style={{ width: '100px', flexShrink: 0 }} />
-              <col style={{ width: '90px', flexShrink: 0 }} />
             </colgroup>
             <thead className="bg-muted/30 border-y border-border/30 sticky top-0 z-10">
               <tr>
