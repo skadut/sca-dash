@@ -267,3 +267,4 @@ export function UtilityTrends() {
       </Card>
     </div>
   )
+}
