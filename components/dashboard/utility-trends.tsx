@@ -31,7 +31,9 @@ export function UtilityTrends() {
     const fetchUtilityTrends = async () => {
       try {
         setLoading(true)
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7077'
+        const aclApiUrl = process.env.NEXT_PUBLIC_ACL_API_URL || '127.0.0.1'
+        const aclApiPort = process.env.NEXT_PUBLIC_ACL_API_PORT || '7077'
+        const baseUrl = `http://${aclApiUrl}:${aclApiPort}`
         console.log('[v0] Fetching utility trends from:', `${baseUrl}/utility-trends-dashboard`)
         
         const response = await fetch(`${baseUrl}/utility-trends-dashboard`, {
