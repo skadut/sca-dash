@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import https from 'https'
 import { mockKeys } from '@/lib/mock-key-data'
 import { mockCertificates } from '@/lib/mock-data'
 
@@ -22,10 +23,111 @@ function getMonthName(date: Date): string {
   return date.toLocaleString('en-US', { month: 'short', year: 'numeric' })
 }
 
-async function calculateTrends(): Promise<UtilityTrendsResponse> {
-  // Check if database connection is available
-  const databaseUrl = process.env.DATABASE_URL
+// Fetch from external API with mTLS
+async function fetchFromExternalAPI(): Promise<UtilityTrendsResponse | null> {
+  const { ACL_API_URL, ACL_API_PORT, TLS_CA_CERT, TLS_CERT, TLS_KEY, TLS_VERIFY } = process.env
 
+  if (!ACL_API_URL || !ACL_API_PORT || !TLS_CA_CERT || !TLS_CERT || !TLS_KEY) {
+    console.log('[v0] Missing required environment variables for utility trends API')
+    return null
+  }
+
+  try {
+    // Parse the URL to extract hostname (remove protocol if present)
+    let hostname = ACL_API_URL
+    if (hostname.includes('://')) {
+      hostname = hostname.split('://')[1]
+    }
+    // Remove trailing slash if present
+    hostname = hostname.replace(/\/$/, '')
+
+    console.log('[v0] Fetching utility trends from:', `${hostname}:${ACL_API_PORT}/utility-trends-dashboard`)
+    console.log('[v0] Certificate verification:', TLS_VERIFY !== 'false' ? 'enabled' : 'disabled')
+
+    // Helper function to decode certificate - handles both PEM and base64 formats
+    const decodeCert = (certData: string): string => {
+      // If it already looks like PEM (contains -----BEGIN), return as-is
+      if (certData.includes('-----BEGIN')) {
+        return certData
+      }
+      // Otherwise, decode from base64
+      try {
+        return Buffer.from(certData, 'base64').toString('utf-8')
+      } catch {
+        return certData // Return original if decode fails
+      }
+    }
+
+    // Use native https module for mTLS support
+    return new Promise((resolve) => {
+      const caCert = decodeCert(TLS_CA_CERT)
+      const clientCert = decodeCert(TLS_CERT)
+      const clientKey = decodeCert(TLS_KEY)
+
+      // Log certificate presence (not the actual content for security)
+      console.log('[v0] CA cert loaded:', caCert.length > 0 ? 'yes' : 'no')
+      console.log('[v0] Client cert loaded:', clientCert.length > 0 ? 'yes' : 'no')
+      console.log('[v0] Client key loaded:', clientKey.length > 0 ? 'yes' : 'no')
+
+      const options: any = {
+        hostname: hostname,
+        port: parseInt(ACL_API_PORT),
+        path: '/utility-trends-dashboard',
+        method: 'GET',
+        ca: caCert,
+        cert: clientCert,
+        key: clientKey,
+        // Set rejectUnauthorized based on TLS_VERIFY env var (default: true)
+        rejectUnauthorized: TLS_VERIFY !== 'false',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+
+      const req = https.request(options, (res) => {
+        let data = ''
+
+        res.on('data', (chunk) => {
+          data += chunk
+        })
+
+        res.on('end', () => {
+          if (res.statusCode === 200) {
+            try {
+              const jsonData = JSON.parse(data)
+              console.log('[v0] Utility trends data fetched successfully from API')
+              resolve(jsonData as UtilityTrendsResponse)
+            } catch (parseError) {
+              console.error('[v0] Error parsing utility trends response:', parseError)
+              resolve(null)
+            }
+          } else {
+            console.error('[v0] Utility trends API response status:', res.statusCode)
+            resolve(null)
+          }
+        })
+      })
+
+      req.on('error', (error: any) => {
+        console.error('[v0] Utility trends API connection error:', error.code, error.message)
+        resolve(null)
+      })
+
+      req.setTimeout(10000, () => {
+        console.error('[v0] Utility trends API request timeout')
+        req.destroy()
+        resolve(null)
+      })
+
+      req.end()
+    })
+  } catch (error) {
+    console.error('[v0] Error setting up utility trends request:', error)
+    return null
+  }
+}
+
+function calculateTrends(): UtilityTrendsResponse {
   // Get the last 6 months
   const now = new Date()
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
@@ -38,90 +140,7 @@ async function calculateTrends(): Promise<UtilityTrendsResponse> {
     monthsMap.set(monthKey, { month: monthKey, keys: 0, certificates: 0 })
   }
 
-  if (databaseUrl) {
-    // Database mode - query from Neon
-    try {
-      const { neon } = await import('@neondatabase/serverless')
-      const sql = neon(databaseUrl)
-
-      // Query total keys and count by type
-      const keysResult = await sql`
-        SELECT 
-          COUNT(*) as total,
-          SUM(CASE WHEN key_label ILIKE '%MSK%' THEN 1 ELSE 0 END) as msk_count,
-          SUM(CASE WHEN secret_data IS NOT NULL AND secret_data != '' THEN 1 ELSE 0 END) as secret_count
-        FROM key_test
-      `
-
-      const totalKeys = Number(keysResult[0]?.total) || 0
-      const totalMsk = Number(keysResult[0]?.msk_count) || 0
-      const totalSecret = Number(keysResult[0]?.secret_count) || 0
-
-      // Query keys by month for last 6 months
-      const keysByMonth = await sql`
-        SELECT 
-          TO_CHAR(created_at, 'Mon YYYY') as month_key,
-          COUNT(*) as count
-        FROM key_test
-        WHERE created_at >= ${sixMonthsAgo.toISOString()}
-        GROUP BY TO_CHAR(created_at, 'Mon YYYY')
-        ORDER BY created_at
-      `
-
-      // Query total certificates
-      const certsResult = await sql`
-        SELECT COUNT(*) as total
-        FROM certificate
-      `
-
-      const totalCertificates = Number(certsResult[0]?.total) || 0
-
-      // Query certificates by month for last 6 months
-      const certsByMonth = await sql`
-        SELECT 
-          TO_CHAR(TO_DATE(created_date, 'YYYYMMDD'), 'Mon YYYY') as month_key,
-          COUNT(*) as count
-        FROM certificate
-        WHERE TO_DATE(created_date, 'YYYYMMDD') >= ${sixMonthsAgo.toISOString()}
-        GROUP BY TO_CHAR(TO_DATE(created_date, 'YYYYMMDD'), 'Mon YYYY')
-        ORDER BY TO_DATE(created_date, 'YYYYMMDD')
-      `
-
-      // Populate monthly data
-      keysByMonth.forEach((row: any) => {
-        const monthData = monthsMap.get(row.month_key)
-        if (monthData) {
-          monthData.keys = Number(row.count)
-        }
-      })
-
-      certsByMonth.forEach((row: any) => {
-        const monthData = monthsMap.get(row.month_key)
-        if (monthData) {
-          monthData.certificates = Number(row.count)
-        }
-      })
-
-      const monthly = Array.from(monthsMap.values())
-      const avgKeysMonth = monthly.length > 0 ? Number((totalKeys / 6).toFixed(1)) : 0
-      const avgCertsMonth = monthly.length > 0 ? Number((totalCertificates / 6).toFixed(1)) : 0
-
-      return {
-        total_keys: totalKeys,
-        total_msk: totalMsk,
-        total_secret: totalSecret,
-        total_certificates: totalCertificates,
-        avg_keys_month: avgKeysMonth,
-        avg_certs_month: avgCertsMonth,
-        monthly,
-      }
-    } catch (error) {
-      console.error('Database query error, falling back to mock data:', error)
-      // Fall through to mock data
-    }
-  }
-
-  // Mock mode - use mock data when database is not available
+  // Count keys by month
   let totalKeys = 0
   let totalMsk = 0
   let totalSecret = 0
@@ -186,12 +205,42 @@ async function calculateTrends(): Promise<UtilityTrendsResponse> {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const trends = await calculateTrends()
-    return NextResponse.json(trends)
+    const { searchParams } = new URL(request.url)
+    const mode = searchParams.get('mode') || 'database'
+
+    // If mode is mock, return mock data directly
+    if (mode === 'mock') {
+      const mockTrends = calculateTrends()
+      return NextResponse.json({
+        ...mockTrends,
+        isUsingMockData: true,
+        message: 'Using mock data',
+      })
+    }
+
+    // Mode is database - try to fetch from external API
+    const apiData = await fetchFromExternalAPI()
+
+    if (apiData) {
+      return NextResponse.json({
+        ...apiData,
+        isUsingMockData: false,
+        message: 'Connected to external utility trends API',
+      })
+    }
+
+    // API connection failed, return mock data fallback
+    const mockTrends = calculateTrends()
+    return NextResponse.json({
+      ...mockTrends,
+      isUsingMockData: true,
+      connectionFailed: true,
+      message: 'External API connection failed - using mock data fallback',
+    })
   } catch (error) {
-    console.error('API error:', error)
+    console.error('[v0] Utility trends API error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch utility trends', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

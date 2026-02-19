@@ -31,6 +31,8 @@ export function UtilityTrends() {
     const fetchUtilityTrends = async () => {
       try {
         setLoading(true)
+        console.log('[v0] Fetching utility trends from: /api/utility-trends-dashboard')
+        
         const response = await fetch('/api/utility-trends-dashboard')
         
         if (!response.ok) {
@@ -38,10 +40,11 @@ export function UtilityTrends() {
         }
         
         const trendsData = await response.json()
+        console.log('[v0] Utility trends data fetched successfully:', trendsData)
         setData(trendsData)
         setError(null)
       } catch (err) {
-        console.error('Failed to fetch utility trends:', err)
+        console.error('[v0] Failed to fetch utility trends:', err)
         setError(err instanceof Error ? err.message : 'Failed to fetch data')
       } finally {
         setLoading(false)
