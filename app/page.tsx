@@ -161,7 +161,7 @@ export default function DashboardPage() {
                       <KeySecretRelationship keys={keys} />
                     </div>
                     <div className="page-enter" style={{ animationDelay: '100ms' }}>
-                      <UtilityTrends certificates={certificates} keys={keys} />
+                      <UtilityTrends />
                     </div>
                   </>
                 )}
