@@ -189,12 +189,12 @@ export function AccessControlList({ data }: AccessControlListProps) {
   const filteredData = certArray.filter((cert) => {
     if (!cert || !cert.used_by) return false
     return (
-      cert.app_id_label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cert.hsm.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (cert.app_id_label && cert.app_id_label.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (cert.hsm && cert.hsm.toLowerCase().includes(searchQuery.toLowerCase())) ||
       cert.used_by.some(
         (app) =>
-          app.nama_instansi.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          app.nama_aplikasi.toLowerCase().includes(searchQuery.toLowerCase())
+          (app && app.nama_instansi && app.nama_instansi.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (app && app.nama_aplikasi && app.nama_aplikasi.toLowerCase().includes(searchQuery.toLowerCase()))
       )
     )
   })
