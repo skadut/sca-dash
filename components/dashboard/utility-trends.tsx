@@ -107,73 +107,85 @@ export function UtilityTrends() {
         </div>
       </div>
 
-      {/* Summary Cards - Redesigned for Better UX */}
+      {/* Summary Cards - 6 Box Clean Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        {/* Unified Keys Card - Elegant Main Focus */}
-        <Card className="lg:col-span-2 border-cyan-500/20 bg-gradient-to-br from-card to-card/50 hover:border-cyan-500/30 transition-colors">
-          <CardContent className="pt-8 pb-8">
-            <div className="space-y-8">
-              {/* Header with Icon */}
-              <div className="flex items-baseline gap-4">
-                <div className="p-3 rounded-lg bg-cyan-500/10 flex-shrink-0">
-                  <Activity className="h-6 w-6 text-cyan-500" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Keys</span>
-                  <span className="text-5xl font-bold text-foreground leading-none mt-2">{data.total_keys}</span>
+        {/* Highlighted - Total Keys */}
+        <Card className="border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 to-card hover:border-cyan-500/30 transition-colors">
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Total Keys</span>
+                <div className="p-1.5 rounded bg-cyan-500/10">
+                  <Activity className="h-3.5 w-3.5 text-cyan-500" />
                 </div>
               </div>
-              
-              {/* Divider */}
-              <div className="h-px bg-border/20" />
-              
-              {/* Key Type Breakdown - Minimalist Numeric Focus */}
-              <div className="grid grid-cols-2 gap-8">
-                <div className="flex flex-col items-center space-y-3">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Master</span>
-                  <span className="text-3xl font-bold text-foreground">{data.total_msk}</span>
-                  <div className="w-1 h-1 rounded-full bg-purple-500/40" />
-                </div>
-                <div className="flex flex-col items-center space-y-3">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Secret</span>
-                  <span className="text-3xl font-bold text-foreground">{data.total_secret}</span>
-                  <div className="w-1 h-1 rounded-full bg-blue-500/40" />
+              <span className="text-3xl font-bold text-foreground block">{data.total_keys}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Secondary - Master Key */}
+        <Card className="border-border/40">
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide block">Master Key</span>
+              <span className="text-2xl font-semibold text-foreground">{data.total_msk}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Secondary - Secret Key */}
+        <Card className="border-border/40">
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide block">Secret Key</span>
+              <span className="text-2xl font-semibold text-foreground">{data.total_secret}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Highlighted - Total Certificates */}
+        <Card className="border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-card hover:border-emerald-500/30 transition-colors">
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Certificates</span>
+                <div className="p-1.5 rounded bg-emerald-500/10">
+                  <Activity className="h-3.5 w-3.5 text-emerald-500" />
                 </div>
               </div>
+              <span className="text-3xl font-bold text-foreground block">{data.total_certificates}</span>
             </div>
           </CardContent>
         </Card>
 
-        {/* Total Certificates Card */}
-        <Card className="border-emerald-500/10 hover:border-emerald-500/20 transition-colors">
-          <CardContent className="pt-8 pb-8 flex flex-col items-center justify-center h-full">
-            <div className="p-3 rounded-lg bg-emerald-500/10 mb-4">
-              <Activity className="h-5 w-5 text-emerald-500" />
+        {/* Highlighted - Avg Keys/Month */}
+        <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-card hover:border-blue-500/30 transition-colors">
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Keys/Month</span>
+                <div className="p-1.5 rounded bg-blue-500/10">
+                  <TrendingUp className="h-3.5 w-3.5 text-blue-500" />
+                </div>
+              </div>
+              <span className="text-3xl font-bold text-foreground block">{data.avg_keys_month}</span>
             </div>
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide text-center mb-2">Certificates</span>
-            <span className="text-4xl font-bold text-foreground">{data.total_certificates}</span>
           </CardContent>
         </Card>
 
-        {/* Avg Keys/Month Card */}
-        <Card className="border-blue-500/10 hover:border-blue-500/20 transition-colors">
-          <CardContent className="pt-8 pb-8 flex flex-col items-center justify-center h-full">
-            <div className="p-3 rounded-lg bg-blue-500/10 mb-4">
-              <TrendingUp className="h-5 w-5 text-blue-500" />
+        {/* Highlighted - Avg Certs/Month */}
+        <Card className="border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-card hover:border-amber-500/30 transition-colors">
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Certs/Month</span>
+                <div className="p-1.5 rounded bg-amber-500/10">
+                  <TrendingUp className="h-3.5 w-3.5 text-amber-500" />
+                </div>
+              </div>
+              <span className="text-3xl font-bold text-foreground block">{data.avg_certs_month}</span>
             </div>
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide text-center mb-2">Keys/Month</span>
-            <span className="text-4xl font-bold text-foreground">{data.avg_keys_month}</span>
-          </CardContent>
-        </Card>
-
-        {/* Avg Certs/Month Card */}
-        <Card className="border-amber-500/10 hover:border-amber-500/20 transition-colors">
-          <CardContent className="pt-8 pb-8 flex flex-col items-center justify-center h-full">
-            <div className="p-3 rounded-lg bg-amber-500/10 mb-4">
-              <TrendingUp className="h-5 w-5 text-amber-500" />
-            </div>
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide text-center mb-2">Certs/Month</span>
-            <span className="text-4xl font-bold text-foreground">{data.avg_certs_month}</span>
           </CardContent>
         </Card>
       </div>
