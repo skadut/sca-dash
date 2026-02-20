@@ -76,20 +76,22 @@ export function KeyInventoryStats() {
     {
       label: 'Keys',
       value: data.all_keys,
-      sublabel: 'Total Keys',
+      sublabel: 'Keys Generated',
       icon: KeyRound,
       iconColor: 'text-cyan-400',
       iconBg: 'bg-cyan-500/10',
       animated: false,
+      highlighted: true,
     },
     {
       label: 'Secret Keys',
       value: data.all_secret,
-      sublabel: 'With secret data',
+      sublabel: 'Keys with Secret',
       icon: Lock,
       iconColor: 'text-purple-400',
       iconBg: 'bg-purple-500/10',
       animated: false,
+      highlighted: false,
     },
     {
       label: 'Master Keys',
@@ -99,6 +101,7 @@ export function KeyInventoryStats() {
       iconColor: 'text-amber-400',
       iconBg: 'bg-amber-500/10',
       animated: false,
+      highlighted: false,
     },
     {
       label: 'Active',
@@ -108,6 +111,7 @@ export function KeyInventoryStats() {
       iconColor: 'text-emerald-400',
       iconBg: 'bg-emerald-500/10',
       animated: true,
+      highlighted: true,
     },
     {
       label: 'Expiring Soon',
@@ -117,6 +121,7 @@ export function KeyInventoryStats() {
       iconColor: 'text-amber-400',
       iconBg: 'bg-amber-500/10',
       animated: true,
+      highlighted: true,
     },
     {
       label: 'Inactive',
@@ -126,6 +131,7 @@ export function KeyInventoryStats() {
       iconColor: 'text-zinc-400',
       iconBg: 'bg-zinc-500/10',
       animated: false,
+      highlighted: true,
     },
     {
       label: 'Revoked',
@@ -135,6 +141,7 @@ export function KeyInventoryStats() {
       iconColor: 'text-red-400',
       iconBg: 'bg-red-500/10',
       animated: false,
+      highlighted: true,
     },
   ]
 
@@ -143,7 +150,11 @@ export function KeyInventoryStats() {
       {stats.map((stat) => (
         <Card
           key={stat.label}
-          className="border-border/30 bg-card/50 backdrop-blur stat-card-hover group overflow-hidden relative"
+          className={`border-border/30 backdrop-blur stat-card-hover group overflow-hidden relative transition-all ${
+            stat.highlighted
+              ? 'bg-card/80 border-border/60 shadow-md hover:shadow-lg'
+              : 'bg-card/30 border-border/20 opacity-75 hover:opacity-85'
+          }`}
         >
           <CardContent className="p-6 relative z-10">
             <div className="flex flex-col gap-4">

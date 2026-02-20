@@ -210,11 +210,25 @@ export function AccessControlList({ data }: AccessControlListProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Certificates</p>
+                <p className="text-sm font-medium text-muted-foreground">Certificates Integrated</p>
                 <h3 className="text-3xl font-bold mt-1">{totalCertificates}</h3>
               </div>
-              <div className="p-3 rounded-lg bg-primary/10">
-                <Zap className="h-6 w-6 text-primary" />
+              <div className="p-3 rounded-lg bg-cyan-500/10">
+                <Certificate className="h-6 w-6 text-cyan-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Keys Integrated</p>
+                <h3 className="text-3xl font-bold mt-1">{totalApplications}</h3>
+              </div>
+              <div className="p-3 rounded-lg bg-green-500/10">
+                <Database className="h-6 w-6 text-green-600" />
               </div>
             </div>
           </CardContent>
@@ -252,7 +266,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Avg Cert/Inst</p>
+                <p className="text-sm font-medium text-muted-foreground">Average Certs/Institutions</p>
                 <h3 className="text-3xl font-bold mt-1">{Number(avgCertPerInstitution).toFixed(2)}</h3>
               </div>
               <div className="p-3 rounded-lg bg-purple-500/10">
