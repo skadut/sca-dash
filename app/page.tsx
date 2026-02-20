@@ -10,6 +10,7 @@ import { DataModeToggle } from '@/components/dashboard/data-mode-toggle'
 import { ThemeToggle } from '@/components/dashboard/theme-toggle'
 import { FileDistribution } from '@/components/dashboard/file-distribution'
 import { KeySecretRelationship } from '@/components/dashboard/key-secret-relationship'
+import { CertificateAvailability } from '@/components/dashboard/certificate-availability'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { CombinedHSMVisualization } from '@/components/dashboard/combined-hsm-visualization'
 import { KeyInventoryToggle } from '@/components/dashboard/key-inventory-toggle'
@@ -158,7 +159,7 @@ export default function DashboardPage(): React.ReactElement {
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 page-enter" style={{ animationDelay: '50ms' }}>
                       <FileDistribution certificates={certificates} />
-                      <KeySecretRelationship keys={keys} />
+                      <KeySecretRelationship />
                     </div>
                     <div className="page-enter" style={{ animationDelay: '100ms' }}>
                       <UtilityTrends />
