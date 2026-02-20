@@ -97,8 +97,23 @@ export function AccessControlList({ data }: AccessControlListProps) {
   }
 
   // Calculate statistics
+  // Calculate statistics from API response
   const certArray = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
   
+  // Get values from API response if available, otherwise calculate
+  const totalCertificates = data?.total_certs_integrated || certArray.length
+  const totalApplications = data?.total_keys_integrated || certArray.reduce((acc, cert) => {
+    if (!cert || !cert.used_by) return acc
+    return acc + cert.used_by.length
+  }, 0)
+  const totalInstitutions = data?.total_institution || new Set(
+    certArray.flatMap((cert) => {
+      if (!cert || !cert.used_by) return []
+      return cert.used_by.map((app) => app.nama_instansi)
+    })
+  ).size
+  const avgCertPerInstitution = data?.average_cert_institution || (totalCertificates > 0 ? (totalApplications / totalCertificates).toFixed(1) : 0)
+
   // Get all unique certificate IDs for the stacked bar (sorted) - MUST be before stackedBarDataWithColors
   const allCertIds = Array.from(
     new Set(
@@ -107,18 +122,6 @@ export function AccessControlList({ data }: AccessControlListProps) {
         .map(c => c.app_id_label)
     )
   ).sort()
-  
-  const totalCertificates = certArray.length
-  const totalApplications = certArray.reduce((acc, cert) => {
-    if (!cert || !cert.used_by) return acc
-    return acc + cert.used_by.length
-  }, 0)
-  const totalInstitutions = new Set(
-    certArray.flatMap((cert) => {
-      if (!cert || !cert.used_by) return []
-      return cert.used_by.map((app) => app.nama_instansi)
-    })
-  ).size
 
   // Prepare stacked bar chart data with gradient colors per institution
   const stackedBarDataWithColors = Array.from(
@@ -249,8 +252,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Avg Apps/Cert</p>
-                <h3 className="text-3xl font-bold mt-1">{totalCertificates > 0 ? (totalApplications / totalCertificates).toFixed(1) : 0}</h3>
+                <p className="text-sm font-medium text-muted-foreground">Avg Cert/Inst</p>
+                <h3 className="text-3xl font-bold mt-1">{Number(avgCertPerInstitution).toFixed(2)}</h3>
               </div>
               <div className="p-3 rounded-lg bg-purple-500/10">
                 <Users className="h-6 w-6 text-purple-600" />
