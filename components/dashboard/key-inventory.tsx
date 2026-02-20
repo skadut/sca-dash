@@ -1,44 +1,108 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { Key } from '@/lib/types'
-import { KeyRound, ShieldCheck, ShieldX, Ban, Server, Clock } from 'lucide-react'
+import { KeyRound, ShieldCheck, ShieldX, Ban, Clock, Key, Lock } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
-interface KeyInventoryStatsProps {
-  keys: Key[]
+interface KeySummaryData {
+  all_keys: number
+  all_secret: number
+  all_msk: number
+  active: number
+  expiring_soon: number
+  inactive: number
+  revoked: number
+  isUsingMockData?: boolean
 }
 
-export function KeyInventoryStats({ keys }: KeyInventoryStatsProps) {
-  const total = keys.length
-  const active = keys.filter((k) => {
-    const expired = new Date(k.key_expired.replace(/\//g, '-')) < new Date()
-    return !k.revoked_key_status && !expired
-  }).length
-  const expired = keys.filter((k) => {
-    const expiredDate = new Date(k.key_expired.replace(/\//g, '-')) < new Date()
-    return expiredDate && !k.revoked_key_status
-  }).length
-  const revoked = keys.filter((k) => k.revoked_key_status).length
-  const expiringSoon = keys.filter((k) => {
-    const expiryDate = new Date(k.key_expired.replace(/\//g, '-'))
-    const today = new Date()
-    const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-    return daysUntilExpiry > 0 && daysUntilExpiry <= 30 && !k.revoked_key_status
-  }).length
+export function KeyInventoryStats() {
+  const [data, setData] = useState<KeySummaryData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchKeySummary = async () => {
+      try {
+        setLoading(true)
+        console.log('[v0] Fetching key summary from: /api/key-summary')
+
+        const response = await fetch('/api/key-summary')
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.statusText}`)
+        }
+
+        const responseData = await response.json() as KeySummaryData
+        console.log('[v0] Key summary data fetched successfully:', responseData)
+        setData(responseData)
+        setError(null)
+      } catch (err) {
+        console.error('[v0] Failed to fetch key summary:', err)
+        setError(err instanceof Error ? err.message : 'Failed to fetch data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchKeySummary()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
+        {Array.from({ length: 7 }).map((_, i) => (
+          <Card key={i} className="border-border/30 bg-card/50 animate-pulse">
+            <CardContent className="p-6">
+              <div className="h-4 bg-muted rounded w-full mb-4" />
+              <div className="h-8 bg-muted rounded w-1/2" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <Card className="border-border/30">
+        <CardContent className="p-6">
+          <p className="text-sm text-red-400">Error: {error || 'Failed to load key summary'}</p>
+        </CardContent>
+      </Card>
+    )
+  }
 
   const stats = [
     {
       label: 'Keys',
-      value: total,
-      sublabel: 'Generated Key',
+      value: data.all_keys,
+      sublabel: 'Total Keys',
       icon: KeyRound,
       iconColor: 'text-cyan-400',
       iconBg: 'bg-cyan-500/10',
       animated: false,
     },
     {
+      label: 'Secret Keys',
+      value: data.all_secret,
+      sublabel: 'With secret data',
+      icon: Lock,
+      iconColor: 'text-purple-400',
+      iconBg: 'bg-purple-500/10',
+      animated: false,
+    },
+    {
+      label: 'Master Keys',
+      value: data.all_msk,
+      sublabel: 'Master key set',
+      icon: Key,
+      iconColor: 'text-amber-400',
+      iconBg: 'bg-amber-500/10',
+      animated: false,
+    },
+    {
       label: 'Active',
-      value: active,
+      value: data.active,
       subtitle: 'Currently in use',
       icon: ShieldCheck,
       iconColor: 'text-emerald-400',
@@ -47,7 +111,7 @@ export function KeyInventoryStats({ keys }: KeyInventoryStatsProps) {
     },
     {
       label: 'Expiring Soon',
-      value: expiringSoon,
+      value: data.expiring_soon,
       subtitle: 'Within 30 days',
       icon: Clock,
       iconColor: 'text-amber-400',
@@ -55,9 +119,9 @@ export function KeyInventoryStats({ keys }: KeyInventoryStatsProps) {
       animated: true,
     },
     {
-      label: 'Expired',
-      value: expired,
-      subtitle: 'Past expiration date',
+      label: 'Inactive',
+      value: data.inactive,
+      subtitle: 'Not in use',
       icon: ShieldX,
       iconColor: 'text-zinc-400',
       iconBg: 'bg-zinc-500/10',
@@ -65,7 +129,7 @@ export function KeyInventoryStats({ keys }: KeyInventoryStatsProps) {
     },
     {
       label: 'Revoked',
-      value: revoked,
+      value: data.revoked,
       subtitle: 'Access denied',
       icon: Ban,
       iconColor: 'text-red-400',
@@ -75,7 +139,7 @@ export function KeyInventoryStats({ keys }: KeyInventoryStatsProps) {
   ]
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
       {stats.map((stat) => (
         <Card
           key={stat.label}
