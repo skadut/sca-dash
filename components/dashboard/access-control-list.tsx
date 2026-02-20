@@ -238,20 +238,6 @@ export function AccessControlList({ data }: AccessControlListProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Applications</p>
-                <h3 className="text-3xl font-bold mt-1">{totalApplications}</h3>
-              </div>
-              <div className="p-3 rounded-lg bg-green-500/10">
-                <Database className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
                 <p className="text-sm font-medium text-muted-foreground">Institutions</p>
                 <h3 className="text-3xl font-bold mt-1">{totalInstitutions}</h3>
               </div>
