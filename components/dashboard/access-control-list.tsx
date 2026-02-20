@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { Search, Building2, Zap, Users, Database, Certificate } from 'lucide-react'
+import { Search, Building2, Zap, Users, Database, Award } from 'lucide-react'
 import type { CertificateUsageData } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -214,7 +214,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
                 <h3 className="text-3xl font-bold mt-1">{totalCertificates}</h3>
               </div>
               <div className="p-3 rounded-lg bg-cyan-500/10">
-                <Certificate className="h-6 w-6 text-cyan-600" />
+                <Award className="h-6 w-6 text-cyan-600" />
               </div>
             </div>
           </CardContent>
