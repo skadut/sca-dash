@@ -155,7 +155,7 @@ export default function DashboardPage(): React.ReactElement {
                 {activeMenu === 'dashboard' && (
                   <>
                     <div className="page-enter">
-                      <CombinedHSMVisualization certificates={certificates} keys={keys} />
+                      <CombinedHSMVisualization />
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 page-enter" style={{ animationDelay: '50ms' }}>
                       <FileDistribution certificates={certificates} />
