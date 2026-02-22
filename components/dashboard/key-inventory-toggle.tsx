@@ -74,7 +74,7 @@ export function KeyInventoryToggle({ keys }: KeyInventoryToggleProps) {
               : "opacity-0 -translate-x-full pointer-events-none"
           }`}
         >
-          <KeyTrafficGraph keys={keys} />
+          <KeyTrafficGraph />
         </div>
       </div>
     </div>
