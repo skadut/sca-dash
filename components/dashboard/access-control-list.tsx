@@ -58,6 +58,12 @@ const generateGradientShades = (baseColor: string, count: number): string[] => {
   return shades
 }
 
+// Color palette for bars
+const barColors = [
+  '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
+  '#ec4899', '#06b6d4', '#84cc16', '#6366f1', '#f97316',
+]
+
 // Custom tooltip for stacked bar chart - displays institution data
 const CustomStackedBarTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
@@ -75,15 +81,12 @@ const CustomStackedBarTooltip = ({ active, payload }: any) => {
         {institutionData.applications && institutionData.applications.length > 0 && (
           <div className="mt-2 pt-2 border-t border-white/10">
             <p className="text-gray-400 text-xs mb-1">Applications:</p>
-            <div className="flex flex-wrap gap-1">
-              {institutionData.applications.slice(0, 5).map((app: string, idx: number) => (
-                <span key={idx} className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded border border-blue-500/30">
+            <div className="grid grid-cols-5 gap-1">
+              {institutionData.applications.map((app: string, idx: number) => (
+                <span key={idx} className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded border border-blue-500/30 text-center">
                   {app}
                 </span>
               ))}
-              {institutionData.applications.length > 5 && (
-                <span className="text-xs text-gray-400 px-2 py-1">+{institutionData.applications.length - 5} more</span>
-              )}
             </div>
           </div>
         )}
@@ -97,6 +100,11 @@ export function AccessControlList({ data }: AccessControlListProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [graphData, setGraphData] = useState<GraphData[]>([])
   const [graphLoading, setGraphLoading] = useState(true)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [certData, setCertData] = useState<any[]>([])
+  const [totalCerts, setTotalCerts] = useState(0)
+  const [certLoading, setCertLoading] = useState(false)
 
   useEffect(() => {
     const fetchGraphData = async () => {
@@ -123,6 +131,39 @@ export function AccessControlList({ data }: AccessControlListProps) {
 
     fetchGraphData()
   }, [])
+
+  // Fetch certificate data with pagination
+  useEffect(() => {
+    const fetchCertData = async () => {
+      try {
+        setCertLoading(true)
+        const params = new URLSearchParams({
+          limit: itemsPerPage.toString(),
+          page: currentPage.toString(),
+        })
+        console.log(`[v0] Fetching certificates with limit=${itemsPerPage}, page=${currentPage}`)
+
+        const response = await fetch(`/api/cert-usage-all?${params}`)
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.statusText}`)
+        }
+
+        const responseData = await response.json()
+        console.log('[v0] Certificate data fetched:', responseData)
+        setCertData(responseData.data || [])
+        setTotalCerts(responseData.total || 0)
+      } catch (err) {
+        console.error('[v0] Failed to fetch certificates:', err)
+        setCertData([])
+      } finally {
+        setCertLoading(false)
+      }
+    }
+
+    fetchCertData()
+  }, [itemsPerPage, currentPage])
+
   const getEncryptionColor = (keyId?: string): string => {
     if (!keyId) return 'bg-gray-500/10 text-gray-400 border-gray-500/20'
     const keyIdLower = keyId.toLowerCase()
@@ -240,8 +281,11 @@ export function AccessControlList({ data }: AccessControlListProps) {
     })
   }
 
-  // Filter certificates
-  const filteredData = certArray.filter((cert) => {
+  // Use certData from API if available, otherwise fall back to mock certArray
+  const tableData = Array.isArray(certData) && certData.length > 0 ? certData : certArray
+
+  // Filter certificates based on search (for display purposes only - API handles pagination)
+  const displayData = tableData.filter((cert) => {
     if (!cert || !cert.used_by) return false
     return (
       (cert.app_id_label && cert.app_id_label.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -336,16 +380,27 @@ export function AccessControlList({ data }: AccessControlListProps) {
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--muted-foreground)" opacity={0.2} />
                 <XAxis 
                   dataKey="nama_instansi" 
-                  angle={-45} 
-                  textAnchor="end" 
-                  height={60} 
-                  tick={{ fontSize: 12 }}
-                  label={{ value: 'Instansi', position: 'bottom', offset: -5 }}
+                  height={100}
+                  tick={{ fontSize: 11, width: 70, wordBreak: 'break-word' }}
+                  interval={0}
+                  tickFormatter={(value: string) => value}
                 />
-                <YAxis label={{ value: 'Applications', angle: -90, position: 'insideLeft' }} />
+                <YAxis 
+                  allowDecimals={false}
+                  tick={{ fontSize: 12 }}
+                />
                 <Tooltip content={<CustomStackedBarTooltip />} />
-                <Legend />
-                <Bar dataKey="total_applications" fill="#3b82f6" name="Applications" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="total_applications" name="Applications" radius={[4, 4, 0, 0]} 
+                  shape={(props: any) => {
+                    const { x, y, width, height, payload } = props
+                    if (!payload) return null
+                    const barIndex = graphData.findIndex(item => item.nama_instansi === payload.nama_instansi)
+                    const color = barColors[barIndex % barColors.length]
+                    return (
+                      <rect x={x} y={y} width={width} height={height} fill={color} />
+                    )
+                  }}
+                />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -371,13 +426,17 @@ export function AccessControlList({ data }: AccessControlListProps) {
 
           {/* Grid Layout */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredData.length === 0 ? (
+            {certLoading ? (
+              <div className="col-span-full text-center py-12 text-muted-foreground">
+                <p>Loading certificate data...</p>
+              </div>
+            ) : tableData.length === 0 ? (
               <div className="col-span-full text-center py-12 text-muted-foreground">
                 <Search className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                <p>No results found</p>
+                <p>No certificate data available</p>
               </div>
             ) : (
-              filteredData.map((cert) => {
+              tableData.map((cert) => {
                 // Get unique encryption types for this certificate (with both label and key_id)
                 const encryptionTypesMap = new Map<string, string>()
                 cert.used_by.forEach(app => {
@@ -426,6 +485,54 @@ export function AccessControlList({ data }: AccessControlListProps) {
               })
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {tableData.length > 0 && (
+            <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/30">
+              {/* Rows per page dropdown - Left side */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Rows per page:</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value))
+                    setCurrentPage(1)
+                  }}
+                  className="px-3 py-1.5 text-sm rounded-md border border-border/30 bg-background text-foreground hover:border-border/50 transition-colors cursor-pointer"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+
+              {/* Pagination display and arrows - Right side */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalCerts)} of {totalCerts}
+                </span>
+                
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-2 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-8 h-8"
+                >
+                  <span>&lt;</span>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    const maxPage = Math.ceil(totalCerts / itemsPerPage)
+                    setCurrentPage(prev => Math.min(prev + 1, maxPage))
+                  }}
+                  disabled={currentPage >= Math.ceil(totalCerts / itemsPerPage)}
+                  className="px-2 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-8 h-8"
+                >
+                  <span>&gt;</span>
+                </button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
