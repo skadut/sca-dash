@@ -100,6 +100,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [graphData, setGraphData] = useState<GraphData[]>([])
   const [graphLoading, setGraphLoading] = useState(true)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [currentPage, setCurrentPage] = useState(1)
 
   useEffect(() => {
     const fetchGraphData = async () => {
@@ -257,6 +259,18 @@ export function AccessControlList({ data }: AccessControlListProps) {
     )
   })
 
+  // Calculate pagination
+  const totalItems = filteredData.length
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedData = filteredData.slice(startIndex, endIndex)
+
+  // Reset to page 1 when search query changes
+  React.useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery])
+
   return (
     <div className="space-y-6">
       {/* Overview Stats */}
@@ -391,7 +405,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
                 <p>No results found</p>
               </div>
             ) : (
-              filteredData.map((cert) => {
+              paginatedData.map((cert) => {
                 // Get unique encryption types for this certificate (with both label and key_id)
                 const encryptionTypesMap = new Map<string, string>()
                 cert.used_by.forEach(app => {
@@ -440,6 +454,64 @@ export function AccessControlList({ data }: AccessControlListProps) {
               })
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {filteredData.length > 0 && (
+            <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/30">
+              <div className="text-sm text-muted-foreground">
+                Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems} results
+              </div>
+              
+              <div className="flex items-center gap-3">
+                {/* Items per page selector */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Per page:</span>
+                  <div className="flex gap-1">
+                    {[10, 20, 50].map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => {
+                          setItemsPerPage(size)
+                          setCurrentPage(1)
+                        }}
+                        className={cn(
+                          'px-3 py-1.5 text-sm rounded-md transition-colors border',
+                          itemsPerPage === size
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'border-border/30 hover:border-border/50 text-muted-foreground hover:text-foreground'
+                        )}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pagination buttons */}
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Previous
+                  </button>
+                  
+                  <span className="px-3 text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
