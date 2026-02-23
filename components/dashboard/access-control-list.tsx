@@ -494,57 +494,44 @@ export function AccessControlList({ data }: AccessControlListProps) {
           {/* Pagination Controls */}
           {filteredData.length > 0 && (
             <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/30">
-              <div className="text-sm text-muted-foreground">
-                {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems} results
+              {/* Rows per page dropdown - Left side */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Rows per page:</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value))
+                    setCurrentPage(1)
+                  }}
+                  className="px-3 py-1.5 text-sm rounded-md border border-border/30 bg-background text-foreground hover:border-border/50 transition-colors cursor-pointer"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
               </div>
-              
-              <div className="flex items-center gap-4">
-                {/* Items per page selector */}
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Per page:</span>
-                  <div className="flex gap-1">
-                    {[10, 20, 50].map((size) => (
-                      <button
-                        key={size}
-                        onClick={() => {
-                          setItemsPerPage(size)
-                          setCurrentPage(1)
-                        }}
-                        className={cn(
-                          'px-3 py-1.5 text-sm rounded-md transition-colors border',
-                          itemsPerPage === size
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'border-border/30 hover:border-border/50 text-muted-foreground hover:text-foreground'
-                        )}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Pagination arrow buttons */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="px-2 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-8 h-8"
-                  >
-                    <span>&lt;</span>
-                  </button>
-                  
-                  <span className="px-2 text-sm text-muted-foreground min-w-[80px] text-center">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className="px-2 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-8 h-8"
-                  >
-                    <span>&gt;</span>
-                  </button>
-                </div>
+              {/* Pagination display and arrows - Right side */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems}
+                </span>
+                
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-2 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-8 h-8"
+                >
+                  <span>&lt;</span>
+                </button>
+                
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-2 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-8 h-8"
+                >
+                  <span>&gt;</span>
+                </button>
               </div>
             </div>
           )}
