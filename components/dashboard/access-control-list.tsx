@@ -354,10 +354,13 @@ export function AccessControlList({ data }: AccessControlListProps) {
               </div>
             ) : (
               filteredData.map((cert) => {
-                // Get unique encryption types for this certificate
-                const encryptionTypes = Array.from(
-                  new Set(cert.used_by.map(app => getEncryptionLabel(app.key_id)))
-                )
+                // Get unique encryption types for this certificate (with both label and key_id)
+                const encryptionTypesMap = new Map<string, string>()
+                cert.used_by.forEach(app => {
+                  const label = getEncryptionLabel(app.key_id)
+                  encryptionTypesMap.set(label, app.key_id)
+                })
+                const encryptionTypes = Array.from(encryptionTypesMap.entries())
                 
                 return (
                   <Card key={cert.app_id_label} className="hover:shadow-lg transition-all hover:border-primary/50 overflow-hidden">
@@ -368,11 +371,11 @@ export function AccessControlList({ data }: AccessControlListProps) {
                           <p className="text-xs text-muted-foreground mt-1">{cert.used_by.length} application(s)</p>
                           {/* Encryption Type Badges */}
                           <div className="flex gap-1.5 mt-2 flex-wrap">
-                            {encryptionTypes.map((encType) => (
+                            {encryptionTypes.map(([encType, keyId]) => (
                               <Badge 
                                 key={encType}
                                 variant="outline" 
-                                className={cn('font-mono text-xs', getEncryptionColor(encType))}
+                                className={cn('font-mono text-xs', getEncryptionColor(keyId))}
                               >
                                 {encType}
                               </Badge>
