@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import https from 'https'
-import { mockAclData } from '@/lib/mock-acl-data'
+import { mockACLData } from '@/lib/mock-acl-data'
 
 interface CertUsageGraphEntry {
   id_login: string
@@ -112,7 +112,7 @@ function generateMockData(): CertUsageGraphEntry[] {
   // Create mock data from existing mock ACL data
   const institutionMap = new Map<string, CertUsageGraphEntry>()
 
-  const certArray = Array.isArray(mockAclData?.data) ? mockAclData.data : Array.isArray(mockAclData) ? mockAclData : []
+  const certArray = Array.isArray(mockACLData?.data) ? mockACLData.data : Array.isArray(mockACLData) ? mockACLData : []
 
   certArray.forEach((cert) => {
     if (!cert || !cert.used_by) return
