@@ -133,7 +133,12 @@ export const mockACLData: CertificateUsageData = {
         {
           nama_instansi: 'Kementerian Riset dan Teknologi',
           nama_aplikasi: 'Research Portal',
-          key_id: 'aes-2048',
+          key_id: '0003aes2048wrap003',
+        },
+        {
+          nama_instansi: 'Kementerian Riset dan Teknologi',
+          nama_aplikasi: 'Data Analytics',
+          key_id: '0003aes2048enc001',
         },
       ],
     },
@@ -144,12 +149,49 @@ export const mockACLData: CertificateUsageData = {
         {
           nama_instansi: 'Kementerian Kelautan dan Perikanan',
           nama_aplikasi: 'Maritime Database',
-          key_id: 'rsa-2048',
+          key_id: '0003rsa2048wrap006',
         },
         {
           nama_instansi: 'Kementerian Kelautan dan Perikanan',
           nama_aplikasi: 'Fisheries System',
-          key_id: 'aes-2048',
+          key_id: '0003aes2048wrap003',
+        },
+        {
+          nama_instansi: 'Kementerian Kelautan dan Perikanan',
+          nama_aplikasi: 'Port Authority',
+          key_id: '0003rsa2048enc002',
+        },
+      ],
+    },
+    {
+      app_id_label: 'KEMENAGCS01',
+      hsm: 'Thales-Luna',
+      used_by: [
+        {
+          nama_instansi: 'Kementerian Agama',
+          nama_aplikasi: 'Hajj Management System',
+          key_id: '0003rsa2048sign005',
+        },
+        {
+          nama_instansi: 'Kementerian Agama',
+          nama_aplikasi: 'Islamic Education Platform',
+          key_id: '0003aes2048wrap003',
+        },
+      ],
+    },
+    {
+      app_id_label: 'KEMENDIKCS01',
+      hsm: 'Klavis-SPBE',
+      used_by: [
+        {
+          nama_instansi: 'Kementerian Pendidikan',
+          nama_aplikasi: 'Learning Management System',
+          key_id: '0003aes2048enc001',
+        },
+        {
+          nama_instansi: 'Kementerian Pendidikan',
+          nama_aplikasi: 'Student Records',
+          key_id: '0003rsa2048wrap006',
         },
       ],
     },
