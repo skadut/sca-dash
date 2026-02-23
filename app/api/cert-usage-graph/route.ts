@@ -16,14 +16,14 @@ export async function GET(request: Request) {
   try {
     const acl_api_url = process.env.ACL_API_URL
     const acl_api_port = process.env.ACL_API_PORT
-    const acl_api_cert = process.env.ACL_API_CERT
-    const acl_api_key = process.env.ACL_API_KEY
-    const acl_api_ca = process.env.ACL_API_CA
+    const tls_cert = process.env.TLS_CERT
+    const tls_key = process.env.TLS_KEY
+    const tls_ca_cert = process.env.TLS_CA_CERT
 
     console.log('[v0] Cert-usage-graph endpoint called')
 
     // Try backend API first
-    if (acl_api_url && acl_api_port && acl_api_cert && acl_api_key && acl_api_ca) {
+    if (acl_api_url && acl_api_port && tls_cert && tls_key && tls_ca_cert) {
       console.log('[v0] Attempting to fetch from backend API:', `${acl_api_url}:${acl_api_port}/cert-usage-graph`)
 
       return await new Promise((resolve) => {
@@ -32,9 +32,9 @@ export async function GET(request: Request) {
           port: parseInt(acl_api_port),
           path: '/cert-usage-graph',
           method: 'GET',
-          cert: acl_api_cert,
-          key: acl_api_key,
-          ca: acl_api_ca,
+          cert: tls_cert,
+          key: tls_key,
+          ca: tls_ca_cert,
           rejectUnauthorized: false,
         }
 
