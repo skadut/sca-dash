@@ -12,7 +12,7 @@ interface CertUsageEntry {
   total_keys: number
 }
 
-export async function GET(request: Request) {
+export async function GET(req: Request) {
   try {
     const acl_api_url = process.env.ACL_API_URL
     const acl_api_port = process.env.ACL_API_PORT
@@ -20,11 +20,11 @@ export async function GET(request: Request) {
     const tls_key = process.env.TLS_KEY
     const tls_ca_cert = process.env.TLS_CA_CERT
 
-    console.log('[v0] Cert-usage-graph endpoint called')
+    console.log('[v0] Cert-usage-graph API called')
 
-    // Try backend API first
+    // Try backend API first if all TLS env vars are present
     if (acl_api_url && acl_api_port && tls_cert && tls_key && tls_ca_cert) {
-      console.log('[v0] Attempting to fetch from backend API:', `${acl_api_url}:${acl_api_port}/cert-usage-graph`)
+      console.log('[v0] Attempting backend connection for cert-usage-graph')
 
       return await new Promise((resolve) => {
         const options = {
@@ -40,87 +40,100 @@ export async function GET(request: Request) {
 
         const req = https.request(options, (res) => {
           let data = ''
+
           res.on('data', (chunk) => {
             data += chunk
           })
+
           res.on('end', () => {
             try {
-              const parsed = JSON.parse(data)
-              console.log('[v0] Backend API returned successfully')
-              resolve(NextResponse.json(parsed))
-            } catch (e) {
-              console.error('[v0] Failed to parse backend response:', e)
-              fallbackToMockData()
+              const parsedData = JSON.parse(data)
+              console.log('[v0] Backend API returned successfully for cert-usage-graph')
+              resolve(
+                NextResponse.json({
+                  data: parsedData.data || [],
+                  status: 'success',
+                  connectionFailed: false,
+                  isUsingMockData: false,
+                })
+              )
+            } catch (parseErr) {
+              console.log('[v0] Failed to parse backend response, using mock data')
+              resolve(getMockDataResponse())
             }
           })
         })
 
         req.on('error', (err) => {
-          console.error('[v0] Backend API connection failed:', err.message)
-          fallbackToMockData()
+          console.log('[v0] Backend API error, using mock data:', err.message)
+          resolve(getMockDataResponse())
         })
 
         req.end()
       })
     } else {
-      console.log('[v0] Missing required environment variables for cert-usage-graph API')
-      return fallbackToMockData()
-    }
-
-    function fallbackToMockData() {
-      console.log('[v0] Using mock data for cert-usage-graph')
-      
-      // Transform mock ACL data into cert usage graph format
-      const certArray = Array.isArray(mockACLData?.data) ? mockACLData.data : Array.isArray(mockACLData) ? mockACLData : []
-      
-      // Group by institution and count applications
-      const institutionMap = new Map<string, CertUsageEntry>()
-      
-      certArray.forEach((cert: any) => {
-        if (!cert || !cert.used_by) return
-        
-        cert.used_by.forEach((app: any) => {
-          const instName = app.nama_instansi
-          
-          if (!institutionMap.has(instName)) {
-            institutionMap.set(instName, {
-              id_login: '',
-              nama_instansi: instName,
-              total_applications: 0,
-              applications: [],
-              total_msk: 0,
-              total_secret: 0,
-              total_keys: 0,
-            })
-          }
-          
-          const instData = institutionMap.get(instName)!
-          const appName = app.nama_aplikasi || cert.app_id_label
-          
-          if (!instData.applications.includes(appName)) {
-            instData.applications.push(appName)
-            instData.total_applications = instData.applications.length
-          }
-        })
-      })
-      
-      // Convert to array and sort by application count (descending)
-      const data = Array.from(institutionMap.values())
-        .sort((a, b) => b.total_applications - a.total_applications)
-        .slice(0, 10)
-      
-      return NextResponse.json({
-        data,
-        isUsingMockData: true,
-        message: 'Using mock data - backend API not configured',
-        status: 'success',
-      })
+      console.log('[v0] Missing TLS environment variables, using mock data')
+      return getMockDataResponse()
     }
   } catch (error) {
-    console.error('[v0] Error in cert-usage-graph:', error)
-    return NextResponse.json(
-      { error: 'Internal server error', isUsingMockData: true },
-      { status: 500 }
+    console.error('[v0] Cert-usage-graph API error:', error)
+    return getMockDataResponse()
+  }
+}
+
+function getMockDataResponse() {
+  try {
+    const certArray = Array.isArray(mockACLData?.data) ? mockACLData.data : Array.isArray(mockACLData) ? mockACLData : []
+
+    // Transform mock data to match API format
+    const institutionMap = new Map<string, any>()
+
+    certArray.forEach((cert: any) => {
+      if (!cert || !cert.used_by) return
+
+      cert.used_by.forEach((app: any) => {
+        const instName = app.nama_instansi
+        if (!institutionMap.has(instName)) {
+          institutionMap.set(instName, {
+            id_login: '',
+            nama_instansi: instName,
+            total_applications: 0,
+            applications: [],
+            total_msk: 0,
+            total_secret: 0,
+            total_keys: 0,
+          })
+        }
+
+        const instData = institutionMap.get(instName)!
+        if (!instData.applications.includes(app.nama_aplikasi || cert.app_id_label)) {
+          instData.applications.push(app.nama_aplikasi || cert.app_id_label)
+          instData.total_applications = instData.applications.length
+        }
+      })
+    })
+
+    // Convert to array and sort by total_applications descending
+    const dataArray = Array.from(institutionMap.values()).sort(
+      (a, b) => b.total_applications - a.total_applications
     )
+
+    // Limit to top 10
+    const topTen = dataArray.slice(0, 10)
+
+    return NextResponse.json({
+      data: topTen,
+      status: 'success',
+      connectionFailed: false,
+      isUsingMockData: true,
+      limit: 10,
+    })
+  } catch (err) {
+    console.error('[v0] Error transforming mock data:', err)
+    return NextResponse.json({
+      data: [],
+      status: 'error',
+      error: 'Failed to process data',
+    })
   }
 }
