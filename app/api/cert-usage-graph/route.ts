@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import https from 'https'
 import { mockACLData } from '@/lib/mock-acl-data'
 
+// Cert usage graph endpoint - fetches from API or uses mock data
 interface CertUsageGraphEntry {
   id_login: string
   nama_instansi: string
