@@ -58,6 +58,12 @@ const generateGradientShades = (baseColor: string, count: number): string[] => {
   return shades
 }
 
+// Color palette for bars
+const barColors = [
+  '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
+  '#ec4899', '#06b6d4', '#84cc16', '#6366f1', '#f97316',
+]
+
 // Custom tooltip for stacked bar chart - displays institution data
 const CustomStackedBarTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
@@ -75,15 +81,12 @@ const CustomStackedBarTooltip = ({ active, payload }: any) => {
         {institutionData.applications && institutionData.applications.length > 0 && (
           <div className="mt-2 pt-2 border-t border-white/10">
             <p className="text-gray-400 text-xs mb-1">Applications:</p>
-            <div className="flex flex-wrap gap-1">
-              {institutionData.applications.slice(0, 5).map((app: string, idx: number) => (
-                <span key={idx} className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded border border-blue-500/30">
+            <div className="grid grid-cols-5 gap-1">
+              {institutionData.applications.map((app: string, idx: number) => (
+                <span key={idx} className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded border border-blue-500/30 text-center">
                   {app}
                 </span>
               ))}
-              {institutionData.applications.length > 5 && (
-                <span className="text-xs text-gray-400 px-2 py-1">+{institutionData.applications.length - 5} more</span>
-              )}
             </div>
           </div>
         )}
@@ -340,12 +343,23 @@ export function AccessControlList({ data }: AccessControlListProps) {
                   textAnchor="end" 
                   height={60} 
                   tick={{ fontSize: 12 }}
-                  label={{ value: 'Instansi', position: 'bottom', offset: -5 }}
                 />
-                <YAxis label={{ value: 'Applications', angle: -90, position: 'insideLeft' }} />
+                <YAxis 
+                  allowDecimals={false}
+                  tick={{ fontSize: 12 }}
+                />
                 <Tooltip content={<CustomStackedBarTooltip />} />
-                <Legend />
-                <Bar dataKey="total_applications" fill="#3b82f6" name="Applications" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="total_applications" name="Applications" radius={[4, 4, 0, 0]} 
+                  shape={(props: any) => {
+                    const { x, y, width, height, payload } = props
+                    if (!payload) return null
+                    const barIndex = graphData.findIndex(item => item.nama_instansi === payload.nama_instansi)
+                    const color = barColors[barIndex % barColors.length]
+                    return (
+                      <rect x={x} y={y} width={width} height={height} fill={color} />
+                    )
+                  }}
+                />
               </BarChart>
             </ResponsiveContainer>
           )}
