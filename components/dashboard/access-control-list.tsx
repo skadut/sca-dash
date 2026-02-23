@@ -281,8 +281,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
     })
   }
 
-  // Filter certificates
-  const filteredData = certArray.filter((cert) => {
+  // Filter certificates based on search (for display purposes only - API handles pagination)
+  const displayData = certData.filter((cert) => {
     if (!cert || !cert.used_by) return false
     return (
       (cert.app_id_label && cert.app_id_label.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -294,18 +294,6 @@ export function AccessControlList({ data }: AccessControlListProps) {
       )
     )
   })
-
-  // Calculate pagination
-  const totalItems = filteredData.length
-  const totalPages = Math.ceil(totalItems / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const paginatedData = filteredData.slice(startIndex, endIndex)
-
-  // Reset to page 1 when search query changes
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchQuery])
 
   return (
     <div className="space-y-6">
@@ -496,7 +484,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
           </div>
 
           {/* Pagination Controls */}
-          {totalCerts > 0 && (
+          {certData.length > 0 && (
             <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/30">
               {/* Rows per page dropdown - Left side */}
               <div className="flex items-center gap-2">
@@ -530,8 +518,11 @@ export function AccessControlList({ data }: AccessControlListProps) {
                 </button>
                 
                 <button
-                  onClick={() => setCurrentPage(prev => prev + 1)}
-                  disabled={currentPage * itemsPerPage >= totalCerts}
+                  onClick={() => {
+                    const maxPage = Math.ceil(totalCerts / itemsPerPage)
+                    setCurrentPage(prev => Math.min(prev + 1, maxPage))
+                  }}
+                  disabled={currentPage >= Math.ceil(totalCerts / itemsPerPage)}
                   className="px-2 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-8 h-8"
                 >
                   <span>&gt;</span>
