@@ -92,17 +92,6 @@ const CustomStackedBarTooltip = ({ active, payload }: any) => {
   }
   return null
 }
-        <p className="text-white font-semibold text-sm">{institutionName}</p>
-        {certEntries.map((cert: string, index: number) => (
-          <p key={index} className="font-medium text-sm mt-1 text-cyan-400">
-            {cert}: 1
-          </p>
-        ))}
-      </div>
-    )
-  }
-  return null
-}
 
 export function AccessControlList({ data }: AccessControlListProps) {
   const [searchQuery, setSearchQuery] = useState('')
