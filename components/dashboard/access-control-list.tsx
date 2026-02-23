@@ -1,16 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { Search, Building2, Zap, Users, Database } from 'lucide-react'
+import { Search, Building2, Zap, Users, Database, Award } from 'lucide-react'
 import type { CertificateUsageData } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 interface AccessControlListProps {
   data: CertificateUsageData
+}
+
+interface GraphData {
+  id_login: string
+  nama_instansi: string
+  total_applications: number
+  applications: string[]
+  total_msk: number
+  total_secret: number
+  total_keys: number
 }
 
 // Base colors for each institution
@@ -48,21 +58,35 @@ const generateGradientShades = (baseColor: string, count: number): string[] => {
   return shades
 }
 
-// Custom tooltip for stacked bar chart - displays certificates used by institution
+// Custom tooltip for stacked bar chart - displays institution data
 const CustomStackedBarTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
-    const institutionName = payload[0].payload.nama_instansi
-    // Get all certificate entries for this institution
-    const certEntries = payload.filter((entry: any) => entry.value === 1).map((entry: any) => entry.dataKey)
+    const institutionData = payload[0].payload
     
     return (
       <div className="bg-black/90 border border-white/10 rounded-lg px-4 py-3 shadow-lg backdrop-blur-sm">
-        <p className="text-white font-semibold text-sm">{institutionName}</p>
-        {certEntries.map((cert: string, index: number) => (
-          <p key={index} className="font-medium text-sm mt-1 text-cyan-400">
-            {cert}: 1
-          </p>
-        ))}
+        <p className="text-white font-semibold text-sm mb-2">{institutionData.nama_instansi}</p>
+        <p className="text-gray-300 text-xs mb-1">
+          <span className="text-gray-400">Total Keys:</span> <span className="font-mono text-cyan-400">{institutionData.total_keys}</span>
+        </p>
+        <p className="text-gray-300 text-xs mb-2">
+          <span className="text-gray-400">Total Applications:</span> <span className="font-mono text-emerald-400">{institutionData.total_applications}</span>
+        </p>
+        {institutionData.applications && institutionData.applications.length > 0 && (
+          <div className="mt-2 pt-2 border-t border-white/10">
+            <p className="text-gray-400 text-xs mb-1">Applications:</p>
+            <div className="flex flex-wrap gap-1">
+              {institutionData.applications.slice(0, 5).map((app: string, idx: number) => (
+                <span key={idx} className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded border border-blue-500/30">
+                  {app}
+                </span>
+              ))}
+              {institutionData.applications.length > 5 && (
+                <span className="text-xs text-gray-400 px-2 py-1">+{institutionData.applications.length - 5} more</span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -71,19 +95,47 @@ const CustomStackedBarTooltip = ({ active, payload }: any) => {
 
 export function AccessControlList({ data }: AccessControlListProps) {
   const [searchQuery, setSearchQuery] = useState('')
+  const [graphData, setGraphData] = useState<GraphData[]>([])
+  const [graphLoading, setGraphLoading] = useState(true)
 
-  // Get encryption type badge color
+  useEffect(() => {
+    const fetchGraphData = async () => {
+      try {
+        setGraphLoading(true)
+        console.log('[v0] Fetching cert-usage-graph from: /api/cert-usage-graph')
+
+        const response = await fetch('/api/cert-usage-graph')
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.statusText}`)
+        }
+
+        const responseData = await response.json()
+        console.log('[v0] Cert-usage-graph data fetched successfully:', responseData)
+        setGraphData(responseData.data || [])
+      } catch (err) {
+        console.error('[v0] Failed to fetch cert-usage-graph:', err)
+        setGraphData([])
+      } finally {
+        setGraphLoading(false)
+      }
+    }
+
+    fetchGraphData()
+  }, [])
   const getEncryptionColor = (keyId?: string): string => {
     if (!keyId) return 'bg-gray-500/10 text-gray-400 border-gray-500/20'
-    if (keyId.toLowerCase().includes('aes')) return 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-    if (keyId.toLowerCase().includes('rsa')) return 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+    const keyIdLower = keyId.toLowerCase()
+    if (keyIdLower.includes('aes')) return 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+    if (keyIdLower.includes('rsa')) return 'bg-orange-500/10 text-orange-400 border-orange-500/20'
     return 'bg-gray-500/10 text-gray-400 border-gray-500/20'
   }
 
   const getEncryptionLabel = (keyId?: string): string => {
     if (!keyId) return 'Unknown'
-    if (keyId.toLowerCase().includes('aes')) return 'AES-256'
-    if (keyId.toLowerCase().includes('rsa')) return 'RSA-3072'
+    const keyIdLower = keyId.toLowerCase()
+    if (keyIdLower.includes('aes')) return 'AES'
+    if (keyIdLower.includes('rsa')) return 'RSA'
     return 'Unknown'
   }
 
@@ -97,8 +149,23 @@ export function AccessControlList({ data }: AccessControlListProps) {
   }
 
   // Calculate statistics
+  // Calculate statistics from API response
   const certArray = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
   
+  // Get values from API response if available, otherwise calculate
+  const totalCertificates = data?.total_certs_integrated || certArray.length
+  const totalApplications = data?.total_keys_integrated || certArray.reduce((acc, cert) => {
+    if (!cert || !cert.used_by) return acc
+    return acc + cert.used_by.length
+  }, 0)
+  const totalInstitutions = data?.total_institution || new Set(
+    certArray.flatMap((cert) => {
+      if (!cert || !cert.used_by) return []
+      return cert.used_by.map((app) => app.nama_instansi)
+    })
+  ).size
+  const avgCertPerInstitution = data?.average_cert_institution || (totalCertificates > 0 ? (totalApplications / totalCertificates).toFixed(1) : 0)
+
   // Get all unique certificate IDs for the stacked bar (sorted) - MUST be before stackedBarDataWithColors
   const allCertIds = Array.from(
     new Set(
@@ -107,18 +174,6 @@ export function AccessControlList({ data }: AccessControlListProps) {
         .map(c => c.app_id_label)
     )
   ).sort()
-  
-  const totalCertificates = certArray.length
-  const totalApplications = certArray.reduce((acc, cert) => {
-    if (!cert || !cert.used_by) return acc
-    return acc + cert.used_by.length
-  }, 0)
-  const totalInstitutions = new Set(
-    certArray.flatMap((cert) => {
-      if (!cert || !cert.used_by) return []
-      return cert.used_by.map((app) => app.nama_instansi)
-    })
-  ).size
 
   // Prepare stacked bar chart data with gradient colors per institution
   const stackedBarDataWithColors = Array.from(
@@ -150,7 +205,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
     const aCertCount = a.certCount || 0
     const bCertCount = b.certCount || 0
     return bCertCount - aCertCount
-  }).map((item, instIndex) => {
+  }).slice(0, 10).map((item, instIndex) => {
     // Generate gradient colors for this institution's certificates
     const baseColor = institutionBaseColors[instIndex % institutionBaseColors.length]
     const certCountForInst = item.certCount || 0
@@ -207,11 +262,11 @@ export function AccessControlList({ data }: AccessControlListProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Certificates</p>
+                <p className="text-sm font-medium text-muted-foreground">Certificates Integrated</p>
                 <h3 className="text-3xl font-bold mt-1">{totalCertificates}</h3>
               </div>
-              <div className="p-3 rounded-lg bg-primary/10">
-                <Zap className="h-6 w-6 text-primary" />
+              <div className="p-3 rounded-lg bg-cyan-500/10">
+                <Award className="h-6 w-6 text-cyan-600" />
               </div>
             </div>
           </CardContent>
@@ -221,7 +276,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Applications</p>
+                <p className="text-sm font-medium text-muted-foreground">Keys Integrated</p>
                 <h3 className="text-3xl font-bold mt-1">{totalApplications}</h3>
               </div>
               <div className="p-3 rounded-lg bg-green-500/10">
@@ -249,8 +304,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Avg Apps/Cert</p>
-                <h3 className="text-3xl font-bold mt-1">{totalCertificates > 0 ? (totalApplications / totalCertificates).toFixed(1) : 0}</h3>
+                <p className="text-sm font-medium text-muted-foreground">Average Certs/Institutions</p>
+                <h3 className="text-3xl font-bold mt-1">{Number(avgCertPerInstitution).toFixed(2)}</h3>
               </div>
               <div className="p-3 rounded-lg bg-purple-500/10">
                 <Users className="h-6 w-6 text-purple-600" />
@@ -267,57 +322,33 @@ export function AccessControlList({ data }: AccessControlListProps) {
           <CardDescription>Distribution across institutions</CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={stackedBarDataWithColors} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--muted-foreground)" opacity={0.2} />
-              <XAxis 
-                dataKey="nama_instansi" 
-                angle={-45} 
-                textAnchor="end" 
-                height={60} 
-                tick={false}
-                label={{ value: 'Instansi', position: 'bottom', offset: -5 }}
-              />
-              <YAxis />
-              <Tooltip content={<CustomStackedBarTooltip />} />
-              {allCertIds.map((certId, index) => {
-                return (
-                  <Bar 
-                    key={certId} 
-                    dataKey={certId} 
-                    stackId="a" 
-                    name={certId.replace('CS', '').substring(0, 12)}
-                    shape={(props: any) => {
-                      const { x, y, width, height, payload } = props
-                      if (!payload) return null
-                      
-                      const instIndex = stackedBarDataWithColors.findIndex(
-                        item => item.nama_instansi === payload.nama_instansi
-                      )
-                      const baseColor = institutionBaseColors[instIndex % institutionBaseColors.length]
-                      const gradients = generateGradientShades(
-                        baseColor,
-                        payload.certCount || 0
-                      )
-                      
-                      const certIndex = allCertIds.indexOf(certId)
-                      const color = gradients[certIndex % gradients.length]
-                      
-                      return (
-                        <rect
-                          x={x}
-                          y={y}
-                          width={width}
-                          height={height}
-                          fill={color}
-                        />
-                      )
-                    }}
-                  />
-                )
-              })}
-            </BarChart>
-          </ResponsiveContainer>
+          {graphLoading ? (
+            <div className="h-[400px] flex items-center justify-center">
+              <p className="text-muted-foreground">Loading graph data...</p>
+            </div>
+          ) : graphData.length === 0 ? (
+            <div className="h-[400px] flex items-center justify-center">
+              <p className="text-muted-foreground">No data available</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={graphData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--muted-foreground)" opacity={0.2} />
+                <XAxis 
+                  dataKey="nama_instansi" 
+                  angle={-45} 
+                  textAnchor="end" 
+                  height={60} 
+                  tick={{ fontSize: 12 }}
+                  label={{ value: 'Instansi', position: 'bottom', offset: -5 }}
+                />
+                <YAxis label={{ value: 'Applications', angle: -90, position: 'insideLeft' }} />
+                <Tooltip content={<CustomStackedBarTooltip />} />
+                <Legend />
+                <Bar dataKey="total_applications" fill="#3b82f6" name="Applications" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </CardContent>
       </Card>
 
@@ -347,10 +378,13 @@ export function AccessControlList({ data }: AccessControlListProps) {
               </div>
             ) : (
               filteredData.map((cert) => {
-                // Get unique encryption types for this certificate
-                const encryptionTypes = Array.from(
-                  new Set(cert.used_by.map(app => getEncryptionLabel(app.key_id)))
-                )
+                // Get unique encryption types for this certificate (with both label and key_id)
+                const encryptionTypesMap = new Map<string, string>()
+                cert.used_by.forEach(app => {
+                  const label = getEncryptionLabel(app.key_id)
+                  encryptionTypesMap.set(label, app.key_id)
+                })
+                const encryptionTypes = Array.from(encryptionTypesMap.entries())
                 
                 return (
                   <Card key={cert.app_id_label} className="hover:shadow-lg transition-all hover:border-primary/50 overflow-hidden">
@@ -361,11 +395,11 @@ export function AccessControlList({ data }: AccessControlListProps) {
                           <p className="text-xs text-muted-foreground mt-1">{cert.used_by.length} application(s)</p>
                           {/* Encryption Type Badges */}
                           <div className="flex gap-1.5 mt-2 flex-wrap">
-                            {encryptionTypes.map((encType) => (
+                            {encryptionTypes.map(([encType, keyId]) => (
                               <Badge 
                                 key={encType}
                                 variant="outline" 
-                                className={cn('font-mono text-xs', getEncryptionColor(encType))}
+                                className={cn('font-mono text-xs', getEncryptionColor(keyId))}
                               >
                                 {encType}
                               </Badge>

@@ -61,7 +61,7 @@ export function KeyInventoryToggle({ keys }: KeyInventoryToggleProps) {
           }`}
         >
           <div className="space-y-6">
-            <KeyInventoryStats keys={keys} />
+            <KeyInventoryStats />
             <KeyInsights keys={keys} />
           </div>
         </div>
@@ -74,7 +74,7 @@ export function KeyInventoryToggle({ keys }: KeyInventoryToggleProps) {
               : "opacity-0 -translate-x-full pointer-events-none"
           }`}
         >
-          <KeyTrafficGraph keys={keys} />
+          <KeyTrafficGraph />
         </div>
       </div>
     </div>

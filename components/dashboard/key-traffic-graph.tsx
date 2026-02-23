@@ -1,86 +1,113 @@
-"use client"
+'use client'
 
-import { useState, useMemo } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
-import { XAxis, YAxis, CartesianGrid, Area, AreaChart } from "recharts"
-import type { Key } from "@/lib/types"
-import { CalendarDays, TrendingUp, Activity, Clock } from "lucide-react"
+import { useState, useMemo, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ChartContainer, ChartTooltip } from '@/components/ui/chart'
+import { XAxis, YAxis, CartesianGrid, Area, AreaChart } from 'recharts'
+import { CalendarDays, TrendingUp, Activity, Clock } from 'lucide-react'
 
-interface KeyTrafficGraphProps {
-  keys: Key[]
+interface MonthlyEntry {
+  year: number
+  month: number
+  total_key_created: number
+  total_msk_created: number
+  total_secret_created: number
 }
 
-type TimeSpan = "monthly" | "yearly"
-type HsmFilter = "all" | "klavis-spbe" | "klavis-iiv" | "thales-luna"
+interface YearlyEntry {
+  year: number
+  total_key_created: number
+  total_msk_created: number
+  total_secret_created: number
+}
+
+interface KeyCreatedSummaryResponse {
+  monthly: MonthlyEntry[]
+  yearly: YearlyEntry[]
+  isUsingMockData?: boolean
+}
+
+type TimeSpan = 'monthly' | 'yearly'
 
 const YEAR_COLOR_MAP: Record<number, { stroke: string; fill: string }> = {
-  2024: { stroke: "#3b82f6", fill: "rgba(59, 130, 246, 0.2)" },
-  2025: { stroke: "#10b981", fill: "rgba(16, 185, 129, 0.2)" },
-  2026: { stroke: "#f59e0b", fill: "rgba(245, 158, 11, 0.2)" },
-  2027: { stroke: "#8b5cf6", fill: "rgba(139, 92, 246, 0.2)" },
-  2028: { stroke: "#ef4444", fill: "rgba(239, 68, 68, 0.2)" },
+  2024: { stroke: '#3b82f6', fill: 'rgba(59, 130, 246, 0.2)' },
+  2025: { stroke: '#10b981', fill: 'rgba(16, 185, 129, 0.2)' },
+  2026: { stroke: '#f59e0b', fill: 'rgba(245, 158, 11, 0.2)' },
+  2027: { stroke: '#8b5cf6', fill: 'rgba(139, 92, 246, 0.2)' },
+  2028: { stroke: '#ef4444', fill: 'rgba(239, 68, 68, 0.2)' },
 }
 
 const getYearColor = (year: number) => {
-  return YEAR_COLOR_MAP[year] || { stroke: "#3b82f6", fill: "rgba(59, 130, 246, 0.2)" }
+  return YEAR_COLOR_MAP[year] || { stroke: '#3b82f6', fill: 'rgba(59, 130, 246, 0.2)' }
 }
 
-const parseKeyDate = (dateStr: string): Date => {
-  // Parse yyyy/mm/dd format
-  const [year, month, day] = dateStr.split("/").map(Number)
-  return new Date(year, month - 1, day)
-}
+export function KeyTrafficGraph() {
+  const [timeSpan, setTimeSpan] = useState<TimeSpan>('monthly')
+  const [data, setData] = useState<KeyCreatedSummaryResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-export function KeyTrafficGraph({ keys }: KeyTrafficGraphProps) {
-  const [timeSpan, setTimeSpan] = useState<TimeSpan>("monthly")
-  const [hsmFilter, setHsmFilter] = useState<HsmFilter>("all")
+  useEffect(() => {
+    const fetchKeyCreatedSummary = async () => {
+      try {
+        setLoading(true)
+        console.log('[v0] Fetching key-created-summary from: /api/key-created-summary')
+
+        const response = await fetch('/api/key-created-summary')
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.statusText}`)
+        }
+
+        const responseData = await response.json() as KeyCreatedSummaryResponse
+        console.log('[v0] Key-created-summary data fetched successfully:', responseData)
+        setData(responseData)
+        setError(null)
+      } catch (err) {
+        console.error('[v0] Failed to fetch key-created-summary:', err)
+        setError(err instanceof Error ? err.message : 'Failed to fetch data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchKeyCreatedSummary()
+  }, [])
 
   const chartData = useMemo(() => {
-    const filteredKeys = keys.filter((key) => {
-      if (hsmFilter === "all") return true
-      return key.hsm === hsmFilter
-    })
+    if (!data) return { data: [], years: [] }
 
-    if (timeSpan === "monthly") {
-      const years = [...new Set(filteredKeys.map((key) => parseKeyDate(key.key_created).getFullYear()))].sort()
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    if (timeSpan === 'monthly') {
+      const monthlyData = data.monthly
+      const years = [...new Set(monthlyData.map((m) => m.year))].sort()
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-      const monthlyData = months.map((month, idx) => {
+      const chartMonthlyData = months.map((month, idx) => {
         const dataPoint: any = { month }
 
         years.forEach((year) => {
-          const count = filteredKeys.filter((key) => {
-            const date = parseKeyDate(key.key_created)
-            return date.getFullYear() === year && date.getMonth() === idx
-          }).length
-          dataPoint[`year${year}`] = count
+          const entry = monthlyData.find((m) => m.year === year && m.month === idx + 1)
+          dataPoint[`year${year}`] = entry?.total_key_created || 0
         })
 
         return dataPoint
       })
 
-      return { data: monthlyData, years }
+      return { data: chartMonthlyData, years }
     } else {
       // Yearly view
-      const groupedData: Record<string, number> = {}
-
-      filteredKeys.forEach((key) => {
-        const date = parseKeyDate(key.key_created)
-        const yearKey = `${date.getFullYear()}`
-        groupedData[yearKey] = (groupedData[yearKey] || 0) + 1
-      })
-
-      const data = Object.entries(groupedData)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([period, keys]) => ({ period, keys }))
-
-      return { data, years: [] }
+      return {
+        data: data.yearly.map((y) => ({
+          period: `${y.year}`,
+          keys: y.total_key_created,
+        })),
+        years: [],
+      }
     }
-  }, [keys, timeSpan, hsmFilter])
+  }, [data, timeSpan])
 
   const totalKeysInPeriod = useMemo(() => {
-    if (timeSpan === "monthly" && chartData.years.length > 0) {
+    if (timeSpan === 'monthly' && chartData.years.length > 0) {
       return chartData.data.reduce((sum, d) => {
         return sum + chartData.years.reduce((yearSum, year) => yearSum + (d[`year${year}`] || 0), 0)
       }, 0)
@@ -91,13 +118,37 @@ export function KeyTrafficGraph({ keys }: KeyTrafficGraphProps) {
   const avgPerPeriod = chartData.data.length > 0 ? (totalKeysInPeriod / chartData.data.length).toFixed(1) : 0
 
   const now = new Date()
-  const currentDate = now.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+  const currentDate = now.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   })
-  const currentTime = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+  const currentTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Card className="border-border/30 bg-card/50">
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">Loading key traffic data...</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <div className="space-y-6">
+        <Card className="border-border/30 bg-card/50">
+          <CardContent className="pt-6">
+            <p className="text-sm text-red-400">Error: {error || 'Failed to load key traffic data'}</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -159,32 +210,19 @@ export function KeyTrafficGraph({ keys }: KeyTrafficGraphProps) {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <CardTitle className="font-sans">Key Creation Traffic</CardTitle>
-              <CardDescription className="font-sans">Number of keys created over time based on key_created date</CardDescription>
+              <CardDescription className="font-sans">Number of keys created over time</CardDescription>
             </div>
             <div className="flex flex-wrap gap-3">
-              <select
-                value={hsmFilter}
-                onChange={(e) => setHsmFilter(e.target.value as HsmFilter)}
-                className="px-3 py-2 text-sm rounded-md border border-border bg-background font-sans"
-              >
-                <option value="all">All HSM</option>
-                <option value="klavis-spbe">Klavis-SPBE</option>
-                <option value="klavis-iiv">Klavis-IIV</option>
-                <option value="thales-luna">Thales-Luna</option>
-              </select>
-
               <div className="flex gap-1 p-1 bg-muted rounded-md">
-                {(["monthly", "yearly"] as const).map((span) => (
+                {(['monthly', 'yearly'] as const).map((span) => (
                   <button
                     key={span}
                     onClick={() => setTimeSpan(span)}
                     className={`px-3 py-1.5 text-sm rounded-md transition-colors font-sans ${
-                      timeSpan === span
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
+                      timeSpan === span ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    {span === "monthly" ? "Month" : "Year"}
+                    {span === 'monthly' ? 'Month' : 'Year'}
                   </button>
                 ))}
               </div>
@@ -195,83 +233,83 @@ export function KeyTrafficGraph({ keys }: KeyTrafficGraphProps) {
           <ChartContainer
             config={{
               keys: {
-                label: "Keys",
-                color: "hsl(var(--chart-1))",
+                label: 'Keys',
+                color: 'hsl(var(--chart-1))',
               },
             }}
             className="h-[400px] w-full"
           >
             <AreaChart data={chartData.data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }} width={1019} height={400}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis
-                  dataKey={timeSpan === "monthly" ? "month" : "period"}
-                  tick={{ fontSize: 12 }}
-                  angle={timeSpan === "monthly" ? 0 : -45}
-                  textAnchor={timeSpan === "monthly" ? "middle" : "end"}
-                  height={60}
-                  className="fill-muted-foreground"
-                />
-                <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" />
-                <ChartTooltip
-                  content={({ active, payload }) => {
-                    if (!active || !payload || !payload.length) return null
-                    return (
-                      <div className="rounded-lg border bg-background p-3 shadow-sm">
-                        <div className="grid gap-2">
-                          <div className="flex flex-col">
-                            <span className="text-[0.70rem] uppercase text-muted-foreground font-sans">
-                              {timeSpan === "monthly" ? "Month" : "Period"}
-                            </span>
-                            <span className="font-bold text-muted-foreground font-mono">
-                              {payload[0].payload.month || payload[0].payload.period}
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+              <XAxis
+                dataKey={timeSpan === 'monthly' ? 'month' : 'period'}
+                tick={{ fontSize: 12 }}
+                angle={timeSpan === 'monthly' ? 0 : -45}
+                textAnchor={timeSpan === 'monthly' ? 'middle' : 'end'}
+                height={60}
+                className="fill-muted-foreground"
+              />
+              <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" />
+              <ChartTooltip
+                content={({ active, payload }) => {
+                  if (!active || !payload || !payload.length) return null
+                  return (
+                    <div className="rounded-lg border bg-background p-3 shadow-sm">
+                      <div className="grid gap-2">
+                        <div className="flex flex-col">
+                          <span className="text-[0.70rem] uppercase text-muted-foreground font-sans">
+                            {timeSpan === 'monthly' ? 'Month' : 'Period'}
+                          </span>
+                          <span className="font-bold text-muted-foreground font-mono">
+                            {payload[0].payload.month || payload[0].payload.period}
+                          </span>
+                        </div>
+                        {payload.map((entry, idx) => (
+                          <div key={idx} className="flex flex-col">
+                            <span className="text-[0.70rem] uppercase text-muted-foreground font-sans">{entry.name}</span>
+                            <span className="font-bold font-mono" style={{ color: entry.stroke }}>
+                              {entry.value}
                             </span>
                           </div>
-                          {payload.map((entry, idx) => (
-                            <div key={idx} className="flex flex-col">
-                              <span className="text-[0.70rem] uppercase text-muted-foreground font-sans">{entry.name}</span>
-                              <span className="font-bold font-mono" style={{ color: entry.stroke }}>
-                                {entry.value}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
+                        ))}
                       </div>
-                    )
-                  }}
+                    </div>
+                  )
+                }}
+              />
+              {timeSpan === 'monthly' && chartData.years.length > 0 ? (
+                chartData.years.map((year) => {
+                  const colors = getYearColor(year)
+                  return (
+                    <Area
+                      key={year}
+                      type="monotone"
+                      dataKey={`year${year}`}
+                      name={`${year}`}
+                      stroke={colors.stroke}
+                      fill={colors.fill}
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                      fillOpacity={1}
+                    />
+                  )
+                })
+              ) : (
+                <Area
+                  type="monotone"
+                  dataKey="keys"
+                  name="Keys"
+                  stroke="#3b82f6"
+                  fill="rgba(59, 130, 246, 0.2)"
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4 }}
+                  fillOpacity={1}
                 />
-                {timeSpan === "monthly" && chartData.years.length > 0 ? (
-                  chartData.years.map((year) => {
-                    const colors = getYearColor(year)
-                    return (
-                      <Area
-                        key={year}
-                        type="monotone"
-                        dataKey={`year${year}`}
-                        name={`${year}`}
-                        stroke={colors.stroke}
-                        fill={colors.fill}
-                        strokeWidth={2}
-                        dot={false}
-                        activeDot={{ r: 4 }}
-                        fillOpacity={1}
-                      />
-                    )
-                  })
-                ) : (
-                  <Area
-                    type="monotone"
-                    dataKey="keys"
-                    name="Keys"
-                    stroke="#3b82f6"
-                    fill="rgba(59, 130, 246, 0.2)"
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{ r: 4 }}
-                    fillOpacity={1}
-                  />
-                )}
-              </AreaChart>
-            </ChartContainer>
+              )}
+            </AreaChart>
+          </ChartContainer>
         </CardContent>
       </Card>
     </div>
