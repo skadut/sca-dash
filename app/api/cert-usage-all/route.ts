@@ -61,38 +61,34 @@ export async function GET(request: Request) {
         })
 
         console.log('[v0] Backend API success for cert-usage-all')
-        console.log('[v0] Backend response structure:', {
-          isArray: Array.isArray(backendData),
-          hasData: 'data' in backendData,
-          hasTotal: 'total' in backendData,
-          totalValue: backendData.total,
-          dataLength: Array.isArray(backendData) ? backendData.length : (Array.isArray(backendData.data) ? backendData.data.length : 'not-array')
-        })
+        console.log('[v0] Backend response keys:', Object.keys(backendData))
         
         // Handle different backend response formats
         let certificateData = []
         let totalCount = 0
         
         if (Array.isArray(backendData)) {
-          // Backend returns raw array - this is the actual case
+          // Backend returns raw array
           certificateData = backendData
           totalCount = backendData.length
         } else if (backendData.data) {
-          // Backend returns { data: [...] } structure
+          // Backend returns { data: [...], total_certs_integrated: 13 } structure
           certificateData = Array.isArray(backendData.data) ? backendData.data : []
-          totalCount = backendData.total || certificateData.length
+          // Use total_certs_integrated if available, otherwise use total or fallback to data length
+          totalCount = backendData.total_certs_integrated || backendData.total || certificateData.length
         } else {
           // Fallback
           certificateData = []
           totalCount = 0
         }
         
-        console.log(`[v0] Backend API returning: ${certificateData.length} items out of ${totalCount} total`)
+        console.log(`[v0] Backend API returning: ${certificateData.length} items out of ${totalCount} total (total_certs_integrated available: ${'total_certs_integrated' in backendData})`)
         
-        // Return properly structured response
+        // Return properly structured response - preserve all backend fields
         const responseData = {
           data: certificateData,
           total: totalCount,
+          total_certs_integrated: backendData.total_certs_integrated || totalCount,
           limit: limit,
           page: page,
           isUsingMockData: false,

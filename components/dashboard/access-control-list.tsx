@@ -150,10 +150,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
         }
 
         const responseData = await response.json()
-        console.log('[v0] Certificate data fetched:', responseData)
-        console.log('[v0] Setting totalCerts to:', responseData.total)
         setCertData(responseData.data || [])
-        setTotalCerts(responseData.total || 0)
+        setTotalCerts(responseData.total_certs_integrated || responseData.total || 0)
       } catch (err) {
         console.error('[v0] Failed to fetch certificates:', err)
         setCertData([])
@@ -496,9 +494,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
                 <select
                   value={itemsPerPage}
                   onChange={(e) => {
-                    const newLimit = Number(e.target.value)
-                    console.log('[v0] Rows per page changed to:', newLimit)
-                    setItemsPerPage(newLimit)
+                    setItemsPerPage(Number(e.target.value))
                     setCurrentPage(1)
                   }}
                   className="px-3 py-1.5 text-sm rounded-md border border-border/30 bg-background text-foreground hover:border-border/50 transition-colors cursor-pointer"
@@ -512,19 +508,11 @@ export function AccessControlList({ data }: AccessControlListProps) {
               {/* Pagination display and arrows - Right side */}
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">
-                  {(() => {
-                    const start = ((currentPage - 1) * itemsPerPage) + 1
-                    const end = Math.min(currentPage * itemsPerPage, totalCerts)
-                    console.log('[v0] Pagination display - currentPage:', currentPage, 'itemsPerPage:', itemsPerPage, 'totalCerts:', totalCerts, 'start:', start, 'end:', end)
-                    return `${start}-${end} of ${totalCerts}`
-                  })()}
+                  {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalCerts)} of {totalCerts}
                 </span>
                 
                 <button
-                  onClick={() => {
-                    console.log('[v0] Previous button clicked, current page:', currentPage)
-                    setCurrentPage(prev => Math.max(prev - 1, 1))
-                  }}
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
                   className="px-2 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-8 h-8"
                 >
@@ -534,15 +522,9 @@ export function AccessControlList({ data }: AccessControlListProps) {
                 <button
                   onClick={() => {
                     const maxPage = Math.ceil(totalCerts / itemsPerPage)
-                    console.log('[v0] Next button clicked, current page:', currentPage, 'maxPage:', maxPage, 'totalCerts:', totalCerts, 'itemsPerPage:', itemsPerPage)
                     setCurrentPage(prev => Math.min(prev + 1, maxPage))
                   }}
-                  disabled={(() => {
-                    const maxPage = Math.ceil(totalCerts / itemsPerPage)
-                    const isDisabled = currentPage >= maxPage
-                    console.log('[v0] Next button disabled check - currentPage:', currentPage, 'maxPage:', maxPage, 'totalCerts:', totalCerts, 'itemsPerPage:', itemsPerPage, 'isDisabled:', isDisabled)
-                    return isDisabled
-                  })()}
+                  disabled={currentPage >= Math.ceil(totalCerts / itemsPerPage)}
                   className="px-2 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-8 h-8"
                 >
                   <span>&gt;</span>
