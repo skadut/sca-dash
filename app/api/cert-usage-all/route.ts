@@ -61,7 +61,23 @@ export async function GET(request: Request) {
         })
 
         console.log('[v0] Backend API success for cert-usage-all')
-        return NextResponse.json(backendData)
+        console.log('[v0] Backend response structure:', {
+          hasData: 'data' in backendData,
+          hasTotal: 'total' in backendData,
+          totalValue: backendData.total,
+          dataLength: Array.isArray(backendData.data) ? backendData.data.length : 'not-array'
+        })
+        
+        // Ensure response has proper structure with total count
+        const responseData = {
+          data: backendData.data || backendData,
+          total: backendData.total || (Array.isArray(backendData.data) ? backendData.data.length : 0),
+          limit: limit,
+          page: page,
+          isUsingMockData: false,
+        }
+        
+        return NextResponse.json(responseData)
       } catch (err) {
         console.log('[v0] Backend API error, using mock data:', err instanceof Error ? err.message : err)
       }
