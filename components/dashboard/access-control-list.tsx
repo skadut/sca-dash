@@ -537,7 +537,12 @@ export function AccessControlList({ data }: AccessControlListProps) {
                     console.log('[v0] Next button clicked, current page:', currentPage, 'maxPage:', maxPage, 'totalCerts:', totalCerts, 'itemsPerPage:', itemsPerPage)
                     setCurrentPage(prev => Math.min(prev + 1, maxPage))
                   }}
-                  disabled={currentPage >= Math.ceil(totalCerts / itemsPerPage)}
+                  disabled={(() => {
+                    const maxPage = Math.ceil(totalCerts / itemsPerPage)
+                    const isDisabled = currentPage >= maxPage
+                    console.log('[v0] Next button disabled check - currentPage:', currentPage, 'maxPage:', maxPage, 'totalCerts:', totalCerts, 'itemsPerPage:', itemsPerPage, 'isDisabled:', isDisabled)
+                    return isDisabled
+                  })()}
                   className="px-2 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-8 h-8"
                 >
                   <span>&gt;</span>
