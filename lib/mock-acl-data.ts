@@ -126,5 +126,32 @@ export const mockACLData: CertificateUsageData = {
         },
       ],
     },
+    {
+      app_id_label: 'KEMENRUCS01',
+      hsm: 'Klavis-SPBE',
+      used_by: [
+        {
+          nama_instansi: 'Kementerian Riset dan Teknologi',
+          nama_aplikasi: 'Research Portal',
+          key_id: 'aes-2048',
+        },
+      ],
+    },
+    {
+      app_id_label: 'KEMENKUCS01',
+      hsm: 'Klavis-IIV',
+      used_by: [
+        {
+          nama_instansi: 'Kementerian Kelautan dan Perikanan',
+          nama_aplikasi: 'Maritime Database',
+          key_id: 'rsa-2048',
+        },
+        {
+          nama_instansi: 'Kementerian Kelautan dan Perikanan',
+          nama_aplikasi: 'Fisheries System',
+          key_id: 'aes-2048',
+        },
+      ],
+    },
   ],
 }

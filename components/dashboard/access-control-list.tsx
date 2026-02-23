@@ -75,15 +75,19 @@ export function AccessControlList({ data }: AccessControlListProps) {
   // Get encryption type badge color
   const getEncryptionColor = (keyId?: string): string => {
     if (!keyId) return 'bg-gray-500/10 text-gray-400 border-gray-500/20'
-    if (keyId.toLowerCase().includes('aes')) return 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-    if (keyId.toLowerCase().includes('rsa')) return 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+    const keyIdLower = keyId.toLowerCase()
+    if (keyIdLower.includes('aes')) return 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+    if (keyIdLower.includes('rsa')) return 'bg-orange-500/10 text-orange-400 border-orange-500/20'
     return 'bg-gray-500/10 text-gray-400 border-gray-500/20'
   }
 
   const getEncryptionLabel = (keyId?: string): string => {
     if (!keyId) return 'Unknown'
-    if (keyId.toLowerCase().includes('aes')) return 'AES-256'
-    if (keyId.toLowerCase().includes('rsa')) return 'RSA-3072'
+    const keyIdLower = keyId.toLowerCase()
+    if (keyIdLower.includes('aes-2048')) return 'AES-2048'
+    if (keyIdLower.includes('aes')) return 'AES-256'
+    if (keyIdLower.includes('rsa-2048')) return 'RSA-2048'
+    if (keyIdLower.includes('rsa')) return 'RSA-3072'
     return 'Unknown'
   }
 
