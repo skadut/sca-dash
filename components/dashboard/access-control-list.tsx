@@ -281,8 +281,11 @@ export function AccessControlList({ data }: AccessControlListProps) {
     })
   }
 
+  // Use certData from API if available, otherwise fall back to mock certArray
+  const tableData = Array.isArray(certData) && certData.length > 0 ? certData : certArray
+
   // Filter certificates based on search (for display purposes only - API handles pagination)
-  const displayData = certData.filter((cert) => {
+  const displayData = tableData.filter((cert) => {
     if (!cert || !cert.used_by) return false
     return (
       (cert.app_id_label && cert.app_id_label.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -427,13 +430,13 @@ export function AccessControlList({ data }: AccessControlListProps) {
               <div className="col-span-full text-center py-12 text-muted-foreground">
                 <p>Loading certificate data...</p>
               </div>
-            ) : certData.length === 0 ? (
+            ) : tableData.length === 0 ? (
               <div className="col-span-full text-center py-12 text-muted-foreground">
                 <Search className="h-12 w-12 mx-auto mb-3 opacity-20" />
                 <p>No certificate data available</p>
               </div>
             ) : (
-              certData.map((cert) => {
+              tableData.map((cert) => {
                 // Get unique encryption types for this certificate (with both label and key_id)
                 const encryptionTypesMap = new Map<string, string>()
                 cert.used_by.forEach(app => {
@@ -484,7 +487,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
           </div>
 
           {/* Pagination Controls */}
-          {certData.length > 0 && (
+          {tableData.length > 0 && (
             <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/30">
               {/* Rows per page dropdown - Left side */}
               <div className="flex items-center gap-2">
