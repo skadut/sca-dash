@@ -267,7 +267,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
   const paginatedData = filteredData.slice(startIndex, endIndex)
 
   // Reset to page 1 when search query changes
-  React.useEffect(() => {
+  useEffect(() => {
     setCurrentPage(1)
   }, [searchQuery])
 
