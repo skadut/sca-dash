@@ -12,176 +12,114 @@ interface CertUsageEntry {
   total_keys: number
 }
 
-interface CertUsageGraphResponse {
-  data: CertUsageEntry[]
-}
-
-// Fetch from external API with mTLS
-async function fetchFromExternalAPI(): Promise<CertUsageGraphResponse | null> {
-  const { ACL_API_URL, ACL_API_PORT, TLS_CA_CERT, TLS_CERT, TLS_KEY, TLS_VERIFY } = process.env
-
-  if (!ACL_API_URL || !ACL_API_PORT || !TLS_CA_CERT || !TLS_CERT || !TLS_KEY) {
-    console.log('[v0] Missing required environment variables for cert-usage-graph API')
-    return null
-  }
-
+export async function GET(request: Request) {
   try {
-    let hostname = ACL_API_URL
-    if (hostname.includes('://')) {
-      hostname = hostname.split('://')[1]
-    }
-    hostname = hostname.replace(/\/$/, '')
+    const acl_api_url = process.env.ACL_API_URL
+    const acl_api_port = process.env.ACL_API_PORT
+    const acl_api_cert = process.env.ACL_API_CERT
+    const acl_api_key = process.env.ACL_API_KEY
+    const acl_api_ca = process.env.ACL_API_CA
 
-    console.log('[v0] Fetching cert-usage-graph from:', `${hostname}:${ACL_API_PORT}/cert-usage-graph`)
-    console.log('[v0] Certificate verification:', TLS_VERIFY !== 'false' ? 'enabled' : 'disabled')
+    console.log('[v0] Cert-usage-graph endpoint called')
 
-    const decodeCert = (certData: string): string => {
-      if (certData.includes('-----BEGIN')) {
-        return certData
-      }
-      try {
-        return Buffer.from(certData, 'base64').toString('utf-8')
-      } catch {
-        return certData
-      }
-    }
+    // Try backend API first
+    if (acl_api_url && acl_api_port && acl_api_cert && acl_api_key && acl_api_ca) {
+      console.log('[v0] Attempting to fetch from backend API:', `${acl_api_url}:${acl_api_port}/cert-usage-graph`)
 
-    return new Promise((resolve) => {
-      const caCert = decodeCert(TLS_CA_CERT)
-      const clientCert = decodeCert(TLS_CERT)
-      const clientKey = decodeCert(TLS_KEY)
+      return await new Promise((resolve) => {
+        const options = {
+          hostname: acl_api_url,
+          port: parseInt(acl_api_port),
+          path: '/cert-usage-graph',
+          method: 'GET',
+          cert: acl_api_cert,
+          key: acl_api_key,
+          ca: acl_api_ca,
+          rejectUnauthorized: false,
+        }
 
-      console.log('[v0] CA cert loaded:', caCert.length > 0 ? 'yes' : 'no')
-      console.log('[v0] Client cert loaded:', clientCert.length > 0 ? 'yes' : 'no')
-      console.log('[v0] Client key loaded:', clientKey.length > 0 ? 'yes' : 'no')
-
-      const options: any = {
-        hostname: hostname,
-        port: parseInt(ACL_API_PORT),
-        path: '/cert-usage-graph',
-        method: 'GET',
-        ca: caCert,
-        cert: clientCert,
-        key: clientKey,
-        rejectUnauthorized: TLS_VERIFY !== 'false',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-
-      const req = https.request(options, (res) => {
-        let data = ''
-
-        res.on('data', (chunk) => {
-          data += chunk
+        const req = https.request(options, (res) => {
+          let data = ''
+          res.on('data', (chunk) => {
+            data += chunk
+          })
+          res.on('end', () => {
+            try {
+              const parsed = JSON.parse(data)
+              console.log('[v0] Backend API returned successfully')
+              resolve(NextResponse.json(parsed))
+            } catch (e) {
+              console.error('[v0] Failed to parse backend response:', e)
+              fallbackToMockData()
+            }
+          })
         })
 
-        res.on('end', () => {
-          if (res.statusCode === 200) {
-            try {
-              const jsonData = JSON.parse(data)
-              console.log('[v0] Cert-usage-graph data fetched successfully from API')
-              resolve({ data: jsonData } as CertUsageGraphResponse)
-            } catch (parseError) {
-              console.error('[v0] Error parsing cert-usage-graph response:', parseError)
-              resolve(null)
-            }
-          } else {
-            console.error('[v0] Cert-usage-graph API response status:', res.statusCode)
-            resolve(null)
+        req.on('error', (err) => {
+          console.error('[v0] Backend API connection failed:', err.message)
+          fallbackToMockData()
+        })
+
+        req.end()
+      })
+    } else {
+      console.log('[v0] Missing required environment variables for cert-usage-graph API')
+      return fallbackToMockData()
+    }
+
+    function fallbackToMockData() {
+      console.log('[v0] Using mock data for cert-usage-graph')
+      
+      // Transform mock ACL data into cert usage graph format
+      const certArray = Array.isArray(mockACLData?.data) ? mockACLData.data : Array.isArray(mockACLData) ? mockACLData : []
+      
+      // Group by institution and count applications
+      const institutionMap = new Map<string, CertUsageEntry>()
+      
+      certArray.forEach((cert: any) => {
+        if (!cert || !cert.used_by) return
+        
+        cert.used_by.forEach((app: any) => {
+          const instName = app.nama_instansi
+          
+          if (!institutionMap.has(instName)) {
+            institutionMap.set(instName, {
+              id_login: '',
+              nama_instansi: instName,
+              total_applications: 0,
+              applications: [],
+              total_msk: 0,
+              total_secret: 0,
+              total_keys: 0,
+            })
+          }
+          
+          const instData = institutionMap.get(instName)!
+          const appName = app.nama_aplikasi || cert.app_id_label
+          
+          if (!instData.applications.includes(appName)) {
+            instData.applications.push(appName)
+            instData.total_applications = instData.applications.length
           }
         })
       })
-
-      req.on('error', (error: any) => {
-        console.error('[v0] Cert-usage-graph API connection error:', error.code, error.message)
-        resolve(null)
-      })
-
-      req.setTimeout(10000, () => {
-        console.error('[v0] Cert-usage-graph API request timeout')
-        req.destroy()
-        resolve(null)
-      })
-
-      req.end()
-    })
-  } catch (error) {
-    console.error('[v0] Error setting up cert-usage-graph request:', error)
-    return null
-  }
-}
-
-function transformMockDataToGraph(): CertUsageEntry[] {
-  const certArray = Array.isArray(mockACLData?.data) ? mockACLData.data : Array.isArray(mockACLData) ? mockACLData : []
-  const institutionMap = new Map<string, CertUsageEntry>()
-
-  certArray.forEach((cert: any) => {
-    if (!cert || !cert.used_by) return
-
-    cert.used_by.forEach((app: any) => {
-      const instName = app.nama_instansi
-      if (!institutionMap.has(instName)) {
-        institutionMap.set(instName, {
-          id_login: '',
-          nama_instansi: instName,
-          total_applications: 0,
-          applications: [],
-          total_msk: 0,
-          total_secret: 0,
-          total_keys: 0,
-        })
-      }
-
-      const instData = institutionMap.get(instName)!
-      const appName = app.nama_aplikasi || cert.app_id_label
-      if (!instData.applications.includes(appName)) {
-        instData.applications.push(appName)
-        instData.total_applications = instData.applications.length
-      }
-    })
-  })
-
-  return Array.from(institutionMap.values())
-    .sort((a, b) => b.total_applications - a.total_applications)
-    .slice(0, 10)
-}
-
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const mode = searchParams.get('mode') || 'database'
-
-    if (mode === 'mock') {
-      const mockData = transformMockDataToGraph()
+      
+      // Convert to array and sort by application count (descending)
+      const data = Array.from(institutionMap.values())
+        .sort((a, b) => b.total_applications - a.total_applications)
+        .slice(0, 10)
+      
       return NextResponse.json({
-        data: mockData,
+        data,
         isUsingMockData: true,
-        message: 'Using mock data',
+        message: 'Using mock data - backend API not configured',
+        status: 'success',
       })
     }
-
-    const apiData = await fetchFromExternalAPI()
-
-    if (apiData) {
-      return NextResponse.json({
-        data: apiData.data,
-        isUsingMockData: false,
-        message: 'Connected to external cert-usage-graph API',
-      })
-    }
-
-    const mockData = transformMockDataToGraph()
-    return NextResponse.json({
-      data: mockData,
-      isUsingMockData: true,
-      connectionFailed: true,
-      message: 'External API connection failed - using mock data fallback',
-    })
   } catch (error) {
-    console.error('[v0] Cert-usage-graph API error:', error)
+    console.error('[v0] Error in cert-usage-graph:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch cert-usage-graph', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Internal server error', isUsingMockData: true },
       { status: 500 }
     )
   }
