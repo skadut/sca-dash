@@ -102,6 +102,9 @@ export function AccessControlList({ data }: AccessControlListProps) {
   const [graphLoading, setGraphLoading] = useState(true)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
+  const [certData, setCertData] = useState<any[]>([])
+  const [totalCerts, setTotalCerts] = useState(0)
+  const [certLoading, setCertLoading] = useState(false)
 
   useEffect(() => {
     const fetchGraphData = async () => {
@@ -128,6 +131,39 @@ export function AccessControlList({ data }: AccessControlListProps) {
 
     fetchGraphData()
   }, [])
+
+  // Fetch certificate data with pagination
+  useEffect(() => {
+    const fetchCertData = async () => {
+      try {
+        setCertLoading(true)
+        const params = new URLSearchParams({
+          limit: itemsPerPage.toString(),
+          page: currentPage.toString(),
+        })
+        console.log(`[v0] Fetching certificates with limit=${itemsPerPage}, page=${currentPage}`)
+
+        const response = await fetch(`/api/cert-usage-all?${params}`)
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.statusText}`)
+        }
+
+        const responseData = await response.json()
+        console.log('[v0] Certificate data fetched:', responseData)
+        setCertData(responseData.data || [])
+        setTotalCerts(responseData.total || 0)
+      } catch (err) {
+        console.error('[v0] Failed to fetch certificates:', err)
+        setCertData([])
+      } finally {
+        setCertLoading(false)
+      }
+    }
+
+    fetchCertData()
+  }, [itemsPerPage, currentPage])
+
   const getEncryptionColor = (keyId?: string): string => {
     if (!keyId) return 'bg-gray-500/10 text-gray-400 border-gray-500/20'
     const keyIdLower = keyId.toLowerCase()
@@ -459,10 +495,10 @@ export function AccessControlList({ data }: AccessControlListProps) {
           {filteredData.length > 0 && (
             <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/30">
               <div className="text-sm text-muted-foreground">
-                Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems} results
+                {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems} results
               </div>
               
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 {/* Items per page selector */}
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">Per page:</span>
@@ -487,26 +523,26 @@ export function AccessControlList({ data }: AccessControlListProps) {
                   </div>
                 </div>
 
-                {/* Pagination buttons */}
-                <div className="flex items-center gap-1">
+                {/* Pagination arrow buttons */}
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-2 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-8 h-8"
                   >
-                    Previous
+                    <span>&lt;</span>
                   </button>
                   
-                  <span className="px-3 text-sm text-muted-foreground">
+                  <span className="px-2 text-sm text-muted-foreground min-w-[80px] text-center">
                     Page {currentPage} of {totalPages}
                   </span>
                   
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-2 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-8 h-8"
                   >
-                    Next
+                    <span>&gt;</span>
                   </button>
                 </div>
               </div>
