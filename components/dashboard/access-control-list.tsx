@@ -435,13 +435,17 @@ export function AccessControlList({ data }: AccessControlListProps) {
 
           {/* Grid Layout */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredData.length === 0 ? (
+            {certLoading ? (
+              <div className="col-span-full text-center py-12 text-muted-foreground">
+                <p>Loading certificate data...</p>
+              </div>
+            ) : certData.length === 0 ? (
               <div className="col-span-full text-center py-12 text-muted-foreground">
                 <Search className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                <p>No results found</p>
+                <p>No certificate data available</p>
               </div>
             ) : (
-              paginatedData.map((cert) => {
+              certData.map((cert) => {
                 // Get unique encryption types for this certificate (with both label and key_id)
                 const encryptionTypesMap = new Map<string, string>()
                 cert.used_by.forEach(app => {
@@ -492,7 +496,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
           </div>
 
           {/* Pagination Controls */}
-          {filteredData.length > 0 && (
+          {totalCerts > 0 && (
             <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/30">
               {/* Rows per page dropdown - Left side */}
               <div className="flex items-center gap-2">
@@ -514,7 +518,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
               {/* Pagination display and arrows - Right side */}
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">
-                  {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems}
+                  {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalCerts)} of {totalCerts}
                 </span>
                 
                 <button
@@ -526,8 +530,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
                 </button>
                 
                 <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  disabled={currentPage * itemsPerPage >= totalCerts}
                   className="px-2 py-1.5 text-sm rounded-md border border-border/30 hover:border-border/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center w-8 h-8"
                 >
                   <span>&gt;</span>
