@@ -84,10 +84,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
   const getEncryptionLabel = (keyId?: string): string => {
     if (!keyId) return 'Unknown'
     const keyIdLower = keyId.toLowerCase()
-    if (keyIdLower.includes('aes2048') || keyIdLower.includes('aes-2048')) return 'AES-2048'
-    if (keyIdLower.includes('aes')) return 'AES-256'
-    if (keyIdLower.includes('rsa2048') || keyIdLower.includes('rsa-2048')) return 'RSA-2048'
-    if (keyIdLower.includes('rsa')) return 'RSA-3072'
+    if (keyIdLower.includes('aes')) return 'AES'
+    if (keyIdLower.includes('rsa')) return 'RSA'
     return 'Unknown'
   }
 
