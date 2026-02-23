@@ -27,7 +27,7 @@ export async function GET(request: Request) {
           const options = {
             hostname: hostname,
             port: parseInt(acl_api_port),
-            path: `/api/cert-usage-all?limit=${limit}&page=${page}`,
+            path: `/cert-usage-all?limit=${limit}&page=${page}`,
             method: 'GET',
             cert: tls_cert,
             key: tls_key,
