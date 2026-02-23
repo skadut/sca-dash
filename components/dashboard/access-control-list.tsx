@@ -151,6 +151,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
 
         const responseData = await response.json()
         console.log('[v0] Certificate data fetched:', responseData)
+        console.log('[v0] Setting totalCerts to:', responseData.total)
         setCertData(responseData.data || [])
         setTotalCerts(responseData.total || 0)
       } catch (err) {
@@ -509,7 +510,12 @@ export function AccessControlList({ data }: AccessControlListProps) {
               {/* Pagination display and arrows - Right side */}
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">
-                  {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalCerts)} of {totalCerts}
+                  {(() => {
+                    const start = ((currentPage - 1) * itemsPerPage) + 1
+                    const end = Math.min(currentPage * itemsPerPage, totalCerts)
+                    console.log('[v0] Pagination display - currentPage:', currentPage, 'itemsPerPage:', itemsPerPage, 'totalCerts:', totalCerts, 'start:', start, 'end:', end)
+                    return `${start}-${end} of ${totalCerts}`
+                  })()}
                 </span>
                 
                 <button
