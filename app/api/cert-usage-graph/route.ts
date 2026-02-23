@@ -27,8 +27,11 @@ export async function GET(req: Request) {
       console.log('[v0] Attempting backend connection for cert-usage-graph')
 
       return await new Promise((resolve) => {
+        // Strip protocol from hostname if present
+        const hostname = acl_api_url.replace(/^https?:\/\//, '')
+        
         const options = {
-          hostname: acl_api_url,
+          hostname: hostname,
           port: parseInt(acl_api_port),
           path: '/cert-usage-graph',
           method: 'GET',
