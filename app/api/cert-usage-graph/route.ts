@@ -48,8 +48,10 @@ export async function GET() {
           }
 
           const instData = institutionMap.get(instName)!
-          if (!instData.applications.includes(cert.app_id_label)) {
-            instData.applications.push(cert.app_id_label)
+          // Count each application (nama_aplikasi) as separate, not just unique certificates
+          const appKey = `${cert.app_id_label}_${app.nama_aplikasi}`
+          if (!instData.applications.includes(appKey)) {
+            instData.applications.push(app.nama_aplikasi || cert.app_id_label)
             instData.total_applications = instData.applications.length
           }
         })
