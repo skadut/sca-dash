@@ -155,7 +155,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
     const aCertCount = a.certCount || 0
     const bCertCount = b.certCount || 0
     return bCertCount - aCertCount
-  }).map((item, instIndex) => {
+  }).slice(0, 10).map((item, instIndex) => {
     // Generate gradient colors for this institution's certificates
     const baseColor = institutionBaseColors[instIndex % institutionBaseColors.length]
     const certCountForInst = item.certCount || 0
