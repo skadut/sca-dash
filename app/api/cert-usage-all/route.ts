@@ -62,16 +62,37 @@ export async function GET(request: Request) {
 
         console.log('[v0] Backend API success for cert-usage-all')
         console.log('[v0] Backend response structure:', {
+          isArray: Array.isArray(backendData),
           hasData: 'data' in backendData,
           hasTotal: 'total' in backendData,
           totalValue: backendData.total,
-          dataLength: Array.isArray(backendData.data) ? backendData.data.length : 'not-array'
+          dataLength: Array.isArray(backendData) ? backendData.length : (Array.isArray(backendData.data) ? backendData.data.length : 'not-array')
         })
         
-        // Ensure response has proper structure with total count
+        // Handle different backend response formats
+        let certificateData = []
+        let totalCount = 0
+        
+        if (Array.isArray(backendData)) {
+          // Backend returns raw array - this is the actual case
+          certificateData = backendData
+          totalCount = backendData.length
+        } else if (backendData.data) {
+          // Backend returns { data: [...] } structure
+          certificateData = Array.isArray(backendData.data) ? backendData.data : []
+          totalCount = backendData.total || certificateData.length
+        } else {
+          // Fallback
+          certificateData = []
+          totalCount = 0
+        }
+        
+        console.log(`[v0] Backend API returning: ${certificateData.length} items out of ${totalCount} total`)
+        
+        // Return properly structured response
         const responseData = {
-          data: backendData.data || backendData,
-          total: backendData.total || (Array.isArray(backendData.data) ? backendData.data.length : 0),
+          data: certificateData,
+          total: totalCount,
           limit: limit,
           page: page,
           isUsingMockData: false,
