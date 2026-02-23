@@ -339,10 +339,10 @@ export function AccessControlList({ data }: AccessControlListProps) {
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--muted-foreground)" opacity={0.2} />
                 <XAxis 
                   dataKey="nama_instansi" 
-                  angle={-45} 
-                  textAnchor="end" 
-                  height={60} 
-                  tick={{ fontSize: 12 }}
+                  height={100}
+                  tick={{ fontSize: 11, width: 70, wordBreak: 'break-word' }}
+                  interval={0}
+                  tickFormatter={(value: string) => value}
                 />
                 <YAxis 
                   allowDecimals={false}
