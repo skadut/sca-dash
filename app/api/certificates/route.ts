@@ -47,19 +47,7 @@ async function fetchFromDatabase(): Promise<Certificate[] | null> {
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const mode = searchParams.get("mode") || "mock"
-
-    // If mode is mock, return mock data directly
-    if (mode === "mock") {
-      return NextResponse.json({
-        certificates: mockCertificatesForAPI,
-        isUsingMockData: true,
-        message: "Using mock data",
-      })
-    }
-
-    // Mode is database - try to fetch from database
+    // Always try database first, fall back to mock data if unavailable
     const dbCertificates = await fetchFromDatabase()
 
     if (dbCertificates) {
@@ -70,12 +58,12 @@ export async function GET(request: Request) {
       })
     }
 
-    // Database connection failed, return error with mock data fallback
+    // Database connection failed, return mock data as fallback
     return NextResponse.json({
       certificates: mockCertificatesForAPI,
       isUsingMockData: true,
       connectionFailed: true,
-      message: "Database connection failed - deploy to Vercel with env vars to connect",
+      message: "Database connection failed - using mock data as fallback",
     })
   } catch (error) {
     console.error("API error:", error)

@@ -109,19 +109,7 @@ async function fetchFromExternalAPI(): Promise<CertificateUsageData | null> {
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const mode = searchParams.get('mode') || 'mock'
-
-    // If mode is mock, return mock data directly
-    if (mode === 'mock') {
-      return NextResponse.json({
-        data: mockACLData,
-        isUsingMockData: true,
-        message: 'Using mock data',
-      })
-    }
-
-    // Mode is database - try to fetch from external API
+    // Always try external API first, fall back to mock data if unavailable
     const apiData = await fetchFromExternalAPI()
 
     if (apiData) {
@@ -132,7 +120,7 @@ export async function GET(request: Request) {
       })
     }
 
-    // API connection failed, return mock data fallback
+    // API connection failed, return mock data as fallback
     return NextResponse.json({
       data: mockACLData,
       isUsingMockData: true,
