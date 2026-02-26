@@ -204,8 +204,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
   }
 
   // Calculate statistics
-  // Calculate statistics from API response
-  const certArray = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
+  // Use certData state (from API) instead of data prop for accurate display
+  const certArray = Array.isArray(certData) ? certData : []
   
   // Get values from API response if available, otherwise calculate
   const totalCertificates = statsData.sum_cert_integrated
