@@ -70,7 +70,6 @@ export default function DashboardPage(): React.ReactElement {
   const certificates = data?.certificates || []
   const keys = keysData?.keys || []
   const aclData2 = aclData?.data || { data: [] }
-  const isConnected = data?.isUsingMockData === false
 
   return (
     <div className="min-h-screen bg-background flex">
