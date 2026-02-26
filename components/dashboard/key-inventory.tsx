@@ -116,7 +116,7 @@ export function KeyInventoryStats() {
     {
       label: 'Expiring Soon',
       value: data.expiring_soon,
-      subtitle: 'Within 30 days',
+      subtitle: 'Within 90 days',
       icon: Clock,
       iconColor: 'text-amber-400',
       iconBg: 'bg-amber-500/10',
