@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import type { Certificate, Key, CertificateUsageData } from '@/lib/types'
 import { AccessControlList } from '@/components/dashboard/access-control-list'
+import { CertsIntegratedStats } from '@/components/dashboard/certs-integrated-stats'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -209,9 +210,14 @@ export default function DashboardPage(): React.ReactElement {
                         </Card>
                       </div>
                     ) : (
-                      <div className="page-enter">
-                        <AccessControlList data={aclData2} />
-                      </div>
+                      <>
+                        <div className="page-enter">
+                          <CertsIntegratedStats />
+                        </div>
+                        <div className="page-enter" style={{ animationDelay: '50ms' }}>
+                          <AccessControlList data={aclData2} />
+                        </div>
+                      </>
                     )}
                   </>
                 )}

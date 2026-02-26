@@ -55,6 +55,11 @@ export async function GET(req: Request) {
               resolve(
                 NextResponse.json({
                   data: parsedData.data || [],
+                  stats: parsedData.stats || {
+                    sum_cert_integrated: 0,
+                    sum_institutions: 0,
+                    sum_key_integrated: 0,
+                  },
                   status: 'success',
                   connectionFailed: false,
                   isUsingMockData: false,
@@ -90,9 +95,13 @@ function getMockDataResponse() {
 
     // Transform mock data to match API format
     const institutionMap = new Map<string, any>()
+    let totalCertIntegrated = 0
+    let totalKeyIntegrated = 0
 
     certArray.forEach((cert: any) => {
       if (!cert || !cert.used_by) return
+
+      totalCertIntegrated += 1
 
       cert.used_by.forEach((app: any) => {
         const instName = app.nama_instansi
@@ -126,6 +135,11 @@ function getMockDataResponse() {
 
     return NextResponse.json({
       data: topTen,
+      stats: {
+        sum_cert_integrated: totalCertIntegrated,
+        sum_institutions: institutionMap.size,
+        sum_key_integrated: totalKeyIntegrated,
+      },
       status: 'success',
       connectionFailed: false,
       isUsingMockData: true,
@@ -135,6 +149,11 @@ function getMockDataResponse() {
     console.error('[v0] Error transforming mock data:', err)
     return NextResponse.json({
       data: [],
+      stats: {
+        sum_cert_integrated: 0,
+        sum_institutions: 0,
+        sum_key_integrated: 0,
+      },
       status: 'error',
       error: 'Failed to process data',
     })
