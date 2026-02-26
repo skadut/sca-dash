@@ -52,6 +52,11 @@ export async function GET(req: Request) {
             try {
               const parsedData = JSON.parse(data)
               console.log('[v0] Backend API returned successfully for cert-usage-graph')
+              console.log('[v0] Backend response structure:', {
+                hasData: 'data' in parsedData,
+                hasStats: 'stats' in parsedData,
+                statsValue: parsedData.stats,
+              })
               resolve(
                 NextResponse.json({
                   data: parsedData.data || [],
@@ -102,6 +107,7 @@ function getMockDataResponse() {
       if (!cert || !cert.used_by) return
 
       totalCertIntegrated += 1
+      totalKeyIntegrated += cert.used_by.length
 
       cert.used_by.forEach((app: any) => {
         const instName = app.nama_instansi
@@ -132,6 +138,8 @@ function getMockDataResponse() {
 
     // Limit to top 10
     const topTen = dataArray.slice(0, 10)
+
+    console.log('[v0] Mock data stats - certs:', totalCertIntegrated, 'institutions:', institutionMap.size, 'keys:', totalKeyIntegrated)
 
     return NextResponse.json({
       data: topTen,
