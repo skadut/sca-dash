@@ -105,6 +105,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
   const [certData, setCertData] = useState<any[]>([])
   const [totalCerts, setTotalCerts] = useState(0)
   const [certLoading, setCertLoading] = useState(false)
+  const [statsData, setStatsData] = useState({ sum_cert_integrated: 0, sum_institutions: 0, sum_key_integrated: 0 })
 
   useEffect(() => {
     const fetchGraphData = async () => {
@@ -121,6 +122,16 @@ export function AccessControlList({ data }: AccessControlListProps) {
         const responseData = await response.json()
         console.log('[v0] Cert-usage-graph data fetched successfully:', responseData)
         setGraphData(responseData.data || [])
+        
+        // Extract stats from API response
+        if (responseData.stats) {
+          setStatsData({
+            sum_cert_integrated: responseData.stats.sum_cert_integrated || 0,
+            sum_institutions: responseData.stats.sum_institutions || 0,
+            sum_key_integrated: responseData.stats.sum_key_integrated || 0,
+          })
+          console.log('[v0] Stats extracted:', responseData.stats)
+        }
       } catch (err) {
         console.error('[v0] Failed to fetch cert-usage-graph:', err)
         setGraphData([])
@@ -193,17 +204,9 @@ export function AccessControlList({ data }: AccessControlListProps) {
   const certArray = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
   
   // Get values from API response if available, otherwise calculate
-  const totalCertificates = data?.total_certs_integrated || certArray.length
-  const totalApplications = data?.total_keys_integrated || certArray.reduce((acc, cert) => {
-    if (!cert || !cert.used_by) return acc
-    return acc + cert.used_by.length
-  }, 0)
-  const totalInstitutions = data?.total_institution || new Set(
-    certArray.flatMap((cert) => {
-      if (!cert || !cert.used_by) return []
-      return cert.used_by.map((app) => app.nama_instansi)
-    })
-  ).size
+  const totalCertificates = statsData.sum_cert_integrated
+  const totalApplications = statsData.sum_key_integrated
+  const totalInstitutions = statsData.sum_institutions
   const avgCertPerInstitution = data?.average_cert_institution || (totalCertificates > 0 ? (totalApplications / totalCertificates).toFixed(1) : 0)
 
   // Get all unique certificate IDs for the stacked bar (sorted) - MUST be before stackedBarDataWithColors
