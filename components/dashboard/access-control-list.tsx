@@ -450,6 +450,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
               <button
                 onClick={() => {
                   console.log('[v0] Refresh button clicked - fetching with limit:', itemsPerPage)
+                  setSearchFilter('')
+                  setSearchQuery('')
                   const params = new URLSearchParams({
                     limit: itemsPerPage.toString(),
                     page: '1',
@@ -552,6 +554,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
                     const value = e.target.value === 'all' ? totalCerts : Number(e.target.value)
                     setItemsPerPage(value)
                     setCurrentPage(1)
+                    setSearchFilter('')
+                    setSearchQuery('')
                   }}
                   className="px-3 py-1.5 text-sm rounded-md border border-border/30 bg-background text-foreground hover:border-border/50 transition-colors cursor-pointer"
                 >
