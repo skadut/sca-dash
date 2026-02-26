@@ -102,9 +102,6 @@ export default function DashboardPage(): React.ReactElement {
 
         <main className="container mx-auto px-4 py-6">
           <div className="space-y-6">
-            <div className="flex justify-end">
-              <DataModeToggle mode={dataMode} onModeChange={setDataMode} isConnected={isConnected} />
-            </div>
 
             {data?.connectionFailed && (
               <Card className="border-amber-500/50 bg-amber-500/5">
