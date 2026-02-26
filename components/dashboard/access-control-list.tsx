@@ -123,15 +123,13 @@ export function AccessControlList({ data }: AccessControlListProps) {
         console.log('[v0] Cert-usage-graph data fetched successfully:', responseData)
         setGraphData(responseData.data || [])
         
-        // Extract stats from API response
-        if (responseData.stats) {
-          setStatsData({
-            sum_cert_integrated: responseData.stats.sum_cert_integrated || 0,
-            sum_institutions: responseData.stats.sum_institutions || 0,
-            sum_key_integrated: responseData.stats.sum_key_integrated || 0,
-          })
-          console.log('[v0] Stats extracted:', responseData.stats)
-        }
+        // Extract stats from root level of API response
+        setStatsData({
+          sum_cert_integrated: responseData.sum_cert_integrated || 0,
+          sum_institutions: responseData.sum_institutions || 0,
+          sum_key_integrated: responseData.sum_key_integrated || 0,
+        })
+        console.log('[v0] Stats extracted:', { sum_cert_integrated: responseData.sum_cert_integrated, sum_institutions: responseData.sum_institutions, sum_key_integrated: responseData.sum_key_integrated })
       } catch (err) {
         console.error('[v0] Failed to fetch cert-usage-graph:', err)
         setGraphData([])

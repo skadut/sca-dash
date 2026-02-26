@@ -60,12 +60,11 @@ export async function GET(req: Request) {
               resolve(
                 NextResponse.json({
                   data: parsedData.data || [],
-                  stats: parsedData.stats || {
-                    sum_cert_integrated: 0,
-                    sum_institutions: 0,
-                    sum_key_integrated: 0,
-                  },
+                  limit: parsedData.limit || 10,
                   status: 'success',
+                  sum_cert_integrated: parsedData.sum_cert_integrated || 0,
+                  sum_institutions: parsedData.sum_institutions || 0,
+                  sum_key_integrated: parsedData.sum_key_integrated || 0,
                   connectionFailed: false,
                   isUsingMockData: false,
                 })
@@ -143,26 +142,23 @@ function getMockDataResponse() {
 
     return NextResponse.json({
       data: topTen,
-      stats: {
-        sum_cert_integrated: totalCertIntegrated,
-        sum_institutions: institutionMap.size,
-        sum_key_integrated: totalKeyIntegrated,
-      },
+      limit: 10,
       status: 'success',
+      sum_cert_integrated: totalCertIntegrated,
+      sum_institutions: institutionMap.size,
+      sum_key_integrated: totalKeyIntegrated,
       connectionFailed: false,
       isUsingMockData: true,
-      limit: 10,
     })
   } catch (err) {
     console.error('[v0] Error transforming mock data:', err)
     return NextResponse.json({
       data: [],
-      stats: {
-        sum_cert_integrated: 0,
-        sum_institutions: 0,
-        sum_key_integrated: 0,
-      },
+      limit: 10,
       status: 'error',
+      sum_cert_integrated: 0,
+      sum_institutions: 0,
+      sum_key_integrated: 0,
       error: 'Failed to process data',
     })
   }
