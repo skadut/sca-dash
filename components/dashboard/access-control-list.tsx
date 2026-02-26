@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { Search, Building2, Zap, Users, Database, Award } from 'lucide-react'
+import { Search, Building2, Zap, Users, Database, Award, RefreshCw } from 'lucide-react'
 import type { CertificateUsageData } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -421,35 +421,53 @@ export function AccessControlList({ data }: AccessControlListProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4 mb-6">
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Search by Certificate, Instansi or KeyID</label>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Enter certificate, institution, or key ID..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        setSearchFilter(searchQuery)
-                        setCurrentPage(1)
-                      }
-                    }}
-                    className="pl-10"
-                  />
-                </div>
-                <Button
-                  onClick={() => {
-                    setSearchFilter(searchQuery)
-                    setCurrentPage(1)
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Enter certificate, institution, or key ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      setSearchFilter(searchQuery)
+                      setCurrentPage(1)
+                    }
                   }}
-                  className="px-4"
-                  variant="default"
-                >
-                  Search
-                </Button>
+                  className="pl-10"
+                />
               </div>
+              <button
+                onClick={() => {
+                  setSearchFilter(searchQuery)
+                  setCurrentPage(1)
+                }}
+                className="p-2 rounded-md border border-border/30 hover:border-border/50 hover:bg-muted/50 transition-colors flex items-center justify-center w-10 h-10"
+                title="Search"
+              >
+                <Search className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentPage(1)
+                  // Trigger refetch by resetting search filter and re-fetching
+                  const params = new URLSearchParams({
+                    limit: itemsPerPage.toString(),
+                    page: '1',
+                  })
+                  if (searchFilter) {
+                    params.append('search', searchFilter)
+                  }
+                  fetch(`/api/cert-usage-all?${params}`).then(res => res.json()).then(data => {
+                    setCertData(data.data || [])
+                    setTotalCerts(data.total_certs_integrated || data.total || 0)
+                  })
+                }}
+                className="p-2 rounded-md border border-border/30 hover:border-border/50 hover:bg-muted/50 transition-colors flex items-center justify-center w-10 h-10"
+                title="Refresh"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
             </div>
           </div>
 
@@ -480,8 +498,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                           <h4 className="font-semibold text-sm truncate text-primary">{cert.app_id_label}</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {cert.used_by.length} {cert.used_by.length === 1 ? 'institution' : 'institutions'}
+                          <p className="text-xs text-muted-foreground mt-1 truncate">
+                            {cert.used_by[0]?.nama_instansi || 'Unknown Institution'}
                           </p>
                           {/* Encryption Type Badges */}
                           <div className="flex gap-1.5 mt-2 flex-wrap">
@@ -505,7 +523,6 @@ export function AccessControlList({ data }: AccessControlListProps) {
                       <div className="space-y-2">
                         {cert.used_by.map((app, appIndex) => (
                           <div key={appIndex} className="p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                            <p className="text-xs font-medium text-foreground truncate">{app.nama_instansi}</p>
                             <p className="text-xs text-muted-foreground truncate font-mono">{app.key_id}</p>
                           </div>
                         ))}
@@ -522,11 +539,12 @@ export function AccessControlList({ data }: AccessControlListProps) {
             <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/30">
               {/* Rows per page dropdown - Left side */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Rows per page:</span>
+                <span className="text-sm text-muted-foreground">Data shown:</span>
                 <select
-                  value={itemsPerPage}
+                  value={itemsPerPage === totalCerts ? 'all' : itemsPerPage}
                   onChange={(e) => {
-                    setItemsPerPage(Number(e.target.value))
+                    const value = e.target.value === 'all' ? totalCerts : Number(e.target.value)
+                    setItemsPerPage(value)
                     setCurrentPage(1)
                   }}
                   className="px-3 py-1.5 text-sm rounded-md border border-border/30 bg-background text-foreground hover:border-border/50 transition-colors cursor-pointer"
@@ -534,6 +552,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={50}>50</option>
+                  <option value="all">All</option>
                 </select>
               </div>
 
