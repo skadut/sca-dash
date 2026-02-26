@@ -449,19 +449,25 @@ export function AccessControlList({ data }: AccessControlListProps) {
               </button>
               <button
                 onClick={() => {
-                  setCurrentPage(1)
-                  // Trigger refetch by resetting search filter and re-fetching
+                  console.log('[v0] Refresh button clicked - fetching with limit:', itemsPerPage)
                   const params = new URLSearchParams({
                     limit: itemsPerPage.toString(),
                     page: '1',
                   })
-                  if (searchFilter) {
-                    params.append('search', searchFilter)
-                  }
-                  fetch(`/api/cert-usage-all?${params}`).then(res => res.json()).then(data => {
-                    setCertData(data.data || [])
-                    setTotalCerts(data.total_certs_integrated || data.total || 0)
-                  })
+                  fetch(`/api/cert-usage-all?${params}`)
+                    .then(res => {
+                      if (!res.ok) throw new Error(`API error: ${res.statusText}`)
+                      return res.json()
+                    })
+                    .then(data => {
+                      console.log('[v0] Refresh successful, received:', data.data?.length, 'items')
+                      setCertData(data.data || [])
+                      setTotalCerts(data.total_certs_integrated || data.total || 0)
+                      setCurrentPage(1)
+                    })
+                    .catch(err => {
+                      console.error('[v0] Refresh failed:', err)
+                    })
                 }}
                 className="p-2 rounded-md border border-border/30 hover:border-border/50 hover:bg-muted/50 transition-colors flex items-center justify-center w-10 h-10"
                 title="Refresh"
