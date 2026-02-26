@@ -69,16 +69,7 @@ export default function DashboardPage(): React.ReactElement {
     revalidateOnFocus: true,
   })
 
-  const { data: graphData, error: graphError, isLoading: graphLoading } = useSWR<{
-    stats: {
-      sum_cert_integrated: number
-      sum_institutions: number
-      sum_key_integrated: number
-    }
-  }>('/api/cert-usage-graph', fetcher, {
-    refreshInterval: 30000,
-    revalidateOnFocus: true,
-  })
+
 
   const certificates = data?.certificates || []
   const keys = keysData?.keys || []
@@ -199,7 +190,7 @@ export default function DashboardPage(): React.ReactElement {
                 )}
                 {activeMenu === 'acl' && (
                   <>
-                    {aclLoading || graphLoading ? (
+                    {aclLoading ? (
                       <div className="page-enter">
                         <StatsCardsSkeleton />
                       </div>
@@ -220,35 +211,9 @@ export default function DashboardPage(): React.ReactElement {
                         </Card>
                       </div>
                     ) : (
-                      <>
-                        <div className="page-enter">
-                          {graphData?.stats && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {[
-                                { label: 'Total Integrated Certificates', value: graphData.stats.sum_cert_integrated, color: 'text-cyan-400' },
-                                { label: 'Total Institutions', value: graphData.stats.sum_institutions, color: 'text-emerald-400' },
-                                { label: 'Total Key Integrated', value: graphData.stats.sum_key_integrated, color: 'text-purple-400' },
-                              ].map((stat) => (
-                                <Card key={stat.label} className="border-border/30 bg-card/50 backdrop-blur stat-card-hover group overflow-hidden relative">
-                                  <CardContent className="p-6 relative z-10">
-                                    <div className="flex flex-col gap-4">
-                                      <p className="text-sm text-muted-foreground font-sans uppercase tracking-wide">
-                                        {stat.label}
-                                      </p>
-                                      <p className={`text-4xl font-bold font-mono ${stat.color} tracking-tight`}>
-                                        {stat.value.toLocaleString()}
-                                      </p>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        <div className="page-enter" style={{ animationDelay: '50ms' }}>
-                          <AccessControlList data={aclData2} />
-                        </div>
-                      </>
+                      <div className="page-enter">
+                        <AccessControlList data={aclData2} />
+                      </div>
                     )}
                   </>
                 )}
