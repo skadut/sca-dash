@@ -62,7 +62,7 @@ export function KeyInventoryToggle({ keys }: KeyInventoryToggleProps) {
         >
           <div className="space-y-6">
             <KeyInventoryStats />
-            <KeyInsights keys={keys} />
+            <KeyInsights />
           </div>
         </div>
 
