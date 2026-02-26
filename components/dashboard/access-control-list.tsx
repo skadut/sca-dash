@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Search, Building2, Zap, Users, Database, Award } from 'lucide-react'
 import type { CertificateUsageData } from '@/lib/types'
@@ -98,6 +99,7 @@ const CustomStackedBarTooltip = ({ active, payload }: any) => {
 
 export function AccessControlList({ data }: AccessControlListProps) {
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchFilter, setSearchFilter] = useState('')
   const [graphData, setGraphData] = useState<GraphData[]>([])
   const [graphLoading, setGraphLoading] = useState(true)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -106,6 +108,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
   const [totalCerts, setTotalCerts] = useState(0)
   const [certLoading, setCertLoading] = useState(false)
   const [statsData, setStatsData] = useState({ sum_cert_integrated: 0, sum_institutions: 0, sum_key_integrated: 0 })
+  const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const fetchGraphData = async () => {
@@ -150,7 +153,10 @@ export function AccessControlList({ data }: AccessControlListProps) {
           limit: itemsPerPage.toString(),
           page: currentPage.toString(),
         })
-        console.log(`[v0] Fetching certificates with limit=${itemsPerPage}, page=${currentPage}`)
+        if (searchFilter) {
+          params.append('search', searchFilter)
+        }
+        console.log(`[v0] Fetching certificates with limit=${itemsPerPage}, page=${currentPage}, search=${searchFilter || 'none'}`)
 
         const response = await fetch(`/api/cert-usage-all?${params}`)
 
@@ -170,7 +176,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
     }
 
     fetchCertData()
-  }, [itemsPerPage, currentPage])
+  }, [itemsPerPage, currentPage, searchFilter])
 
   const getEncryptionColor = (keyId?: string): string => {
     if (!keyId) return 'bg-gray-500/10 text-gray-400 border-gray-500/20'
@@ -414,18 +420,41 @@ export function AccessControlList({ data }: AccessControlListProps) {
           <CardDescription>View all certificates and their applications</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="relative mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search certificates or applications..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+          <div className="space-y-4 mb-6">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">Search by Certificate, Instansi or KeyID</label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Enter certificate, institution, or key ID..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        setSearchFilter(searchQuery)
+                        setCurrentPage(1)
+                      }
+                    }}
+                    className="pl-10"
+                  />
+                </div>
+                <Button
+                  onClick={() => {
+                    setSearchFilter(searchQuery)
+                    setCurrentPage(1)
+                  }}
+                  className="px-4"
+                  variant="default"
+                >
+                  Search
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* Grid Layout */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" ref={contentRef}>
             {certLoading ? (
               <div className="col-span-full text-center py-12 text-muted-foreground">
                 <p>Loading certificate data...</p>
@@ -451,7 +480,9 @@ export function AccessControlList({ data }: AccessControlListProps) {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                           <h4 className="font-semibold text-sm truncate text-primary">{cert.app_id_label}</h4>
-                          <p className="text-xs text-muted-foreground mt-1">{cert.used_by.length} application(s)</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {cert.used_by.length} {cert.used_by.length === 1 ? 'institution' : 'institutions'}
+                          </p>
                           {/* Encryption Type Badges */}
                           <div className="flex gap-1.5 mt-2 flex-wrap">
                             {encryptionTypes.map(([encType, keyId]) => (
@@ -470,11 +501,11 @@ export function AccessControlList({ data }: AccessControlListProps) {
                     </CardHeader>
 
                     <CardContent className="space-y-3">
-                      {/* Applications List */}
+                      {/* Institutions List */}
                       <div className="space-y-2">
                         {cert.used_by.map((app, appIndex) => (
                           <div key={appIndex} className="p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                            <p className="text-xs font-medium text-foreground truncate">{app.nama_aplikasi}</p>
+                            <p className="text-xs font-medium text-foreground truncate">{app.nama_instansi}</p>
                             <p className="text-xs text-muted-foreground truncate font-mono">{app.key_id}</p>
                           </div>
                         ))}
