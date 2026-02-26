@@ -225,26 +225,19 @@ export default function DashboardPage(): React.ReactElement {
                           {graphData?.stats && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                               {[
-                                { label: 'Total Integrated Certificates', value: graphData.stats.sum_cert_integrated, icon: 'FileText', color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
-                                { label: 'Total Institutions', value: graphData.stats.sum_institutions, icon: 'Building2', color: 'text-emerald-400', bgColor: 'bg-emerald-500/10' },
-                                { label: 'Total Key Integrated', value: graphData.stats.sum_key_integrated, icon: 'Key', color: 'text-purple-400', bgColor: 'bg-purple-500/10' },
+                                { label: 'Total Integrated Certificates', value: graphData.stats.sum_cert_integrated, color: 'text-cyan-400' },
+                                { label: 'Total Institutions', value: graphData.stats.sum_institutions, color: 'text-emerald-400' },
+                                { label: 'Total Key Integrated', value: graphData.stats.sum_key_integrated, color: 'text-purple-400' },
                               ].map((stat) => (
                                 <Card key={stat.label} className="border-border/30 bg-card/50 backdrop-blur stat-card-hover group overflow-hidden relative">
                                   <CardContent className="p-6 relative z-10">
                                     <div className="flex flex-col gap-4">
-                                      <div className="flex items-start justify-between">
-                                        <p className="text-sm text-muted-foreground font-sans uppercase tracking-wide">
-                                          {stat.label}
-                                        </p>
-                                        <div className={`p-2.5 rounded-lg ${stat.bgColor} backdrop-blur-sm`}>
-                                          <div className={`h-5 w-5 rounded ${stat.color}`} />
-                                        </div>
-                                      </div>
-                                      <div>
-                                        <p className={`text-4xl font-bold font-mono ${stat.color} tracking-tight`}>
-                                          {stat.value.toLocaleString()}
-                                        </p>
-                                      </div>
+                                      <p className="text-sm text-muted-foreground font-sans uppercase tracking-wide">
+                                        {stat.label}
+                                      </p>
+                                      <p className={`text-4xl font-bold font-mono ${stat.color} tracking-tight`}>
+                                        {stat.value.toLocaleString()}
+                                      </p>
                                     </div>
                                   </CardContent>
                                 </Card>
