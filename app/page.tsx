@@ -22,7 +22,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import type { Certificate, Key, CertificateUsageData } from '@/lib/types'
 import { AccessControlList } from '@/components/dashboard/access-control-list'
-import { CertsIntegratedStats } from '@/components/dashboard/certs-integrated-stats'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -66,6 +65,17 @@ export default function DashboardPage(): React.ReactElement {
     connectionFailed?: boolean
     message?: string
   }>(`/api/acl?mode=${dataMode}`, fetcher, {
+    refreshInterval: 30000,
+    revalidateOnFocus: true,
+  })
+
+  const { data: graphData, error: graphError, isLoading: graphLoading } = useSWR<{
+    stats: {
+      sum_cert_integrated: number
+      sum_institutions: number
+      sum_key_integrated: number
+    }
+  }>('/api/cert-usage-graph', fetcher, {
     refreshInterval: 30000,
     revalidateOnFocus: true,
   })
@@ -189,7 +199,7 @@ export default function DashboardPage(): React.ReactElement {
                 )}
                 {activeMenu === 'acl' && (
                   <>
-                    {aclLoading ? (
+                    {aclLoading || graphLoading ? (
                       <div className="page-enter">
                         <StatsCardsSkeleton />
                       </div>
@@ -212,7 +222,35 @@ export default function DashboardPage(): React.ReactElement {
                     ) : (
                       <>
                         <div className="page-enter">
-                          <CertsIntegratedStats />
+                          {graphData?.stats && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {[
+                                { label: 'Total Integrated Certificates', value: graphData.stats.sum_cert_integrated, icon: 'FileText', color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
+                                { label: 'Total Institutions', value: graphData.stats.sum_institutions, icon: 'Building2', color: 'text-emerald-400', bgColor: 'bg-emerald-500/10' },
+                                { label: 'Total Key Integrated', value: graphData.stats.sum_key_integrated, icon: 'Key', color: 'text-purple-400', bgColor: 'bg-purple-500/10' },
+                              ].map((stat) => (
+                                <Card key={stat.label} className="border-border/30 bg-card/50 backdrop-blur stat-card-hover group overflow-hidden relative">
+                                  <CardContent className="p-6 relative z-10">
+                                    <div className="flex flex-col gap-4">
+                                      <div className="flex items-start justify-between">
+                                        <p className="text-sm text-muted-foreground font-sans uppercase tracking-wide">
+                                          {stat.label}
+                                        </p>
+                                        <div className={`p-2.5 rounded-lg ${stat.bgColor} backdrop-blur-sm`}>
+                                          <div className={`h-5 w-5 rounded ${stat.color}`} />
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <p className={`text-4xl font-bold font-mono ${stat.color} tracking-tight`}>
+                                          {stat.value.toLocaleString()}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </div>
+                          )}
                         </div>
                         <div className="page-enter" style={{ animationDelay: '50ms' }}>
                           <AccessControlList data={aclData2} />
