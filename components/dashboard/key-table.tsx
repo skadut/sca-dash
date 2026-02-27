@@ -66,11 +66,11 @@ export function KeyTable({ keys }: KeyTableProps) {
       const secretStatus = hasSecret ? 'available' : 'no-secret'
       
       const matchesSearch =
-        key.nama_aplikasi?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        key.nama_instansi?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        key.id_aplikasi?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        key.id_login?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        key.key_id?.toLowerCase().includes(searchTerm.toLowerCase())
+        String(key.nama_aplikasi || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(key.nama_instansi || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(key.id_aplikasi || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(key.id_login || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(key.key_id || '').toLowerCase().includes(searchTerm.toLowerCase())
 
       const matchesHsm = hsmFilter === 'all' || 
         (hsmFilter === 'untagged' ? (!key.hsm || key.hsm.trim() === '') : key.hsm === hsmFilter)
