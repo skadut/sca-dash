@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { Search, Building2, Zap, Users, Database, Award } from 'lucide-react'
+import { Search, Building2, Zap, Users, Database, Award, RefreshCw } from 'lucide-react'
 import type { CertificateUsageData } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -98,6 +99,7 @@ const CustomStackedBarTooltip = ({ active, payload }: any) => {
 
 export function AccessControlList({ data }: AccessControlListProps) {
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchFilter, setSearchFilter] = useState('')
   const [graphData, setGraphData] = useState<GraphData[]>([])
   const [graphLoading, setGraphLoading] = useState(true)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -105,6 +107,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
   const [certData, setCertData] = useState<any[]>([])
   const [totalCerts, setTotalCerts] = useState(0)
   const [certLoading, setCertLoading] = useState(false)
+  const [statsData, setStatsData] = useState({ sum_cert_integrated: 0, sum_institutions: 0, sum_key_integrated: 0 })
+  const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const fetchGraphData = async () => {
@@ -121,6 +125,14 @@ export function AccessControlList({ data }: AccessControlListProps) {
         const responseData = await response.json()
         console.log('[v0] Cert-usage-graph data fetched successfully:', responseData)
         setGraphData(responseData.data || [])
+        
+        // Extract stats from root level of API response
+        setStatsData({
+          sum_cert_integrated: responseData.sum_cert_integrated || 0,
+          sum_institutions: responseData.sum_institutions || 0,
+          sum_key_integrated: responseData.sum_key_integrated || 0,
+        })
+        console.log('[v0] Stats extracted:', { sum_cert_integrated: responseData.sum_cert_integrated, sum_institutions: responseData.sum_institutions, sum_key_integrated: responseData.sum_key_integrated })
       } catch (err) {
         console.error('[v0] Failed to fetch cert-usage-graph:', err)
         setGraphData([])
@@ -141,7 +153,10 @@ export function AccessControlList({ data }: AccessControlListProps) {
           limit: itemsPerPage.toString(),
           page: currentPage.toString(),
         })
-        console.log(`[v0] Fetching certificates with limit=${itemsPerPage}, page=${currentPage}`)
+        if (searchFilter) {
+          params.append('search', searchFilter)
+        }
+        console.log(`[v0] Fetching certificates with limit=${itemsPerPage}, page=${currentPage}, search=${searchFilter || 'none'}`)
 
         const response = await fetch(`/api/cert-usage-all?${params}`)
 
@@ -150,9 +165,8 @@ export function AccessControlList({ data }: AccessControlListProps) {
         }
 
         const responseData = await response.json()
-        console.log('[v0] Certificate data fetched:', responseData)
         setCertData(responseData.data || [])
-        setTotalCerts(responseData.total || 0)
+        setTotalCerts(responseData.total_certs_integrated || responseData.total || 0)
       } catch (err) {
         console.error('[v0] Failed to fetch certificates:', err)
         setCertData([])
@@ -162,7 +176,7 @@ export function AccessControlList({ data }: AccessControlListProps) {
     }
 
     fetchCertData()
-  }, [itemsPerPage, currentPage])
+  }, [itemsPerPage, currentPage, searchFilter])
 
   const getEncryptionColor = (keyId?: string): string => {
     if (!keyId) return 'bg-gray-500/10 text-gray-400 border-gray-500/20'
@@ -190,21 +204,13 @@ export function AccessControlList({ data }: AccessControlListProps) {
   }
 
   // Calculate statistics
-  // Calculate statistics from API response
-  const certArray = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []
+  // Use certData state (from API) instead of data prop for accurate display
+  const certArray = Array.isArray(certData) ? certData : []
   
   // Get values from API response if available, otherwise calculate
-  const totalCertificates = data?.total_certs_integrated || certArray.length
-  const totalApplications = data?.total_keys_integrated || certArray.reduce((acc, cert) => {
-    if (!cert || !cert.used_by) return acc
-    return acc + cert.used_by.length
-  }, 0)
-  const totalInstitutions = data?.total_institution || new Set(
-    certArray.flatMap((cert) => {
-      if (!cert || !cert.used_by) return []
-      return cert.used_by.map((app) => app.nama_instansi)
-    })
-  ).size
+  const totalCertificates = statsData.sum_cert_integrated
+  const totalApplications = statsData.sum_key_integrated
+  const totalInstitutions = statsData.sum_institutions
   const avgCertPerInstitution = data?.average_cert_institution || (totalCertificates > 0 ? (totalApplications / totalCertificates).toFixed(1) : 0)
 
   // Get all unique certificate IDs for the stacked bar (sorted) - MUST be before stackedBarDataWithColors
@@ -414,18 +420,67 @@ export function AccessControlList({ data }: AccessControlListProps) {
           <CardDescription>View all certificates and their applications</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="relative mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search certificates or applications..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+          <div className="space-y-4 mb-6">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Enter certificate, institution, or key ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      setSearchFilter(searchQuery)
+                      setCurrentPage(1)
+                    }
+                  }}
+                  className="pl-10"
+                />
+              </div>
+              <button
+                onClick={() => {
+                  setSearchFilter(searchQuery)
+                  setCurrentPage(1)
+                }}
+                className="p-2 rounded-md border border-border/30 hover:border-border/50 hover:bg-muted/50 transition-colors flex items-center justify-center w-10 h-10"
+                title="Search"
+              >
+                <Search className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => {
+                  console.log('[v0] Refresh button clicked - fetching with limit:', itemsPerPage)
+                  setSearchFilter('')
+                  setSearchQuery('')
+                  const params = new URLSearchParams({
+                    limit: itemsPerPage.toString(),
+                    page: '1',
+                  })
+                  fetch(`/api/cert-usage-all?${params}`)
+                    .then(res => {
+                      if (!res.ok) throw new Error(`API error: ${res.statusText}`)
+                      return res.json()
+                    })
+                    .then(data => {
+                      console.log('[v0] Refresh successful, received:', data.data?.length, 'items')
+                      setCertData(data.data || [])
+                      setTotalCerts(data.total_certs_integrated || data.total || 0)
+                      setCurrentPage(1)
+                    })
+                    .catch(err => {
+                      console.error('[v0] Refresh failed:', err)
+                    })
+                }}
+                className="p-2 rounded-md border border-border/30 hover:border-border/50 hover:bg-muted/50 transition-colors flex items-center justify-center w-10 h-10"
+                title="Refresh"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {/* Grid Layout */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" ref={contentRef}>
             {certLoading ? (
               <div className="col-span-full text-center py-12 text-muted-foreground">
                 <p>Loading certificate data...</p>
@@ -451,7 +506,9 @@ export function AccessControlList({ data }: AccessControlListProps) {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                           <h4 className="font-semibold text-sm truncate text-primary">{cert.app_id_label}</h4>
-                          <p className="text-xs text-muted-foreground mt-1">{cert.used_by.length} application(s)</p>
+                          <p className="text-xs text-muted-foreground mt-1 truncate">
+                            {cert.used_by[0]?.nama_instansi || 'Unknown Institution'}
+                          </p>
                           {/* Encryption Type Badges */}
                           <div className="flex gap-1.5 mt-2 flex-wrap">
                             {encryptionTypes.map(([encType, keyId]) => (
@@ -470,11 +527,10 @@ export function AccessControlList({ data }: AccessControlListProps) {
                     </CardHeader>
 
                     <CardContent className="space-y-3">
-                      {/* Applications List */}
+                      {/* Institutions List */}
                       <div className="space-y-2">
                         {cert.used_by.map((app, appIndex) => (
                           <div key={appIndex} className="p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                            <p className="text-xs font-medium text-foreground truncate">{app.nama_aplikasi}</p>
                             <p className="text-xs text-muted-foreground truncate font-mono">{app.key_id}</p>
                           </div>
                         ))}
@@ -491,18 +547,22 @@ export function AccessControlList({ data }: AccessControlListProps) {
             <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/30">
               {/* Rows per page dropdown - Left side */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Rows per page:</span>
+                <span className="text-sm text-muted-foreground">Data shown:</span>
                 <select
-                  value={itemsPerPage}
+                  value={itemsPerPage === totalCerts ? 'all' : itemsPerPage}
                   onChange={(e) => {
-                    setItemsPerPage(Number(e.target.value))
+                    const value = e.target.value === 'all' ? totalCerts : Number(e.target.value)
+                    setItemsPerPage(value)
                     setCurrentPage(1)
+                    setSearchFilter('')
+                    setSearchQuery('')
                   }}
                   className="px-3 py-1.5 text-sm rounded-md border border-border/30 bg-background text-foreground hover:border-border/50 transition-colors cursor-pointer"
                 >
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={50}>50</option>
+                  <option value="all">All</option>
                 </select>
               </div>
 

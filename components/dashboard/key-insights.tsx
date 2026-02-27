@@ -1,40 +1,59 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Clock, Trophy, TrendingUp } from "lucide-react"
-import type { Key } from "@/lib/types"
 
-interface KeyInsightsProps {
-  keys: Key[]
+interface RecentKeyData {
+  key_id: string
+  nama_instansi: string
+  nama_aplikasi: string
+  hsm: string
+  recent_day: number
 }
 
-export function KeyInsights({ keys }: KeyInsightsProps) {
-  // Get top 4 most recent keys - sorted by created_date column
-  const recentKeys = [...keys]
-    .sort((a, b) => parseInt(b.created_date) - parseInt(a.created_date))
-    .slice(0, 4)
+interface TopInstitutionData {
+  nama_instansi: string
+  msk_count: number
+  secret_count: number
+  total_keys: number
+  percentage: number
+}
 
-  // Get top 4 institutions by key count
-  const instansiCounts = keys.reduce((acc, key) => {
-    const name = key.nama_instansi
-    if (!acc[name]) {
-      acc[name] = { count: 0, keys: [] }
+export function KeyInsights() {
+  const [recentKeys, setRecentKeys] = useState<RecentKeyData[]>([])
+  const [topInstitutions, setTopInstitutions] = useState<TopInstitutionData[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch data from both endpoints
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const [recentRes, institutionRes] = await Promise.all([
+          fetch('/api/key-recent-top4'),
+          fetch('/api/key-instansi-top4')
+        ])
+
+        if (recentRes.ok) {
+          const recentData = await recentRes.json()
+          setRecentKeys(recentData.data || [])
+        }
+
+        if (institutionRes.ok) {
+          const institutionData = await institutionRes.json()
+          setTopInstitutions(institutionData.data || [])
+        }
+      } catch (err) {
+        console.error('[v0] Failed to fetch key insights data:', err)
+      } finally {
+        setLoading(false)
+      }
     }
-    acc[name].count++
-    acc[name].keys.push(key)
-    return acc
-  }, {} as Record<string, { count: number; keys: Key[] }>)
 
-  const topInstansi = Object.entries(instansiCounts)
-    .sort(([, a], [, b]) => b.count - a.count)
-    .slice(0, 4)
-    .map(([name, data], index) => ({
-      rank: index + 1,
-      name,
-      count: data.count,
-      keys: data.keys,
-    }))
+    fetchData()
+  }, [])
 
   const getHsmColor = (hsm: string): { badge: string; avatarIndex: number } => {
     const normalized = hsm?.toLowerCase() || ''
@@ -48,22 +67,10 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
     return { badge: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20', avatarIndex: 3 }
   }
 
-  const getTimeAgo = (dateStr: string): string => {
-    // Parse YYYYMMDD format
-    const year = parseInt(dateStr.substring(0, 4))
-    const month = parseInt(dateStr.substring(4, 6)) - 1 // JavaScript months are 0-indexed
-    const day = parseInt(dateStr.substring(6, 8))
-    
-    const date = new Date(year, month, day)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
-
-    if (diffMins < 60) return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`
-    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`
-    return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`
+  const getTimeAgo = (recentDay: number): string => {
+    if (recentDay === 0) return 'Today'
+    if (recentDay === 1) return 'Yesterday'
+    return `${recentDay} days ago`
   }
 
   const getInitials = (name: string): string => {
@@ -100,30 +107,36 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-2 flex-1 overflow-y-auto">
-          {recentKeys.map((key) => {
-            const hsmColor = getHsmColor(key.hsm)
-            return (
-              <div
-                key={key.id}
-                className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-              >
-                <div className={`h-10 w-10 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 ${getAvatarColor(hsmColor.avatarIndex)}`}>
-                  {getInitials(key.nama_aplikasi)}
+          {loading ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Loading...</p>
+          ) : recentKeys.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No recent keys</p>
+          ) : (
+            recentKeys.map((key) => {
+              const hsmColor = getHsmColor(key.hsm)
+              return (
+                <div
+                  key={key.key_id}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                >
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 ${getAvatarColor(hsmColor.avatarIndex)}`}>
+                    {getInitials(key.nama_aplikasi)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm text-foreground truncate">{key.nama_aplikasi}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {key.nama_instansi} • {getTimeAgo(key.recent_day)}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <Badge variant="outline" className={`${hsmColor.badge} text-xs whitespace-nowrap`}>
+                      {key.hsm}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-foreground truncate">{key.nama_aplikasi}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {key.nama_instansi} • {getTimeAgo(key.created_date)}
-                  </p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <Badge variant="outline" className={`${hsmColor.badge} text-xs whitespace-nowrap`}>
-                    {key.hsm}
-                  </Badge>
-                </div>
-              </div>
-            )
-          })}
+              )
+            })
+          )}
         </CardContent>
       </Card>
 
@@ -139,43 +152,46 @@ export function KeyInsights({ keys }: KeyInsightsProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-2 flex-1 overflow-y-auto">
-          {topInstansi.map((item) => {
-            const percentage = ((item.count / keys.length) * 100).toFixed(0)
-            return (
+          {loading ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Loading...</p>
+          ) : topInstitutions.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No institution data</p>
+          ) : (
+            topInstitutions.map((item, index) => (
               <div
-                key={item.name}
+                key={item.nama_instansi}
                 className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
               >
                 <div className="relative flex-shrink-0">
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center font-semibold text-sm ${getAvatarColor(item.rank - 1)}`}>
-                    {getInitials(item.name)}
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center font-semibold text-sm ${getAvatarColor(index)}`}>
+                    {getInitials(item.nama_instansi)}
                   </div>
-                  {item.rank <= 3 && (
+                  {index < 3 && (
                     <div className={`absolute -top-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 ${
-                      item.rank === 1 ? 'bg-amber-500' :
-                      item.rank === 2 ? 'bg-zinc-400' :
+                      index === 0 ? 'bg-amber-500' :
+                      index === 1 ? 'bg-zinc-400' :
                       'bg-amber-600'
                     }`}>
-                      {item.rank}
+                      {index + 1}
                     </div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-foreground truncate">{item.name}</p>
+                  <p className="font-medium text-sm text-foreground truncate">{item.nama_instansi}</p>
                   <p className="text-xs text-muted-foreground">
-                    {item.count} {item.count === 1 ? 'key' : 'keys'}
+                    {item.total_keys} {item.total_keys === 1 ? 'key' : 'keys'}
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="font-mono text-sm font-semibold text-foreground">{item.count}</p>
+                  <p className="font-mono text-sm font-semibold text-foreground">{item.total_keys}</p>
                   <div className="flex items-center justify-end gap-1 text-xs text-emerald-400">
                     <TrendingUp className="h-3 w-3" />
-                    +{percentage}%
+                    +{item.percentage.toFixed(2)}%
                   </div>
                 </div>
               </div>
-            )
-          })}
+            ))
+          )}
         </CardContent>
       </Card>
     </div>

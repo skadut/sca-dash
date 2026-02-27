@@ -7,8 +7,9 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '10')
     const page = parseInt(searchParams.get('page') || '1')
+    const search = searchParams.get('search') || ''
 
-    console.log(`[v0] Fetching certificates with limit=${limit}, page=${page}`)
+    console.log(`[v0] Fetching certificates with limit=${limit}, page=${page}, search=${search || 'none'}`)
 
     const acl_api_url = process.env.ACL_API_URL
     const acl_api_port = process.env.ACL_API_PORT
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
           const options = {
             hostname: hostname,
             port: parseInt(acl_api_port),
-            path: `/cert-usage-all?limit=${limit}&page=${page}`,
+            path: `/cert-usage-all?limit=${limit}&page=${page}${search ? `&search=${encodeURIComponent(search)}` : ''}`,
             method: 'GET',
             cert: tls_cert,
             key: tls_key,
@@ -61,7 +62,40 @@ export async function GET(request: Request) {
         })
 
         console.log('[v0] Backend API success for cert-usage-all')
-        return NextResponse.json(backendData)
+        console.log('[v0] Backend response keys:', Object.keys(backendData))
+        
+        // Handle different backend response formats
+        let certificateData = []
+        let totalCount = 0
+        
+        if (Array.isArray(backendData)) {
+          // Backend returns raw array
+          certificateData = backendData
+          totalCount = backendData.length
+        } else if (backendData.data) {
+          // Backend returns { data: [...], total_certs_integrated: 13 } structure
+          certificateData = Array.isArray(backendData.data) ? backendData.data : []
+          // Use total_certs_integrated if available, otherwise use total or fallback to data length
+          totalCount = backendData.total_certs_integrated || backendData.total || certificateData.length
+        } else {
+          // Fallback
+          certificateData = []
+          totalCount = 0
+        }
+        
+        console.log(`[v0] Backend API returning: ${certificateData.length} items out of ${totalCount} total (total_certs_integrated available: ${'total_certs_integrated' in backendData})`)
+        
+        // Return properly structured response - preserve all backend fields
+        const responseData = {
+          data: certificateData,
+          total: totalCount,
+          total_certs_integrated: backendData.total_certs_integrated || totalCount,
+          limit: limit,
+          page: page,
+          isUsingMockData: false,
+        }
+        
+        return NextResponse.json(responseData)
       } catch (err) {
         console.log('[v0] Backend API error, using mock data:', err instanceof Error ? err.message : err)
       }
@@ -70,13 +104,29 @@ export async function GET(request: Request) {
     }
 
     // Fallback to paginated mock data
-    const certArray = Array.isArray(mockACLData?.data) ? mockACLData.data : Array.isArray(mockACLData) ? mockACLData : []
+    let certArray = Array.isArray(mockACLData?.data) ? mockACLData.data : Array.isArray(mockACLData) ? mockACLData : []
+    
+    // Filter by search if provided
+    if (search) {
+      const searchLower = search.toLowerCase()
+      certArray = certArray.filter(cert => {
+        return (
+          (cert.app_id_label && cert.app_id_label.toLowerCase().includes(searchLower)) ||
+          (cert.hsm && cert.hsm.toLowerCase().includes(searchLower)) ||
+          (cert.used_by && cert.used_by.some((app: any) => 
+            (app.nama_instansi && app.nama_instansi.toLowerCase().includes(searchLower)) ||
+            (app.key_id && app.key_id.toLowerCase().includes(searchLower))
+          ))
+        )
+      })
+    }
+    
     const total = certArray.length
     const startIndex = (page - 1) * limit
     const endIndex = startIndex + limit
     const paginatedData = certArray.slice(startIndex, endIndex)
 
-    console.log(`[v0] Returning mock data: ${paginatedData.length} items out of ${total} total`)
+    console.log(`[v0] Returning mock data: ${paginatedData.length} items out of ${total} total (filtered by search: ${search ? 'yes' : 'no'})`)
 
     return NextResponse.json({
       data: paginatedData,

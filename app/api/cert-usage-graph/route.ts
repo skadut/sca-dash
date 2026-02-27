@@ -52,10 +52,19 @@ export async function GET(req: Request) {
             try {
               const parsedData = JSON.parse(data)
               console.log('[v0] Backend API returned successfully for cert-usage-graph')
+              console.log('[v0] Backend response structure:', {
+                hasData: 'data' in parsedData,
+                hasStats: 'stats' in parsedData,
+                statsValue: parsedData.stats,
+              })
               resolve(
                 NextResponse.json({
                   data: parsedData.data || [],
+                  limit: parsedData.limit || 10,
                   status: 'success',
+                  sum_cert_integrated: parsedData.sum_cert_integrated || 0,
+                  sum_institutions: parsedData.sum_institutions || 0,
+                  sum_key_integrated: parsedData.sum_key_integrated || 0,
                   connectionFailed: false,
                   isUsingMockData: false,
                 })
@@ -90,9 +99,14 @@ function getMockDataResponse() {
 
     // Transform mock data to match API format
     const institutionMap = new Map<string, any>()
+    let totalCertIntegrated = 0
+    let totalKeyIntegrated = 0
 
     certArray.forEach((cert: any) => {
       if (!cert || !cert.used_by) return
+
+      totalCertIntegrated += 1
+      totalKeyIntegrated += cert.used_by.length
 
       cert.used_by.forEach((app: any) => {
         const instName = app.nama_instansi
@@ -124,18 +138,27 @@ function getMockDataResponse() {
     // Limit to top 10
     const topTen = dataArray.slice(0, 10)
 
+    console.log('[v0] Mock data stats - certs:', totalCertIntegrated, 'institutions:', institutionMap.size, 'keys:', totalKeyIntegrated)
+
     return NextResponse.json({
       data: topTen,
+      limit: 10,
       status: 'success',
+      sum_cert_integrated: totalCertIntegrated,
+      sum_institutions: institutionMap.size,
+      sum_key_integrated: totalKeyIntegrated,
       connectionFailed: false,
       isUsingMockData: true,
-      limit: 10,
     })
   } catch (err) {
     console.error('[v0] Error transforming mock data:', err)
     return NextResponse.json({
       data: [],
+      limit: 10,
       status: 'error',
+      sum_cert_integrated: 0,
+      sum_institutions: 0,
+      sum_key_integrated: 0,
       error: 'Failed to process data',
     })
   }

@@ -6,7 +6,6 @@ import { StatsCards } from '@/components/dashboard/stats-cards'
 import { CertificateTable } from '@/components/dashboard/certificate-table'
 import { NavigationTabs } from '@/components/dashboard/navigation-tabs'
 import { UtilityTrends } from '@/components/dashboard/utility-trends'
-import { DataModeToggle } from '@/components/dashboard/data-mode-toggle'
 import { ThemeToggle } from '@/components/dashboard/theme-toggle'
 import { FileDistribution } from '@/components/dashboard/file-distribution'
 import { KeySecretRelationship } from '@/components/dashboard/key-secret-relationship'
@@ -25,11 +24,8 @@ import { AccessControlList } from '@/components/dashboard/access-control-list'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-type DataMode = 'mock' | 'database'
-
 export default function DashboardPage(): React.ReactElement {
   const [activeMenu, setActiveMenu] = useState<'dashboard' | 'inventory' | 'certificates' | 'acl'>('dashboard')
-  const [dataMode, setDataMode] = useState<DataMode>('mock')
   const [activeTab, setActiveTab] = useState<'status' | 'traffic'>('status')
   const [pageKey, setPageKey] = useState(0)
 
@@ -44,7 +40,7 @@ export default function DashboardPage(): React.ReactElement {
     isUsingMockData: boolean
     connectionFailed?: boolean
     message?: string
-  }>(`/api/certificates?mode=${dataMode}`, fetcher, {
+  }>('/api/certificates', fetcher, {
     refreshInterval: 30000,
     revalidateOnFocus: true,
   })
@@ -54,7 +50,7 @@ export default function DashboardPage(): React.ReactElement {
     isUsingMockData: boolean
     connectionFailed?: boolean
     message?: string
-  }>(`/api/keys?mode=${dataMode}`, fetcher, {
+  }>('/api/keys', fetcher, {
     refreshInterval: 30000,
     revalidateOnFocus: true,
   })
@@ -64,15 +60,16 @@ export default function DashboardPage(): React.ReactElement {
     isUsingMockData: boolean
     connectionFailed?: boolean
     message?: string
-  }>(`/api/acl?mode=${dataMode}`, fetcher, {
+  }>('/api/acl', fetcher, {
     refreshInterval: 30000,
     revalidateOnFocus: true,
   })
 
+
+
   const certificates = data?.certificates || []
   const keys = keysData?.keys || []
   const aclData2 = aclData?.data || { data: [] }
-  const isConnected = data?.isUsingMockData === false
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -97,10 +94,6 @@ export default function DashboardPage(): React.ReactElement {
               </div>
               <div className="flex items-center gap-2">
                 <ThemeToggle />
-                <Button variant="outline" size="sm" onClick={() => mutate()} disabled={isLoading} className="gap-2">
-                  <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-                  Refresh
-                </Button>
               </div>
             </div>
           </div>
@@ -108,17 +101,14 @@ export default function DashboardPage(): React.ReactElement {
 
         <main className="container mx-auto px-4 py-6">
           <div className="space-y-6">
-            <div className="flex justify-end">
-              <DataModeToggle mode={dataMode} onModeChange={setDataMode} isConnected={isConnected} />
-            </div>
 
-            {dataMode === "database" && data?.connectionFailed && (
+            {data?.connectionFailed && (
               <Card className="border-amber-500/50 bg-amber-500/5">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <Info className="h-5 w-5 text-amber-600" />
                     <div>
-                      <p className="font-medium text-amber-700">Database Connection Unavailable</p>
+                      <p className="font-medium text-amber-700">Backend Connection Unavailable</p>
                       <p className="text-sm text-muted-foreground">{data.message} - Showing mock data as fallback.</p>
                     </div>
                   </div>
